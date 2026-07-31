@@ -1,0 +1,17 @@
+{
+  "name": "whatsapp-recorder-uno",
+  "version": "1.0.0",
+  "description": "WhatsApp Bot for recording chats and playing UNO",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@whiskeysockets/baileys": "^6.7.5",
+    "axios": "^1.18.1",
+    "node-cache": "^5.1.2",
+    "pino": "^8.20.0",
+    "wa-sticker-formatter": "^4.4.4"
+  }
+}
