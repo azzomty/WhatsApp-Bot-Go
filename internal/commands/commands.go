@@ -92,7 +92,7 @@ func Handle(ctx *BotContext) {
 	case ".زرف":
 		zarf(ctx)
 	case ".بينتريست":
-		return
+		pinterestSearch(ctx)
 	case ".ملصق", ".sticker":
 		makeSticker(ctx)
 	case ".سماح":

@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"whatsapp-bot/internal/commands"
 	"whatsapp-bot/internal/games"
+	"whatsapp-bot/internal/pinterest"
 	"whatsapp-bot/internal/store"
 	"time"
 )
@@ -182,6 +183,103 @@ func eventHandler(evt interface{}) {
 			return
 		}
 
+		if req, ok := pinterest.GetPending(v.Info.Chat.String()); ok {
+			choice := text
+			if strings.HasPrefix(choice, "/") {
+				choice = strings.TrimPrefix(choice, "/")
+				suffix := ""
+				aspect := "all"
+				overrideCount := req.Count
+
+				switch choice {
+				case "1":
+					suffix = " icons"
+					aspect = "icon"
+				case "2":
+					suffix = " banner"
+					aspect = "banner"
+				case "3":
+					suffix = " wallpaper"
+					aspect = "wallpaper"
+				default:
+					// Not a valid choice, let commands handle it
+					goto CommandHandling
+				}
+
+				pinterest.ClearPending(v.Info.Chat.String())
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{
+						Text: proto.String("صبرك"),
+						ContextInfo: &waProto.ContextInfo{
+							StanzaID:      proto.String(v.Info.ID),
+							Participant:   proto.String(v.Info.Sender.String()),
+							QuotedMessage: v.Message,
+						},
+					},
+				})
+
+				go func() {
+					results := pinterest.SearchPinterest(req.Query+suffix, aspect)
+					
+					var urlsToSend []string
+					for i, res := range results {
+						if i >= overrideCount {
+							break
+						}
+						urlsToSend = append(urlsToSend, res.URL)
+					}
+
+					count := 0
+					for _, u := range urlsToSend {
+						data, err := pinterest.DownloadImage(u)
+						if err == nil && len(data) > 5000 {
+							resp, err := client.Upload(context.Background(), data, whatsmeow.MediaImage)
+							if err == nil {
+								imgMsg := &waProto.ImageMessage{
+									URL:           proto.String(resp.URL),
+									DirectPath:    proto.String(resp.DirectPath),
+									MediaKey:      resp.MediaKey,
+									Mimetype:      proto.String("image/jpeg"),
+									FileEncSHA256: resp.FileEncSHA256,
+									FileSHA256:    resp.FileSHA256,
+									FileLength:    proto.Uint64(uint64(len(data))),
+								}
+								client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+									ImageMessage: imgMsg,
+								})
+								count++
+							}
+						}
+					}
+					if count == 0 {
+						client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+							ExtendedTextMessage: &waProto.ExtendedTextMessage{
+								Text: proto.String("للأسف ما لقيت شيء!"),
+								ContextInfo: &waProto.ContextInfo{
+									StanzaID:      proto.String(v.Info.ID),
+									Participant:   proto.String(v.Info.Sender.String()),
+									QuotedMessage: v.Message,
+								},
+							},
+						})
+					} else if count < overrideCount {
+						client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+							ExtendedTextMessage: &waProto.ExtendedTextMessage{
+								Text: proto.String("للأسف لقيت صور أقل من المطلوب، راح ارسلها لك."),
+								ContextInfo: &waProto.ContextInfo{
+									StanzaID:      proto.String(v.Info.ID),
+									Participant:   proto.String(v.Info.Sender.String()),
+									QuotedMessage: v.Message,
+								},
+							},
+						})
+					}
+				}()
+				return
+			}
+		}
+
+	CommandHandling:
 		go commands.Handle(ctx)
 
 	case *events.GroupInfo:
