@@ -1,0 +1,4 @@
+../../../go/pkg/mod/golang.org/x/exp@v0.0.0-20250711185948-6ae5c78190dc/constraints/constraints.go:9:8: package cmp is not in GOROOT (/usr/lib/go-1.18/src/cmp)
+../../../go/pkg/mod/golang.org/x/crypto@v0.40.0/curve25519/curve25519.go:13:8: package crypto/ecdh is not in GOROOT (/usr/lib/go-1.18/src/crypto/ecdh)
+../../../go/pkg/mod/go.mau.fi/whatsmeow@v0.0.0-20250811141640-b804d10c54c2/keepalive.go:11:2: package math/rand/v2 is not in GOROOT (/usr/lib/go-1.18/src/math/rand/v2)
+../../../go/pkg/mod/golang.org/x/sys@v0.34.0/unix/syscall_linux.go:16:2: package slices is not in GOROOT (/usr/lib/go-1.18/src/slices)

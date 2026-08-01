@@ -84,10 +84,6 @@ func eventHandler(evt interface{}) {
 					m = m.ViewOnceMessageV2.Message
 					continue
 				}
-				if m.DocumentWithCaptionMessage != nil && m.DocumentWithCaptionMessage.Message != nil {
-					m = m.DocumentWithCaptionMessage.Message
-					continue
-				}
 				break
 			}
 			return m

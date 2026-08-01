@@ -51,9 +51,6 @@ func unwrapMessage(msg *waProto.Message) *waProto.Message {
 	if msg.ViewOnceMessageV2 != nil && msg.ViewOnceMessageV2.Message != nil {
 		return unwrapMessage(msg.ViewOnceMessageV2.Message)
 	}
-	if msg.DocumentWithCaptionMessage != nil && msg.DocumentWithCaptionMessage.Message != nil {
-		return unwrapMessage(msg.DocumentWithCaptionMessage.Message)
-	}
 	return msg
 }
 
