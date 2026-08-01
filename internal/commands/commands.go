@@ -49,6 +49,19 @@ func AddMessage(chatID string, msg *events.Message) {
 	MessageStore[chatID] = msgs
 }
 
+func getLID(ctx *BotContext, jid types.JID) string {
+	if jid.Server == "lid" {
+		return jid.String()
+	}
+	if ctx.Client != nil && ctx.Client.Store != nil && ctx.Client.Store.LIDs != nil {
+		lid, err := ctx.Client.Store.LIDs.GetLIDForPN(context.Background(), jid)
+		if err == nil && lid.Server == "lid" {
+			return lid.String()
+		}
+	}
+	return jid.ToNonAD().String()
+}
+
 func Handle(ctx *BotContext) {
 	if ctx.Text == "" {
 		return
