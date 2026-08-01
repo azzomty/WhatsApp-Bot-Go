@@ -70,25 +70,33 @@ type DDGResponse struct {
 
 func SearchPinterest(query string, aspect string) []PinResult {
 	query = url.QueryEscape(query + " site:pinterest.com")
-	req, _ := http.NewRequest("GET", "https://duckduckgo.com/?q="+query, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-
+	var vqd string
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
+	for i := 0; i < 3; i++ {
+		req, _ := http.NewRequest("GET", "https://duckduckgo.com/?q="+query, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		
+		body, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		bodyStr := string(body)
+
+		re := regexp.MustCompile(`vqd=([a-zA-Z0-9_-]+)`)
+		matches := re.FindStringSubmatch(bodyStr)
+		if len(matches) >= 2 {
+			vqd = matches[1]
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	if vqd == "" {
 		return nil
 	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	bodyStr := string(body)
-
-	re := regexp.MustCompile(`vqd=([a-zA-Z0-9_-]+)`)
-	matches := re.FindStringSubmatch(bodyStr)
-	if len(matches) < 2 {
-		return nil
-	}
-	vqd := matches[1]
 
 	req2, _ := http.NewRequest("GET", "https://duckduckgo.com/i.js?l=us-en&o=json&q="+query+"&vqd="+vqd+"&f=,,,&p=1", nil)
 	req2.Header.Set("User-Agent", "Mozilla/5.0")

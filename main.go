@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -243,6 +244,12 @@ func eventHandler(evt interface{}) {
 
 				go func() {
 					results := pinterest.SearchPinterest(req.Query+suffix, aspect)
+
+					if len(results) > 0 {
+						rand.Shuffle(len(results), func(i, j int) {
+							results[i], results[j] = results[j], results[i]
+						})
+					}
 
 					var urlsToSend []string
 					for i, res := range results {
