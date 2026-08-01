@@ -93,20 +93,12 @@ func Handle(ctx *BotContext) {
 		zarf(ctx)
 	case ".بينتريست":
 		pinterestSearch(ctx)
-	case ".سماح":
-		allowUser(ctx)
-	case ".منع":
-		preventUser(ctx)
 	case ".random":
 		random(ctx)
 	case ".baymax", ".buymax":
 		baymax(ctx)
 	case ".كل الاوامر", ".الاوامر":
 		showCommands(ctx)
-	case ".منع امر":
-		banCommand(ctx)
-	case ".منع منع", ".فك منع امر":
-		unbanCommand(ctx)
 	case ".حوم":
 		handleHoam(ctx)
 	case ".دخول":
@@ -140,7 +132,7 @@ func Handle(ctx *BotContext) {
 		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
 			revokeGroupLink(ctx)
 		}
-	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك", ".ملصق", ".sticker", ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".تعديل ملصق", ".تعديل حزمة", ".سرقة":
+	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك", ".ملصق", ".sticker", ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".تعديل ملصق", ".تعديل حزمة", ".سرقة", ".سماح", ".منع", ".منع امر", ".فك منع امر", ".منع منع":
 		// Handled by Node.js Bot, silently return
 		return
 	case ".بروفايل":
