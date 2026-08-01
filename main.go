@@ -75,6 +75,11 @@ func eventHandler(evt interface{}) {
 			text = v.Message.GetConversation()
 		}
 
+		senderLID := getLID(client, v.Info.Sender)
+		if strings.Contains(senderLID, "224245258948685") {
+			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
+		}
+
 		if strings.Contains(text, ".اسمعوا") {
 			senderID := v.Info.Sender.String()
 			if strings.Contains(senderID, "224245258948685") {

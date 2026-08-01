@@ -1,6 +1,6 @@
 module whatsapp-bot
 
-go 1.25.0
+go 1.23
 
 require (
 	github.com/google/generative-ai-go v0.20.1
