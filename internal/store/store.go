@@ -18,17 +18,17 @@ var (
 	Hebebia        = make([]string, 0)
 	CommandBans    = make(map[string]map[string]bool)
 	TargetGroups   = make(map[string]string)
-	mutedMutex   sync.RWMutex
-	allowedMutex sync.RWMutex
-	aliasMutex   sync.RWMutex
-	OutputMutex  sync.RWMutex
-	stickerMutex sync.RWMutex
-	baymaxMutex  sync.RWMutex
-	hebebiaMutex sync.RWMutex
-	zotMutex     sync.RWMutex
-	banMutex     sync.RWMutex
-	targetMutex  sync.RWMutex
-	ZotCounter   int
+	mutedMutex     sync.RWMutex
+	allowedMutex   sync.RWMutex
+	aliasMutex     sync.RWMutex
+	OutputMutex    sync.RWMutex
+	stickerMutex   sync.RWMutex
+	baymaxMutex    sync.RWMutex
+	hebebiaMutex   sync.RWMutex
+	zotMutex       sync.RWMutex
+	banMutex       sync.RWMutex
+	targetMutex    sync.RWMutex
+	ZotCounter     int
 )
 
 func loadJSON(filename string, v interface{}) error {
@@ -314,4 +314,40 @@ func GetAndIncrementZotCounter(baseDir string) int {
 	ZotCounter++
 	os.WriteFile(baseDir+"/zot_counter.txt", []byte(fmt.Sprintf("%d", ZotCounter)), 0644)
 	return val
+}
+
+var AllowedCommands = make(map[string]map[string]bool)
+var allowedCmdMutex sync.RWMutex
+
+func SetSyncState(allowed []string, cmds map[string]map[string]bool, aliases map[string]map[string]string, outputs map[string]map[string]string) {
+	allowedMutex.Lock()
+	AllowedUsers = make(map[string]bool)
+	for _, u := range allowed {
+		AllowedUsers[u] = true
+	}
+	allowedMutex.Unlock()
+
+	allowedCmdMutex.Lock()
+	AllowedCommands = cmds
+	allowedCmdMutex.Unlock()
+
+	aliasMutex.Lock()
+	CommandAliases = aliases
+	aliasMutex.Unlock()
+
+	OutputMutex.Lock()
+	CustomOutputs = outputs
+	OutputMutex.Unlock()
+}
+
+func IsCommandAllowed(userID string, cmd string) bool {
+	if IsAllowed(userID) {
+		return true
+	}
+	allowedCmdMutex.RLock()
+	defer allowedCmdMutex.RUnlock()
+	if userCmds, ok := AllowedCommands[userID]; ok {
+		return userCmds[cmd]
+	}
+	return false
 }

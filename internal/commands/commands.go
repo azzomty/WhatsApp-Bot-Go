@@ -65,7 +65,7 @@ func Handle(ctx *BotContext) {
 	}
 
 	if strings.HasPrefix(cmdName, ".") {
-		if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+		if !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
 			return
 		}
 	}
@@ -235,7 +235,10 @@ func unmute(ctx *BotContext) {
 }
 
 func editAlias(ctx *BotContext) {
-	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+	senderID := ctx.Sender.ToNonAD().String()
+	isAllowed := store.IsCommandAllowed(senderID, ".تعديل امر")
+
+	if !isAllowed && !ctx.IsAdmin && !ctx.IsSuperAdmin {
 		return
 	}
 	var newCmd, oldCmd string

@@ -162,13 +162,13 @@ func GetMatchingPairs(results []PinResult, targetPairs int) []string {
 		if err != nil {
 			continue
 		}
-		
+
 		body, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
-		
+
 		re := regexp.MustCompile(`https://i\.pinimg\.com/originals/[a-zA-Z0-9/_-]+\.(?:jpg|png|jpeg)`)
 		imgMatches := re.FindAllString(string(body), -1)
-		
+
 		if len(imgMatches) > 0 {
 			var uniqueImages []string
 			seen := make(map[string]bool)
@@ -182,7 +182,7 @@ func GetMatchingPairs(results []PinResult, targetPairs int) []string {
 					uniqueImages = append(uniqueImages, img)
 				}
 			}
-			
+
 			if len(uniqueImages) >= 2 {
 				pairs = append(pairs, uniqueImages[0], uniqueImages[1])
 				sentUrls[uniqueImages[0]] = true
@@ -230,8 +230,5 @@ func GetMatchingPairs(results []PinResult, targetPairs int) []string {
 		}
 	}
 
-
-
 	return pairs
 }
-

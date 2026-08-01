@@ -9,17 +9,17 @@ import (
 
 	"github.com/google/generative-ai-go/genai"
 	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/types"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/proto"
 )
 
 var (
-	client          *genai.Client
-	CurrentModel    = "gemini-3.5-flash"
-	chatSessions    = make(map[string]*genai.ChatSession)
-	geminiAPIKey    = os.Getenv("GEMINI_API_KEY")
+	client       *genai.Client
+	CurrentModel = "gemini-3.5-flash"
+	chatSessions = make(map[string]*genai.ChatSession)
+	geminiAPIKey = os.Getenv("GEMINI_API_KEY")
 )
 
 func init() {
@@ -47,7 +47,7 @@ func sendMessage(clientWA *whatsmeow.Client, chatID types.JID, text string, quot
 
 func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JID, text string, isGroup bool, isFromMe bool, msg *waProto.Message, stanzaID string, participant string) bool {
 	lowerText := strings.ToLower(text)
-	
+
 	if lowerText == ".models" || lowerText == ".model" {
 		modelsList := "النماذج المتوفرة:\n1- gemini-3.5-flash\n2- gemini-3.1-flash-lite\n\nلتغيير النموذج اكتب داش مع الرقم، مثال:\n-1"
 		sendMessage(clientWA, chatID, modelsList, msg, stanzaID, participant)
@@ -63,7 +63,6 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 	}
 
 	hasGeminiCommand := strings.Contains(lowerText, ".جيميناي") || strings.Contains(lowerText, "جيميناي.") || strings.Contains(lowerText, ".حيميناي") || strings.Contains(lowerText, "حيميناي.")
-	
 
 	isMentioned := false
 	if msg != nil && msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil {
@@ -75,7 +74,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 			}
 		}
 	}
-	
+
 	prompt := text
 	if hasGeminiCommand {
 		prompt = strings.ReplaceAll(prompt, ".جيميناي", "")
@@ -103,7 +102,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 				prompt += "\n\n[الرسالة المقتبسة]:\n" + qText
 			}
 		}
-		
+
 		prompt = strings.TrimSpace(prompt)
 
 		if prompt != "" {

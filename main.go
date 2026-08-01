@@ -20,6 +20,7 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"google.golang.org/protobuf/proto"
 	"time"
+	"whatsapp-bot/internal/api"
 	"whatsapp-bot/internal/commands"
 	"whatsapp-bot/internal/games"
 	"whatsapp-bot/internal/pinterest"
@@ -335,6 +336,7 @@ func startRenderServer() {
 
 func main() {
 	go startRenderServer()
+	go api.StartServer()
 
 	store.LoadAll(".")
 
