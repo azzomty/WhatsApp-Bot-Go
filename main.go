@@ -19,11 +19,11 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"google.golang.org/protobuf/proto"
+	"time"
 	"whatsapp-bot/internal/commands"
 	"whatsapp-bot/internal/games"
 	"whatsapp-bot/internal/pinterest"
 	"whatsapp-bot/internal/store"
-	"time"
 )
 
 var (
@@ -33,7 +33,7 @@ var (
 		Count  int
 		Warned bool
 	})
-	spamMutex sync.Mutex
+	spamMutex   sync.Mutex
 	startupTime time.Time
 )
 
@@ -66,10 +66,31 @@ func eventHandler(evt interface{}) {
 
 		commands.AddMessage(v.Info.Chat.String(), v)
 
-		text := v.Message.GetConversation()
-		if text == "" {
+		text := ""
+		if v.Message.GetExtendedTextMessage() != nil {
 			text = v.Message.GetExtendedTextMessage().GetText()
+		} else if v.Message.GetConversation() != "" {
+			text = v.Message.GetConversation()
 		}
+
+		if strings.Contains(text, ".اسمعوا") {
+			senderID := v.Info.Sender.String()
+			if strings.Contains(senderID, "224245258948685") {
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{
+						Text: proto.String("هههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههه\n"),
+						ContextInfo: &waProto.ContextInfo{
+							StanzaID:      proto.String(v.Info.ID),
+							Participant:   proto.String(v.Info.Sender.String()),
+							QuotedMessage: v.Message,
+						},
+					},
+				})
+				return
+			}
+		}
+
+		text = strings.TrimSpace(text)
 
 		// Exclude reactions and non-messages from spam detection
 		isSpamable := true
@@ -201,9 +222,7 @@ func eventHandler(evt interface{}) {
 				case "3":
 					suffix = " wallpaper"
 					aspect = "wallpaper"
-				case "4":
-					suffix = " matching icons pfp"
-					aspect = "all"
+
 				default:
 					// Not a valid choice, let commands handle it
 					goto CommandHandling
@@ -223,7 +242,7 @@ func eventHandler(evt interface{}) {
 
 				go func() {
 					results := pinterest.SearchPinterest(req.Query+suffix, aspect)
-					
+
 					var urlsToSend []string
 					for i, res := range results {
 						if i >= overrideCount {

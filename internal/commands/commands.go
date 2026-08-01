@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -16,11 +16,11 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 
+	"sync"
 	"whatsapp-bot/internal/gemini"
 	"whatsapp-bot/internal/pinterest"
 	"whatsapp-bot/internal/stickers"
 	"whatsapp-bot/internal/store"
-	"sync"
 )
 
 var (
@@ -132,7 +132,21 @@ func Handle(ctx *BotContext) {
 			sendMessage(ctx, "تم تعيين هذا القروب للاستقبال! 🌟")
 			ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, ctx.Sender, ctx.Event.Info.ID))
 		}
-	case ".حذف تعديل", ".معلومات هبهبية", ".add", ".delete":
+	case ".قفل":
+		closeGroup(ctx)
+	case ".فتح":
+		openGroup(ctx)
+	case ".عرض":
+		setGroupPic(ctx)
+	case ".رابط", ".الرابط":
+		if len(parts) > 1 && parts[1] == "القروب" {
+			getGroupLink(ctx)
+		}
+	case ".تغيير":
+		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
+			revokeGroupLink(ctx)
+		}
+	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".بدء", ".توقيف", ".ورك":
 		// Handled by Node.js Bot, silently return
 		return
 	case ".بروفايل":
@@ -499,7 +513,7 @@ func pinterestSearch(ctx *BotContext) {
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count)
 
-	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- Matching Profiles (تطقيمات شخصين)\n\nاكتب الرقم مع السلاش (مثال: /1)"
+	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
 }
 
@@ -700,7 +714,7 @@ func banCommand(ctx *BotContext) {
 	if len(targets) > 0 {
 		targetLID := getLID(ctx, targets[0])
 		store.SetCommandBan(targetLID, cmdToBan, true, ".")
-		sendMessage(ctx, "تم منع الشخص من استخدام أمر " + cmdToBan + " بنجاح!")
+		sendMessage(ctx, "تم منع الشخص من استخدام أمر "+cmdToBan+" بنجاح!")
 	} else {
 		sendMessage(ctx, "لازم تمنشن الشخص اللي تبي تمنعه.")
 	}
@@ -723,7 +737,7 @@ func unbanCommand(ctx *BotContext) {
 	if len(targets) > 0 {
 		targetLID := getLID(ctx, targets[0])
 		store.SetCommandBan(targetLID, cmdToUnban, false, ".")
-		sendMessage(ctx, "تم فك المنع عن أمر " + cmdToUnban + " بنجاح!")
+		sendMessage(ctx, "تم فك المنع عن أمر "+cmdToUnban+" بنجاح!")
 	} else {
 		sendMessage(ctx, "لازم تمنشن الشخص اللي تبي تفك منعه.")
 	}
@@ -971,7 +985,7 @@ func startHoam(ctx *BotContext) {
 
 	choices := []string{"حجر ✊", "ورقة ✋", "مقص ✌️"}
 	msg := "بدأت اللعبة! 🎲 الاختيارات العشوائية:\n\n"
-	
+
 	winnerIndex := rand.Intn(len(players))
 	winner := players[winnerIndex]
 
@@ -1102,7 +1116,7 @@ func SendWelcomeMessage(clientWA *whatsmeow.Client, groupJID types.JID, joinedUs
 	}
 
 	text := fmt.Sprintf("@%s\nمرحبا بك في الحصن", joinedUser.User)
-	
+
 	if len(data) > 0 {
 		uploaded, err := clientWA.Upload(context.Background(), data, whatsmeow.MediaImage)
 		if err == nil {
@@ -1156,7 +1170,7 @@ func repeatMessage(ctx *BotContext) {
 		sendMessage(ctx, "الصيغة: .تكرار <الرسالة> <العدد>")
 		return
 	}
-	
+
 	lastPart := parts[len(parts)-1]
 	count := 0
 	for _, char := range lastPart {
@@ -1167,17 +1181,17 @@ func repeatMessage(ctx *BotContext) {
 			break
 		}
 	}
-	
+
 	if count <= 0 || count > 2000 {
 		sendMessage(ctx, "العدد لازم يكون رقم صالح (حد أقصى 2000)")
 		return
 	}
-	
+
 	msg := strings.Join(parts[1:len(parts)-1], " ")
 	if msg == "" {
 		return
 	}
-	
+
 	// Send multiple messages to spam as requested by the user
 	go func() {
 		for i := 0; i < count; i++ {
@@ -1185,4 +1199,97 @@ func repeatMessage(ctx *BotContext) {
 			time.Sleep(200 * time.Millisecond) // Small delay to prevent rate limit
 		}
 	}()
+}
+
+func closeGroup(ctx *BotContext) {
+	if !strings.HasSuffix(ctx.ChatID.String(), "@g.us") {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+	err := ctx.Client.SetGroupAnnounce(context.Background(), ctx.ChatID, true)
+	if err != nil {
+		sendMessage(ctx, "فشل قفل القروب، تأكد إني أدمن!")
+	} else {
+		sendMessage(ctx, "تم قفل القروب بنجاح 🔒")
+	}
+}
+
+func openGroup(ctx *BotContext) {
+	if !strings.HasSuffix(ctx.ChatID.String(), "@g.us") {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+	err := ctx.Client.SetGroupAnnounce(context.Background(), ctx.ChatID, false)
+	if err != nil {
+		sendMessage(ctx, "فشل فتح القروب، تأكد إني أدمن!")
+	} else {
+		sendMessage(ctx, "تم فتح القروب بنجاح 🔓")
+	}
+}
+
+func getGroupLink(ctx *BotContext) {
+	if !strings.HasSuffix(ctx.ChatID.String(), "@g.us") {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+	link, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, false)
+	if err != nil {
+		sendMessage(ctx, "فشل جلب الرابط، تأكد إني أدمن!")
+	} else {
+		sendMessage(ctx, "رابط القروب:\nhttps://chat.whatsapp.com/"+link)
+	}
+}
+
+func revokeGroupLink(ctx *BotContext) {
+	if !strings.HasSuffix(ctx.ChatID.String(), "@g.us") {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+	_, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, true)
+	if err != nil {
+		sendMessage(ctx, "فشل تغيير الرابط، تأكد إني أدمن!")
+	} else {
+		sendMessage(ctx, "تم تغيير رابط القروب بنجاح (ما راح أرسل الرابط الجديد) 🔄")
+	}
+}
+
+func setGroupPic(ctx *BotContext) {
+	if !strings.HasSuffix(ctx.ChatID.String(), "@g.us") {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+
+	msg := ctx.Event.Message
+	if msg == nil {
+		sendMessage(ctx, "لازم ترد على صورة عشان احطها افتار للقروب!")
+		return
+	}
+
+	var imgMsg *waProto.ImageMessage
+	if msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil && msg.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
+		quoted := msg.ExtendedTextMessage.ContextInfo.QuotedMessage
+		if quoted.ImageMessage != nil {
+			imgMsg = quoted.ImageMessage
+		} else if quoted.ViewOnceMessageV2 != nil && quoted.ViewOnceMessageV2.Message != nil && quoted.ViewOnceMessageV2.Message.ImageMessage != nil {
+			imgMsg = quoted.ViewOnceMessageV2.Message.ImageMessage
+		}
+	}
+
+	if imgMsg == nil {
+		sendMessage(ctx, "لازم ترد على صورة يا غالي!")
+		return
+	}
+
+	data, err := ctx.Client.Download(context.Background(), imgMsg)
+	if err != nil {
+		sendMessage(ctx, "فشل تحميل الصورة: "+err.Error())
+		return
+	}
+
+	_, err = ctx.Client.SetGroupPhoto(context.Background(), ctx.ChatID, data)
+	if err != nil {
+		sendMessage(ctx, "فشل تغيير صورة القروب، تأكد إني أدمن!")
+	} else {
+		sendMessage(ctx, "تم تغيير صورة القروب بنجاح 🖼️")
+	}
 }

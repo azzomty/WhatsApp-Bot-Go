@@ -98,7 +98,14 @@ func deleteGame(chatID string) {
 
 func safeSend(ctx *commands.BotContext, text string) {
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
-		Conversation: proto.String(text),
+		ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			Text: proto.String(text),
+			ContextInfo: &waProto.ContextInfo{
+				StanzaID:      proto.String(ctx.Event.Info.ID),
+				Participant:   proto.String(ctx.Event.Info.Sender.String()),
+				QuotedMessage: ctx.Event.Message,
+			},
+		},
 	})
 }
 
@@ -107,7 +114,10 @@ func safeSendMentions(ctx *commands.BotContext, text string, mentions []string) 
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{
 			Text: proto.String(text),
 			ContextInfo: &waProto.ContextInfo{
-				MentionedJID: mentions,
+				MentionedJID:  mentions,
+				StanzaID:      proto.String(ctx.Event.Info.ID),
+				Participant:   proto.String(ctx.Event.Info.Sender.String()),
+				QuotedMessage: ctx.Event.Message,
 			},
 		},
 	}
