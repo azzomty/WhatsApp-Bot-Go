@@ -13,5 +13,17 @@
     "node-cache": "^5.1.2",
     "pino": "^8.20.0",
     "wa-sticker-formatter": "^4.4.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azzomty/WhatsApp-Bot-Go.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/azzomty/WhatsApp-Bot-Go/issues"
+  },
+  "homepage": "https://github.com/azzomty/WhatsApp-Bot-Go#readme"
 }

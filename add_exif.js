@@ -1,4 +1,4 @@
-const { Sticker, StickerTypes } = require('/home/lennox/Desktop/WhatsApp_Bot/node_modules/wa-sticker-formatter');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const fs = require('fs');
 
 async function run() {

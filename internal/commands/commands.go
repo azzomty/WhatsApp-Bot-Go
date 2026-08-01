@@ -148,9 +148,9 @@ func Handle(ctx *BotContext) {
 		}
 	case ".ملصق", ".sticker":
 		makeSticker(ctx)
-	case ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".تعديل ملصق", ".تعديل حزمة":
+	case ".حقوق", ".تعديل حقوق", ".تعديل حقوقي":
 		editRights(ctx)
-	case ".سرقة":
+	case ".سرقة", ".تعديل ملصق", ".تعديل حزمة":
 		stealSticker(ctx)
 	case ".سماح":
 		allowUser(ctx)
