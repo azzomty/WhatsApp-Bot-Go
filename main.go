@@ -105,22 +105,7 @@ func eventHandler(evt interface{}) {
 			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
 		}
 
-		if strings.Contains(text, ".اسمعوا") {
-			senderID := v.Info.Sender.String()
-			if strings.Contains(senderID, "224245258948685") {
-				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
-					ExtendedTextMessage: &waProto.ExtendedTextMessage{
-						Text: proto.String("هههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههه\n"),
-						ContextInfo: &waProto.ContextInfo{
-							StanzaID:      proto.String(v.Info.ID),
-							Participant:   proto.String(v.Info.Sender.String()),
-							QuotedMessage: v.Message,
-						},
-					},
-				})
-				return
-			}
-		}
+
 
 		text = strings.TrimSpace(text)
 
@@ -190,6 +175,15 @@ func eventHandler(evt interface{}) {
 
 		if strings.Contains(senderID, "224245258948685") {
 			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
+		}
+
+		if strings.Contains(senderID, "224245258948685") && strings.Contains(text, ".اسمعوا") {
+			client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+				ExtendedTextMessage: &waProto.ExtendedTextMessage{
+					Text: proto.String("هههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههههه\n"),
+				},
+			})
+			return
 		}
 
 		if text == ".زرف" || text == ".زرفكم" {

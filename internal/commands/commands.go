@@ -82,7 +82,9 @@ func Handle(ctx *BotContext) {
 
 	if strings.HasPrefix(cmdName, ".") {
 		if !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
-			return
+			if cmdName != ".بروفايل" && cmdName != ".baymax" && cmdName != ".buymax" {
+				return
+			}
 		}
 	}
 
@@ -168,9 +170,11 @@ func Handle(ctx *BotContext) {
 		hebebiaAdd(ctx)
 	case ".delete", ".حذف":
 		hebebiaDelete(ctx)
-	case ".الاقاب", ".الالقاب", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك", ".عرض":
+	case ".الاقاب", ".الالقاب", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك":
 		// Handled by Node.js Bot, silently return
 		return
+	case ".عرض":
+		setGroupPic(ctx)
 	case ".بروفايل":
 		getProfilePic(ctx)
 	case ".تكرار":
@@ -1135,6 +1139,8 @@ func getProfilePic(ctx *BotContext) {
 			number = strings.ReplaceAll(number, "-", "")
 			number = strings.ReplaceAll(number, " ", "")
 			target = types.NewJID(number, "s.whatsapp.net")
+		} else {
+			target = ctx.Sender
 		}
 	}
 
@@ -1307,7 +1313,7 @@ func getGroupLink(ctx *BotContext) {
 	}
 	link, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, false)
 	if err != nil {
-		sendMessage(ctx, "فشل جلب الرابط، تأكد إني أدمن!")
+		sendMessage(ctx, "فشل جلب الرابط، تأكد إني أدمن! "+err.Error())
 	} else {
 		sendMessage(ctx, "رابط القروب:\nhttps://chat.whatsapp.com/"+link)
 	}
@@ -1320,7 +1326,7 @@ func revokeGroupLink(ctx *BotContext) {
 	}
 	_, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, true)
 	if err != nil {
-		sendMessage(ctx, "فشل تغيير الرابط، تأكد إني أدمن!")
+		sendMessage(ctx, "فشل تغيير الرابط، تأكد إني أدمن! "+err.Error())
 	} else {
 		sendMessage(ctx, "تم تغيير رابط القروب بنجاح (ما راح أرسل الرابط الجديد) 🔄")
 	}
@@ -1361,7 +1367,7 @@ func setGroupPic(ctx *BotContext) {
 
 	_, err = ctx.Client.SetGroupPhoto(context.Background(), ctx.ChatID, data)
 	if err != nil {
-		sendMessage(ctx, "فشل تغيير صورة القروب، تأكد إني أدمن!")
+		sendMessage(ctx, "فشل تغيير صورة القروب: "+err.Error())
 	} else {
 		sendMessage(ctx, "تم تغيير صورة القروب بنجاح 🖼️")
 	}
