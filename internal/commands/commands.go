@@ -49,19 +49,6 @@ func AddMessage(chatID string, msg *events.Message) {
 	MessageStore[chatID] = msgs
 }
 
-func getLID(ctx *BotContext, jid types.JID) string {
-	if jid.Server == "lid" {
-		return jid.String()
-	}
-	if ctx.Client != nil && ctx.Client.Store != nil && ctx.Client.Store.LIDs != nil {
-		lid, err := ctx.Client.Store.LIDs.GetLIDForPN(context.Background(), jid)
-		if err == nil && lid.Server == "lid" {
-			return lid.String()
-		}
-	}
-	return jid.ToNonAD().String()
-}
-
 func Handle(ctx *BotContext) {
 	if ctx.Text == "" {
 		return
@@ -159,7 +146,7 @@ func Handle(ctx *BotContext) {
 		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
 			revokeGroupLink(ctx)
 		}
-	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".بدء", ".توقيف", ".ورك":
+	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك":
 		// Handled by Node.js Bot, silently return
 		return
 	case ".بروفايل":
