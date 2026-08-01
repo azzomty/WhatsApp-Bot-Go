@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"whatsapp-bot/internal/store"
 )
@@ -39,9 +38,4 @@ func StartServer() {
 		w.Write([]byte(`{"status":"synced"}`))
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	http.ListenAndServe(":"+port, nil)
 }

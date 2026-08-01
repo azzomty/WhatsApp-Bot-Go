@@ -335,8 +335,8 @@ func startRenderServer() {
 }
 
 func main() {
+	api.StartServer()
 	go startRenderServer()
-	go api.StartServer()
 
 	store.LoadAll(".")
 
