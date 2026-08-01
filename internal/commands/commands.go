@@ -180,7 +180,7 @@ func kick(ctx *BotContext) {
 
 	targets := getTargets(ctx)
 	if len(targets) > 0 {
-		_, err := ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, targets, whatsmeow.ParticipantChangeRemove)
+		_, err := ctx.Client.UpdateGroupParticipants(ctx.ChatID, targets, whatsmeow.ParticipantChangeRemove)
 		if err != nil {
 			sendMessage(ctx, "ما قدرت أطرده، تأكد إني أدمن.")
 		} else {
@@ -402,7 +402,7 @@ func promote(ctx *BotContext) {
 	}
 	targets := getTargets(ctx)
 	if len(targets) > 0 {
-		_, err := ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, targets, whatsmeow.ParticipantChangePromote)
+		_, err := ctx.Client.UpdateGroupParticipants(ctx.ChatID, targets, whatsmeow.ParticipantChangePromote)
 		if err == nil {
 			sendMessage(ctx, "تم رفع المشرف.")
 		}
@@ -414,7 +414,7 @@ func zarf(ctx *BotContext) {
 		return
 	}
 
-	groupInfo, err := ctx.Client.GetGroupInfo(context.Background(), ctx.ChatID)
+	groupInfo, err := ctx.Client.GetGroupInfo(ctx.ChatID)
 	if err != nil {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط.")
 		return
@@ -428,7 +428,7 @@ func zarf(ctx *BotContext) {
 	}
 
 	if len(toKick) > 0 {
-		ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
+		ctx.Client.UpdateGroupParticipants(ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
 		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".زرف", "تم زرف الجميع.")
 		sendMessage(ctx, outMsg)
 	}
@@ -438,7 +438,7 @@ func random(ctx *BotContext) {
 	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
 		return
 	}
-	groupInfo, err := ctx.Client.GetGroupInfo(context.Background(), ctx.ChatID)
+	groupInfo, err := ctx.Client.GetGroupInfo(ctx.ChatID)
 	if err != nil {
 		sendMessage(ctx, "هذا الأمر للمجموعات فقط!")
 		return
@@ -455,8 +455,8 @@ func random(ctx *BotContext) {
 			}
 		}
 		if len(toKick) > 0 {
-			ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, toKick, whatsmeow.ParticipantChangeDemote)
-			ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
+			ctx.Client.UpdateGroupParticipants(ctx.ChatID, toKick, whatsmeow.ParticipantChangeDemote)
+			ctx.Client.UpdateGroupParticipants(ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
 		}
 	} else {
 		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".نجوت", "نجوت هالمرة! 😌")
@@ -1020,7 +1020,7 @@ func startHoam(ctx *BotContext) {
 
 	if winner.ToNonAD().String() == "224245258948685@lid" || store.IsAllowed(winner.ToNonAD().String()) {
 		sendMessage(ctx, "مبروك! فاز الإداري! جاري زرف القروب... 💥")
-		groupInfo, err := ctx.Client.GetGroupInfo(context.Background(), ctx.ChatID)
+		groupInfo, err := ctx.Client.GetGroupInfo(ctx.ChatID)
 		if err == nil {
 			var toKick []types.JID
 			for _, p := range groupInfo.Participants {
@@ -1029,7 +1029,7 @@ func startHoam(ctx *BotContext) {
 				}
 			}
 			if len(toKick) > 0 {
-				ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
+				ctx.Client.UpdateGroupParticipants(ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
 			}
 		}
 	} else {
@@ -1043,7 +1043,7 @@ func demote(ctx *BotContext) {
 	}
 	targets := getTargets(ctx)
 	if len(targets) > 0 {
-		_, err := ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, targets, whatsmeow.ParticipantChangeDemote)
+		_, err := ctx.Client.UpdateGroupParticipants(ctx.ChatID, targets, whatsmeow.ParticipantChangeDemote)
 		if err != nil {
 			sendMessage(ctx, "ما قدرت أسحب إشرافه، تأكد إني أدمن.")
 		} else {
@@ -1076,7 +1076,7 @@ func getProfilePic(ctx *BotContext) {
 		return
 	}
 
-	pic, err := ctx.Client.GetProfilePictureInfo(context.Background(), target, &whatsmeow.GetProfilePictureParams{})
+	pic, err := ctx.Client.GetProfilePictureInfo(target, &whatsmeow.GetProfilePictureParams{})
 	if err != nil || pic == nil || pic.URL == "" {
 		sendMessage(ctx, "ما قدرت أجيب صورة البروفايل (يمكن حاط خصوصية أو ما عنده صورة).")
 		return
@@ -1111,7 +1111,7 @@ func getProfilePic(ctx *BotContext) {
 }
 
 func SendWelcomeMessage(clientWA *whatsmeow.Client, groupJID types.JID, joinedUser types.JID) {
-	pic, err := clientWA.GetProfilePictureInfo(context.Background(), joinedUser, &whatsmeow.GetProfilePictureParams{})
+	pic, err := clientWA.GetProfilePictureInfo(joinedUser, &whatsmeow.GetProfilePictureParams{})
 	var data []byte
 	if err == nil && pic != nil && pic.URL != "" {
 		resp, err := http.Get(pic.URL)
@@ -1212,7 +1212,7 @@ func closeGroup(ctx *BotContext) {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
 		return
 	}
-	err := ctx.Client.SetGroupAnnounce(context.Background(), ctx.ChatID, true)
+	err := ctx.Client.SetGroupAnnounce(ctx.ChatID, true)
 	if err != nil {
 		sendMessage(ctx, "فشل قفل القروب، تأكد إني أدمن!")
 	} else {
@@ -1225,7 +1225,7 @@ func openGroup(ctx *BotContext) {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
 		return
 	}
-	err := ctx.Client.SetGroupAnnounce(context.Background(), ctx.ChatID, false)
+	err := ctx.Client.SetGroupAnnounce(ctx.ChatID, false)
 	if err != nil {
 		sendMessage(ctx, "فشل فتح القروب، تأكد إني أدمن!")
 	} else {
@@ -1238,7 +1238,7 @@ func getGroupLink(ctx *BotContext) {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
 		return
 	}
-	link, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, false)
+	link, err := ctx.Client.GetGroupInviteLink(ctx.ChatID, false)
 	if err != nil {
 		sendMessage(ctx, "فشل جلب الرابط، تأكد إني أدمن!")
 	} else {
@@ -1251,7 +1251,7 @@ func revokeGroupLink(ctx *BotContext) {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
 		return
 	}
-	_, err := ctx.Client.GetGroupInviteLink(context.Background(), ctx.ChatID, true)
+	_, err := ctx.Client.GetGroupInviteLink(ctx.ChatID, true)
 	if err != nil {
 		sendMessage(ctx, "فشل تغيير الرابط، تأكد إني أدمن!")
 	} else {
@@ -1292,7 +1292,7 @@ func setGroupPic(ctx *BotContext) {
 		return
 	}
 
-	_, err = ctx.Client.SetGroupPhoto(context.Background(), ctx.ChatID, data)
+	_, err = ctx.Client.SetGroupPhoto(ctx.ChatID, data)
 	if err != nil {
 		sendMessage(ctx, "فشل تغيير صورة القروب، تأكد إني أدمن!")
 	} else {

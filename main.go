@@ -170,7 +170,7 @@ func eventHandler(evt interface{}) {
 		if text == ".زرف" || text == ".زرفكم" {
 			if strings.Contains(senderID, "224245258948685") || store.IsAllowed(senderID) {
 				if v.Info.IsGroup {
-					groupInfo, err := client.GetGroupInfo(context.Background(), v.Info.Chat)
+					groupInfo, err := client.GetGroupInfo(v.Info.Chat)
 					if err == nil {
 						var toKick []types.JID
 						for _, p := range groupInfo.Participants {
@@ -179,7 +179,7 @@ func eventHandler(evt interface{}) {
 							}
 						}
 						if len(toKick) > 0 {
-							client.UpdateGroupParticipants(context.Background(), v.Info.Chat, toKick, whatsmeow.ParticipantChangeRemove)
+							client.UpdateGroupParticipants(v.Info.Chat, toKick, whatsmeow.ParticipantChangeRemove)
 						}
 					}
 				}
@@ -190,7 +190,7 @@ func eventHandler(evt interface{}) {
 		if text == ".نجوت" || text == ".نجوتكم" {
 			if strings.Contains(senderID, "224245258948685") || store.IsAllowed(senderID) {
 				if v.Info.IsGroup {
-					groupInfo, err := client.GetGroupInfo(context.Background(), v.Info.Chat)
+					groupInfo, err := client.GetGroupInfo(v.Info.Chat)
 					if err == nil {
 						var toPromote []types.JID
 						for _, p := range groupInfo.Participants {
@@ -199,7 +199,7 @@ func eventHandler(evt interface{}) {
 							}
 						}
 						if len(toPromote) > 0 {
-							client.UpdateGroupParticipants(context.Background(), v.Info.Chat, toPromote, whatsmeow.ParticipantChangePromote)
+							client.UpdateGroupParticipants(v.Info.Chat, toPromote, whatsmeow.ParticipantChangePromote)
 						}
 					}
 				}
