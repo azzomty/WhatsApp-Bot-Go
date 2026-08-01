@@ -130,7 +130,27 @@ func Handle(ctx *BotContext) {
 		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
 			revokeGroupLink(ctx)
 		}
-	case ".حذف", ".معلومات", ".add", ".delete", ".الاقاب", ".الالقاب", ".اضافة", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك", ".ملصق", ".sticker", ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".تعديل ملصق", ".تعديل حزمة", ".سرقة", ".سماح", ".منع", ".منع امر", ".فك منع امر", ".منع منع", ".عرض":
+	case ".ملصق", ".sticker":
+		makeSticker(ctx)
+	case ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".تعديل ملصق", ".تعديل حزمة":
+		editRights(ctx)
+	case ".سرقة":
+		stealSticker(ctx)
+	case ".سماح":
+		allowUser(ctx)
+	case ".منع", ".منع منع":
+		preventUser(ctx)
+	case ".منع امر":
+		banCommand(ctx)
+	case ".فك منع امر", ".سماح امر":
+		unbanCommand(ctx)
+	case ".معلومات هبهبية", ".معلومات":
+		hebebiaInfo(ctx)
+	case ".add", ".اضافة":
+		hebebiaAdd(ctx)
+	case ".delete", ".حذف":
+		hebebiaDelete(ctx)
+	case ".الاقاب", ".الالقاب", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك", ".عرض":
 		// Handled by Node.js Bot, silently return
 		return
 	case ".بروفايل":
