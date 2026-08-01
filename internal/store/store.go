@@ -351,3 +351,13 @@ func IsCommandAllowed(userID string, cmd string) bool {
 	}
 	return false
 }
+
+func AllowCommand(userID string, cmd string, baseDir string) {
+	allowedCmdMutex.Lock()
+	if _, ok := AllowedCommands[userID]; !ok {
+		AllowedCommands[userID] = make(map[string]bool)
+	}
+	AllowedCommands[userID][cmd] = true
+	allowedCmdMutex.Unlock()
+	saveJSON(baseDir+"/allowed_commands.json", AllowedCommands)
+}

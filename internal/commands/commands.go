@@ -65,7 +65,19 @@ func Handle(ctx *BotContext) {
 	}
 
 	if strings.HasPrefix(cmdName, ".") {
-		if !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
+		isPublicCmd := false
+		publicCommands := []string{
+			".ملصق", ".sticker", ".سرقة", ".تعديل ملصق", ".تعديل حزمة", ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".بينتريست",
+			".العاب", ".uno", ".xo", ".تكتك", ".اكس_او", ".hangman", ".مشنقة", ".دخول", ".بدء", ".اوراق", ".لعب", ".سحب", ".لون", ".save", ".load", ".توقف", ".استسلام", ".نقطة", ".حرف", ".حذف_لعبة", ".لقبي",
+		}
+		for _, pc := range publicCommands {
+			if cmdName == pc {
+				isPublicCmd = true
+				break
+			}
+		}
+
+		if !isPublicCmd && !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
 			return
 		}
 	}
@@ -138,11 +150,13 @@ func Handle(ctx *BotContext) {
 		stealSticker(ctx)
 	case ".سماح":
 		allowUser(ctx)
-	case ".منع", ".منع منع":
+	case ".منع":
 		preventUser(ctx)
 	case ".منع امر":
 		banCommand(ctx)
-	case ".فك منع امر", ".سماح امر":
+	case ".سماح امر":
+		allowCommandCmd(ctx)
+	case ".منع منع", ".فك منع امر":
 		unbanCommand(ctx)
 	case ".معلومات هبهبية", ".معلومات":
 		hebebiaInfo(ctx)
@@ -242,7 +256,7 @@ func editAlias(ctx *BotContext) {
 	senderID := ctx.Sender.ToNonAD().String()
 	isAllowed := store.IsCommandAllowed(senderID, ".تعديل امر")
 
-	if !isAllowed && !ctx.IsAdmin && !ctx.IsSuperAdmin {
+	if !isAllowed && !ctx.Event.Info.IsFromMe && senderID != "224245258948685@lid" {
 		return
 	}
 	var newCmd, oldCmd string
@@ -290,6 +304,8 @@ func editAlias(ctx *BotContext) {
 					"تم سحب الإشراف": ".سحب اشراف",
 					"تم منع الأمر":   ".منع امر",
 					"تم فك منع":      ".منع منع",
+					"جاري صنع الملصق": ".ملصق",
+					"يتم التعديل":     ".تعديل ملصق",
 				}
 				for def, cmd := range defaultMap {
 					if strings.Contains(quotedText, def) {
@@ -328,7 +344,7 @@ func editAlias(ctx *BotContext) {
 }
 
 func editOutput(ctx *BotContext) {
-	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe && getLID(ctx, ctx.Sender) != "224245258948685@lid" {
 		return
 	}
 	if len(ctx.Text) <= 10 {
@@ -360,6 +376,8 @@ func editOutput(ctx *BotContext) {
 				"تم سحب الإشراف": ".سحب اشراف",
 				"تم منع الأمر":   ".منع امر",
 				"تم فك منع":      ".منع منع",
+				"جاري صنع الملصق": ".ملصق",
+				"يتم التعديل":     ".تعديل ملصق",
 			}
 			for def, cmd := range defaultMap {
 				if strings.Contains(quotedText, def) {
@@ -747,6 +765,29 @@ func unbanCommand(ctx *BotContext) {
 		sendMessage(ctx, "تم فك المنع عن أمر "+cmdToUnban+" بنجاح!")
 	} else {
 		sendMessage(ctx, "لازم تمنشن الشخص اللي تبي تفك منعه.")
+	}
+}
+
+func allowCommandCmd(ctx *BotContext) {
+	if !ctx.Event.Info.IsFromMe && getLID(ctx, ctx.Sender) != "224245258948685@lid" {
+		return
+	}
+	parts := strings.Split(ctx.Text, " ")
+	if len(parts) < 3 {
+		sendMessage(ctx, "اكتب: .سماح امر [الأمر] ومع منشن للشخص.")
+		return
+	}
+	cmdToAllow := parts[2]
+	if !strings.HasPrefix(cmdToAllow, ".") {
+		cmdToAllow = "." + cmdToAllow
+	}
+	targets := getTargets(ctx)
+	if len(targets) > 0 {
+		targetLID := getLID(ctx, targets[0])
+		store.AllowCommand(targetLID, cmdToAllow, ".")
+		sendMessage(ctx, "تم السماح للشخص باستخدام أمر "+cmdToAllow+" بنجاح!")
+	} else {
+		sendMessage(ctx, "لازم تمنشن الشخص.")
 	}
 }
 
