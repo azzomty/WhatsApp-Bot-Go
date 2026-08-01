@@ -499,7 +499,7 @@ func pinterestSearch(ctx *BotContext) {
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count)
 
-	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n\nاكتب الرقم مع السلاش (مثال: /1)"
+	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- Matching Profiles (تطقيمات شخصين)\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
 }
 

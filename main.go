@@ -201,6 +201,9 @@ func eventHandler(evt interface{}) {
 				case "3":
 					suffix = " wallpaper"
 					aspect = "wallpaper"
+				case "4":
+					suffix = " matching icons pfp"
+					aspect = "all"
 				default:
 					// Not a valid choice, let commands handle it
 					goto CommandHandling
@@ -243,6 +246,11 @@ func eventHandler(evt interface{}) {
 									FileEncSHA256: resp.FileEncSHA256,
 									FileSHA256:    resp.FileSHA256,
 									FileLength:    proto.Uint64(uint64(len(data))),
+									ContextInfo: &waProto.ContextInfo{
+										StanzaID:      proto.String(v.Info.ID),
+										Participant:   proto.String(v.Info.Sender.String()),
+										QuotedMessage: v.Message,
+									},
 								}
 								client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
 									ImageMessage: imgMsg,
