@@ -38,6 +38,25 @@ type BotContext struct {
 	IsSuperAdmin bool
 }
 
+func unwrapMessage(msg *waProto.Message) *waProto.Message {
+	if msg == nil {
+		return nil
+	}
+	if msg.EphemeralMessage != nil && msg.EphemeralMessage.Message != nil {
+		return unwrapMessage(msg.EphemeralMessage.Message)
+	}
+	if msg.ViewOnceMessage != nil && msg.ViewOnceMessage.Message != nil {
+		return unwrapMessage(msg.ViewOnceMessage.Message)
+	}
+	if msg.ViewOnceMessageV2 != nil && msg.ViewOnceMessageV2.Message != nil {
+		return unwrapMessage(msg.ViewOnceMessageV2.Message)
+	}
+	if msg.DocumentWithCaptionMessage != nil && msg.DocumentWithCaptionMessage.Message != nil {
+		return unwrapMessage(msg.DocumentWithCaptionMessage.Message)
+	}
+	return msg
+}
+
 func AddMessage(chatID string, msg *events.Message) {
 	msgMutex.Lock()
 	defer msgMutex.Unlock()
@@ -65,19 +84,7 @@ func Handle(ctx *BotContext) {
 	}
 
 	if strings.HasPrefix(cmdName, ".") {
-		isPublicCmd := false
-		publicCommands := []string{
-			".ملصق", ".sticker", ".سرقة", ".تعديل ملصق", ".تعديل حزمة", ".حقوق", ".تعديل حقوق", ".تعديل حقوقي", ".بينتريست",
-			".العاب", ".uno", ".xo", ".تكتك", ".اكس_او", ".hangman", ".مشنقة", ".دخول", ".بدء", ".اوراق", ".لعب", ".سحب", ".لون", ".save", ".load", ".توقف", ".استسلام", ".نقطة", ".حرف", ".حذف_لعبة", ".لقبي",
-		}
-		for _, pc := range publicCommands {
-			if cmdName == pc {
-				isPublicCmd = true
-				break
-			}
-		}
-
-		if !isPublicCmd && !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
+		if !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
 			return
 		}
 	}
@@ -576,7 +583,7 @@ func makeSticker(ctx *BotContext) {
 
 		// Traverse history backwards
 		for i := len(history) - 1; i >= 0; i-- {
-			hMsg := history[i].Message
+			hMsg := unwrapMessage(history[i].Message)
 			if isSteal {
 				if sMsg := hMsg.GetStickerMessage(); sMsg != nil {
 					mediaMsgs = append(mediaMsgs, sMsg)
@@ -644,9 +651,11 @@ func makeSticker(ctx *BotContext) {
 	var mediaMsg whatsmeow.DownloadableMessage
 	var isVideo bool
 
+	unwrappedMsg := unwrapMessage(msg)
+
 	if isSteal {
-		if ext := msg.GetExtendedTextMessage(); ext != nil {
-			quoted := ext.GetContextInfo().GetQuotedMessage()
+		if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
+			quoted := unwrapMessage(ext.GetContextInfo().GetQuotedMessage())
 			if qSticker := quoted.GetStickerMessage(); qSticker != nil {
 				mediaMsg = qSticker
 				isVideo = qSticker.GetIsAnimated()
@@ -657,13 +666,13 @@ func makeSticker(ctx *BotContext) {
 			return
 		}
 	} else {
-		if img := msg.GetImageMessage(); img != nil {
+		if img := unwrappedMsg.GetImageMessage(); img != nil {
 			mediaMsg = img
-		} else if vid := msg.GetVideoMessage(); vid != nil {
+		} else if vid := unwrappedMsg.GetVideoMessage(); vid != nil {
 			mediaMsg = vid
 			isVideo = true
-		} else if ext := msg.GetExtendedTextMessage(); ext != nil {
-			quoted := ext.GetContextInfo().GetQuotedMessage()
+		} else if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
+			quoted := unwrapMessage(ext.GetContextInfo().GetQuotedMessage())
 			if qImg := quoted.GetImageMessage(); qImg != nil {
 				mediaMsg = qImg
 			} else if qVid := quoted.GetVideoMessage(); qVid != nil {

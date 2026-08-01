@@ -69,10 +69,39 @@ func eventHandler(evt interface{}) {
 		commands.AddMessage(v.Info.Chat.String(), v)
 
 		text := ""
-		if v.Message.GetExtendedTextMessage() != nil {
-			text = v.Message.GetExtendedTextMessage().GetText()
-		} else if v.Message.GetConversation() != "" {
-			text = v.Message.GetConversation()
+		
+		unwrap := func(m *waProto.Message) *waProto.Message {
+			for m != nil {
+				if m.EphemeralMessage != nil && m.EphemeralMessage.Message != nil {
+					m = m.EphemeralMessage.Message
+					continue
+				}
+				if m.ViewOnceMessage != nil && m.ViewOnceMessage.Message != nil {
+					m = m.ViewOnceMessage.Message
+					continue
+				}
+				if m.ViewOnceMessageV2 != nil && m.ViewOnceMessageV2.Message != nil {
+					m = m.ViewOnceMessageV2.Message
+					continue
+				}
+				if m.DocumentWithCaptionMessage != nil && m.DocumentWithCaptionMessage.Message != nil {
+					m = m.DocumentWithCaptionMessage.Message
+					continue
+				}
+				break
+			}
+			return m
+		}
+
+		uMsg := unwrap(v.Message)
+		if uMsg.GetExtendedTextMessage() != nil {
+			text = uMsg.GetExtendedTextMessage().GetText()
+		} else if uMsg.GetConversation() != "" {
+			text = uMsg.GetConversation()
+		} else if uMsg.GetImageMessage() != nil {
+			text = uMsg.GetImageMessage().GetCaption()
+		} else if uMsg.GetVideoMessage() != nil {
+			text = uMsg.GetVideoMessage().GetCaption()
 		}
 
 		senderLID := getLID(client, v.Info.Sender)
