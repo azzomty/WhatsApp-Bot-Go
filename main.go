@@ -421,6 +421,10 @@ func eventHandler(evt interface{}) {
 				}
 			}
 		}
+	case *events.LoggedOut:
+		fmt.Println("تم تسجيل الخروج من الهاتف! جاري حذف الجلسة...")
+		client.Logout(context.Background())
+		os.Exit(0)
 	}
 }
 
