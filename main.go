@@ -136,6 +136,16 @@ func eventHandler(evt interface{}) {
 
 		text = strings.TrimSpace(text)
 
+		if v.Message.GetReactionMessage() != nil {
+			if v.Info.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{
+						Text: proto.String("شفتك تفاعلت! تم تفعيل اقتراحات Pinterest الخاصة بك بناءً على هذا التفاعل."),
+					},
+				})
+			}
+		}
+
 		// Exclude reactions and non-messages from spam detection
 		isSpamable := true
 		if v.Message.GetReactionMessage() != nil || v.Message.GetProtocolMessage() != nil || text == "" {
@@ -409,15 +419,6 @@ func eventHandler(evt interface{}) {
 					}
 					break
 				}
-			}
-		}
-	case *events.Receipt:
-		if v.Type == events.ReceiptTypeReaction {
-			if v.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
-				// تفاعل بينتريست للرياكت
-				client.SendMessage(context.Background(), v.Chat, &waProto.Message{
-					Conversation: proto.String("شفتك تفاعلت! تم تفعيل اقتراحات Pinterest الخاصة بك بناءً على هذا التفاعل."),
-				})
 			}
 		}
 	}
