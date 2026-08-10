@@ -447,7 +447,7 @@ func main() {
 	store.LoadAll(".")
 
 	dbLog := waLog.Stdout("Database", "ERROR", true)
-	container, err := sqlstore.New(context.Background(), "sqlite3", "file:whatsapp.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite3", "file:whatsapp_v2.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		panic(err)
 	}
