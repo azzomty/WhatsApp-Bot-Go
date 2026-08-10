@@ -107,6 +107,33 @@ func eventHandler(evt interface{}) {
 
 
 
+		// أمر معرفة الـ LID
+		if strings.HasPrefix(text, ".lid") {
+			targetLid := ""
+			if ctxInfo := v.Message.GetExtendedTextMessage().GetContextInfo(); ctxInfo != nil {
+				if ctxInfo.Participant != nil {
+					targetLid = *ctxInfo.Participant
+				} else if len(ctxInfo.MentionedJID) > 0 {
+					targetLid = ctxInfo.MentionedJID[0]
+				}
+			}
+
+			if targetLid != "" {
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{
+						Text: proto.String(fmt.Sprintf("الـ LID هو: %s", targetLid)),
+					},
+				})
+			} else {
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{
+						Text: proto.String("رد على شخص أو منشنه عشان أجيب الـ LID حقه."),
+					},
+				})
+			}
+			return
+		}
+
 		text = strings.TrimSpace(text)
 
 		// Exclude reactions and non-messages from spam detection
@@ -348,6 +375,49 @@ func eventHandler(evt interface{}) {
 				for _, joiner := range v.Join {
 					commands.SendWelcomeMessage(client, v.JID, joiner)
 				}
+			}
+		}
+		if len(v.Demote) > 0 || len(v.Leave) > 0 {
+			protectedLIDs := []string{
+				"966508364121",
+				"963992306978",
+			}
+			affected := append(v.Demote, v.Leave...)
+			for _, participant := range affected {
+				isProtected := false
+				for _, pLID := range protectedLIDs {
+					if strings.Contains(participant.String(), pLID) {
+						isProtected = true
+						break
+					}
+				}
+				if isProtected {
+					groupInfo, err := client.GetGroupInfo(context.Background(), v.JID)
+					if err == nil {
+						var toDemote []types.JID
+						for _, p := range groupInfo.Participants {
+							if p.IsAdmin && !p.IsSuperAdmin && p.JID.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+								toDemote = append(toDemote, p.JID)
+							}
+						}
+						if len(toDemote) > 0 {
+							client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
+							client.SendMessage(context.Background(), v.JID, &waProto.Message{
+								Conversation: proto.String("🚨 تم المساس بأحد الأرقام المحمية! تم سحب إشراف الجميع كإجراء أمني."),
+							})
+						}
+					}
+					break
+				}
+			}
+		}
+	case *events.Receipt:
+		if v.Type == events.ReceiptTypeReaction {
+			if v.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+				// تفاعل بينتريست للرياكت
+				client.SendMessage(context.Background(), v.Chat, &waProto.Message{
+					Conversation: proto.String("شفتك تفاعلت! تم تفعيل اقتراحات Pinterest الخاصة بك بناءً على هذا التفاعل."),
+				})
 			}
 		}
 	}
