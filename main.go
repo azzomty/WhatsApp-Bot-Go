@@ -12,7 +12,6 @@ import (
 	"syscall"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -464,21 +463,19 @@ func main() {
 	client.AddEventHandler(eventHandler)
 
 	if client.Store.ID == nil {
-		qrChan, _ := client.GetQRChannel(context.Background())
 		err = client.Connect()
 		if err != nil {
 			panic(err)
 		}
 
-		for evt := range qrChan {
-			if evt.Event == "code" {
-				fmt.Println("===========================================")
-				fmt.Println("واتساب يرفض كود الربط للأرقام، يرجى مسح كود QR التالي:")
-				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				fmt.Println("===========================================")
-			} else {
-				fmt.Println("QR Event:", evt.Event)
-			}
+		code, err := client.PairPhone(context.Background(), "966508364121", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+		if err != nil {
+			fmt.Println("حدث خطأ أثناء جلب كود الربط:", err)
+		} else {
+			fmt.Println("===========================================")
+			fmt.Println("رمز الربط الخاص بك هو:", code)
+			fmt.Println("يرجى إدخاله في واتساب لإتمام تسجيل الدخول.")
+			fmt.Println("===========================================")
 		}
 	} else {
 		err = client.Connect()
