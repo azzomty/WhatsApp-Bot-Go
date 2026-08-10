@@ -152,7 +152,7 @@ func Handle(ctx *BotContext) {
 		makeSticker(ctx)
 	case ".حقوق", ".تعديل حقوق", ".تعديل حقوقي":
 		editRights(ctx)
-	case ".سرقة", ".تعديل ملصق", ".تعديل حزمة":
+	case ".سرقة", ".تعديل ملصق", ".تعديل حزمة", ".حزمة":
 		stealSticker(ctx)
 	case ".سماح":
 		allowUser(ctx)
@@ -570,7 +570,8 @@ func makeSticker(ctx *BotContext) {
 
 	isSteal := strings.HasPrefix(strings.ToLower(ctx.Text), ".تعديل ملصق") ||
 		strings.HasPrefix(strings.ToLower(ctx.Text), ".سرقة") ||
-		strings.HasPrefix(strings.ToLower(ctx.Text), ".تعديل حزمة")
+		strings.HasPrefix(strings.ToLower(ctx.Text), ".تعديل حزمة") ||
+		strings.HasPrefix(strings.ToLower(ctx.Text), ".حزمة")
 
 	rights := store.GetStickerAuthor(getLID(ctx, ctx.Sender))
 

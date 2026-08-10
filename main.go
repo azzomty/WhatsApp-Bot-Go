@@ -465,26 +465,15 @@ func main() {
 			panic(err)
 		}
 
-		phoneNumber := os.Getenv("PHONE_NUMBER")
-		if phoneNumber != "" {
-			code, err := client.PairPhone(context.Background(), phoneNumber, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
-			if err != nil {
-				fmt.Println("حدث خطأ أثناء جلب كود الربط:", err)
+		qrChan, _ := client.GetQRChannel(context.Background())
+		for evt := range qrChan {
+			if evt.Event == "code" {
+				fmt.Println("===========================================")
+				fmt.Println("واتساب يرفض كود الربط للأرقام، يرجى مسح كود QR التالي:")
+				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+				fmt.Println("===========================================")
 			} else {
-				fmt.Println("===========================================")
-				fmt.Println("رمز الربط الخاص بك هو:", code)
-				fmt.Println("يرجى إدخاله في واتساب لإتمام تسجيل الدخول.")
-				fmt.Println("===========================================")
-			}
-		} else {
-			qrChan, _ := client.GetQRChannel(context.Background())
-			for evt := range qrChan {
-				if evt.Event == "code" {
-					qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-					fmt.Println("امسح الكود أو استخدم متغير PHONE_NUMBER للحصول على كود ربط بدلاً من الباركود")
-				} else {
-					fmt.Println("QR Event:", evt.Event)
-				}
+				fmt.Println("QR Event:", evt.Event)
 			}
 		}
 	} else {
