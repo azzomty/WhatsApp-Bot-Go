@@ -464,12 +464,12 @@ func main() {
 	client.AddEventHandler(eventHandler)
 
 	if client.Store.ID == nil {
+		qrChan, _ := client.GetQRChannel(context.Background())
 		err = client.Connect()
 		if err != nil {
 			panic(err)
 		}
 
-		qrChan, _ := client.GetQRChannel(context.Background())
 		for evt := range qrChan {
 			if evt.Event == "code" {
 				fmt.Println("===========================================")
