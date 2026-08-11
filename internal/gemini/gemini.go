@@ -141,3 +141,23 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 	}
 	return false
 }
+
+func GeneratePinterestQueryFromImage(imageBytes []byte) (string, error) {
+	if client == nil {
+		return "", fmt.Errorf("Gemini client not initialized")
+	}
+	model := client.GenerativeModel("gemini-3.5-flash")
+	model.SystemInstruction = &genai.Content{
+		Parts: []genai.Part{genai.Text("You are an image analyzer. Return ONLY a short English search query (2-4 words) that best describes the main subject of this image for a Pinterest search. Do not include quotes, periods, or any other text.")},
+	}
+	resp, err := model.GenerateContent(context.Background(), genai.ImageData("jpeg", imageBytes))
+	if err != nil {
+		return "", err
+	}
+	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
+		if part, ok := resp.Candidates[0].Content.Parts[0].(genai.Text); ok {
+			return strings.TrimSpace(string(part)), nil
+		}
+	}
+	return "", fmt.Errorf("No response from Gemini")
+}

@@ -59,7 +59,7 @@ func AddMessage(chatID string, msg *events.Message) {
 	defer msgMutex.Unlock()
 	msgs := MessageStore[chatID]
 	msgs = append(msgs, msg)
-	if len(msgs) > 50 {
+	if len(msgs) > 1000 {
 		msgs = msgs[1:]
 	}
 	MessageStore[chatID] = msgs
@@ -519,11 +519,31 @@ func random(ctx *BotContext) {
 
 func pinterestSearch(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(ctx.Text, ".بينتريست", "", 1))
+	
+	// If query is empty or "صورة", check if there is a quoted image
+	if (query == "" || query == "صورة") && ctx.Event.Message.GetExtendedTextMessage() != nil {
+		qMsg := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
+		if qMsg != nil && qMsg.GetImageMessage() != nil {
+			sendMessage(ctx, "جاري تحليل الصورة والبحث عن صور مشابهة... 🔍")
+			imgData, err := ctx.Client.Download(context.Background(), qMsg.GetImageMessage())
+			if err == nil {
+				geminiQuery, err := gemini.GeneratePinterestQueryFromImage(imgData)
+				if err == nil && geminiQuery != "" {
+					query = geminiQuery
+					sendMessage(ctx, "تم تحليل الصورة! جاري البحث عن: "+query)
+				} else {
+					sendMessage(ctx, "ما قدرت أحلل الصورة، حاول بصورة ثانية.")
+					return
+				}
+			}
+		}
+	}
+
 	if query == "" {
 		return
 	}
 
-	if ctx.Event.Info.IsFromMe && !strings.HasPrefix(ctx.Event.Message.GetConversation(), ".بينتريست") {
+	if ctx.Event.Info.IsFromMe && !strings.HasPrefix(ctx.Event.Message.GetConversation(), ".بينتريست") && ctx.Event.Message.GetExtendedTextMessage() == nil {
 		return
 	}
 
