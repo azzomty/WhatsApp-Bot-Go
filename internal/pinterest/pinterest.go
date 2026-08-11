@@ -75,7 +75,6 @@ func GetPending(chatID string) (PendingRequest, bool) {
 }
 
 func setPinterestHeaders(req *http.Request) {
-	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Accept-Language", "en-US")
 	req.Header.Set("Authorization", os.Getenv("PINTEREST_TOKEN"))
 	req.Header.Set("Cookie", os.Getenv("PINTEREST_COOKIE"))
