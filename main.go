@@ -59,6 +59,32 @@ func eventHandler(evt interface{}) {
 		if v.Info.Timestamp.Before(startupTime) {
 			return
 		}
+
+		if v.Message.GetReactionMessage() != nil {
+			if v.Message.GetReactionMessage().GetText() == "🔍" {
+				msgList := commands.MessageStore[v.Info.Chat.String()]
+				var origMsg *events.Message
+				for _, m := range msgList {
+					if m.Info.ID == v.Message.GetReactionMessage().GetKey().GetID() {
+						origMsg = m
+						break
+					}
+				}
+
+				if origMsg != nil {
+					uMsg := commands.UnwrapMessage(origMsg.Message)
+					if uMsg != nil && uMsg.GetImageMessage() != nil {
+						go func() {
+							imgData, err := client.Download(context.Background(), uMsg.GetImageMessage())
+							if err == nil {
+								commands.HandleReaction(client, v, imgData)
+							}
+						}()
+					}
+				}
+			}
+			return
+		}
 		if v.Info.IsFromMe {
 			// Optionally allow bot's own messages for commands if needed
 			if v.Info.Chat.String() == "status@broadcast" {

@@ -39,18 +39,18 @@ type BotContext struct {
 	IsSuperAdmin bool
 }
 
-func unwrapMessage(msg *waProto.Message) *waProto.Message {
+func UnwrapMessage(msg *waProto.Message) *waProto.Message {
 	if msg == nil {
 		return nil
 	}
 	if msg.EphemeralMessage != nil && msg.EphemeralMessage.Message != nil {
-		return unwrapMessage(msg.EphemeralMessage.Message)
+		return UnwrapMessage(msg.EphemeralMessage.Message)
 	}
 	if msg.ViewOnceMessage != nil && msg.ViewOnceMessage.Message != nil {
-		return unwrapMessage(msg.ViewOnceMessage.Message)
+		return UnwrapMessage(msg.ViewOnceMessage.Message)
 	}
 	if msg.ViewOnceMessageV2 != nil && msg.ViewOnceMessageV2.Message != nil {
-		return unwrapMessage(msg.ViewOnceMessageV2.Message)
+		return UnwrapMessage(msg.ViewOnceMessageV2.Message)
 	}
 	return msg
 }
@@ -110,7 +110,13 @@ func Handle(ctx *BotContext) {
 		promote(ctx)
 	case ".زرف":
 		zarf(ctx)
-	case ".بينتريست":
+	case ".بينتريست", ".بحث":
+		pinterestSearch(ctx)
+	case ".فوريو":
+		pinterestForYou(ctx)
+	case ".تطقيم":
+		pinterestMatchingIcons(ctx)
+	case "OLD_PIN":
 		pinterestSearch(ctx)
 	case ".random":
 		random(ctx)
@@ -519,7 +525,7 @@ func random(ctx *BotContext) {
 }
 
 func pinterestSearch(ctx *BotContext) {
-	query := strings.TrimSpace(strings.Replace(ctx.Text, ".بينتريست", "", 1))
+	query := strings.TrimSpace(strings.Replace(strings.Replace(ctx.Text, ".بينتريست", "", 1), ".بحث", "", 1))
 	
 	isVisual := false
 	base64Image := ""
@@ -609,7 +615,7 @@ func makeSticker(ctx *BotContext) {
 
 		// Traverse history backwards
 		for i := len(history) - 1; i >= 0; i-- {
-			hMsg := unwrapMessage(history[i].Message)
+			hMsg := UnwrapMessage(history[i].Message)
 			if isSteal {
 				if sMsg := hMsg.GetStickerMessage(); sMsg != nil {
 					mediaMsgs = append(mediaMsgs, sMsg)
@@ -684,11 +690,11 @@ func makeSticker(ctx *BotContext) {
 	var mediaMsg whatsmeow.DownloadableMessage
 	var isVideo bool
 
-	unwrappedMsg := unwrapMessage(msg)
+	unwrappedMsg := UnwrapMessage(msg)
 
 	if isSteal {
 		if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
-			quoted := unwrapMessage(ext.GetContextInfo().GetQuotedMessage())
+			quoted := UnwrapMessage(ext.GetContextInfo().GetQuotedMessage())
 			if qSticker := quoted.GetStickerMessage(); qSticker != nil {
 				mediaMsg = qSticker
 				isVideo = qSticker.GetIsAnimated()
@@ -705,7 +711,7 @@ func makeSticker(ctx *BotContext) {
 			mediaMsg = vid
 			isVideo = true
 		} else if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
-			quoted := unwrapMessage(ext.GetContextInfo().GetQuotedMessage())
+			quoted := UnwrapMessage(ext.GetContextInfo().GetQuotedMessage())
 			if qImg := quoted.GetImageMessage(); qImg != nil {
 				mediaMsg = qImg
 			} else if qVid := quoted.GetVideoMessage(); qVid != nil {
@@ -1475,4 +1481,118 @@ func protectUser(ctx *BotContext) {
 		store.SetProtectedUser(lid, true)
 	}
 	sendMessage(ctx, "تم تفعيل الحماية! الآن إذا تم سحب إشرافهم أو طردهم، أو لو عدلوا اسم/وصف القروب وأحد غيرهم عدله، راح يتم سحب إشراف الجميع.")
+}
+
+func pinterestForYou(ctx *BotContext) {
+	sendMessage(ctx, "جاري جلب صور للفوريو... ⏳")
+	go func() {
+		results := pinterest.ForYouPinterest("all")
+		if len(results) > 0 {
+			rand.Shuffle(len(results), func(i, j int) {
+				results[i], results[j] = results[j], results[i]
+			})
+		}
+		
+		count := 0
+		for _, res := range results {
+			if count >= 5 {
+				break
+			}
+			data, err := pinterest.DownloadImage(res.URL)
+			if err == nil && len(data) > 5000 {
+				resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
+				if err == nil {
+					imgMsg := &waProto.ImageMessage{
+						URL:           proto.String(resp.URL),
+						DirectPath:    proto.String(resp.DirectPath),
+						MediaKey:      resp.MediaKey,
+						Mimetype:      proto.String("image/jpeg"),
+						FileEncSHA256: resp.FileEncSHA256,
+						FileSHA256:    resp.FileSHA256,
+						FileLength:    proto.Uint64(uint64(len(data))),
+					}
+					ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+					count++
+				}
+			}
+		}
+		if count == 0 {
+			sendMessage(ctx, "للأسف ما قدرت أجيب صور للفوريو!")
+		}
+	}()
+}
+
+func pinterestMatchingIcons(ctx *BotContext) {
+	query := strings.TrimSpace(strings.Replace(ctx.Text, ".تطقيم", "", 1))
+	
+	sendMessage(ctx, "جاري البحث عن تطقيمات... 🔍")
+	go func() {
+		results := pinterest.SearchPinterestMatchingIcons(query)
+		if len(results) >= 2 {
+			count := 0
+			for _, res := range results {
+				if count >= 2 {
+					break
+				}
+				data, err := pinterest.DownloadImage(res.URL)
+				if err == nil && len(data) > 5000 {
+					resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
+					if err == nil {
+						imgMsg := &waProto.ImageMessage{
+							URL:           proto.String(resp.URL),
+							DirectPath:    proto.String(resp.DirectPath),
+							MediaKey:      resp.MediaKey,
+							Mimetype:      proto.String("image/jpeg"),
+							FileEncSHA256: resp.FileEncSHA256,
+							FileSHA256:    resp.FileSHA256,
+							FileLength:    proto.Uint64(uint64(len(data))),
+						}
+						ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+						count++
+					}
+				}
+			}
+			if count < 2 {
+				sendMessage(ctx, "لقيت التطقيم بس فشل تحميل إحدى الصور!")
+			}
+		} else {
+			sendMessage(ctx, "للأسف ما لقيت تطقيمات مناسبة!")
+		}
+	}()
+}
+
+func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte) {
+	base64Image := base64.StdEncoding.EncodeToString(imgData)
+	results := pinterest.SearchPinterestLens(base64Image, "all")
+	if len(results) > 0 {
+		count := 0
+		chatID := v.Info.Chat
+		for _, res := range results {
+			if count >= 3 {
+				break
+			}
+			data, err := pinterest.DownloadImage(res.URL)
+			if err == nil && len(data) > 5000 {
+				resp, err := client.Upload(context.Background(), data, whatsmeow.MediaImage)
+				if err == nil {
+					imgMsg := &waProto.ImageMessage{
+						URL:           proto.String(resp.URL),
+						DirectPath:    proto.String(resp.DirectPath),
+						MediaKey:      resp.MediaKey,
+						Mimetype:      proto.String("image/jpeg"),
+						FileEncSHA256: resp.FileEncSHA256,
+						FileSHA256:    resp.FileSHA256,
+						FileLength:    proto.Uint64(uint64(len(data))),
+						ContextInfo: &waProto.ContextInfo{
+							StanzaID:      proto.String(v.Message.GetReactionMessage().GetKey().GetID()),
+							Participant:   v.Message.GetReactionMessage().GetKey().Participant,
+							QuotedMessage: &waProto.Message{ImageMessage: &waProto.ImageMessage{}}, // Dummy just to make it a reply
+						},
+					}
+					client.SendMessage(context.Background(), chatID, &waProto.Message{ImageMessage: imgMsg})
+					count++
+				}
+			}
+		}
+	}
 }

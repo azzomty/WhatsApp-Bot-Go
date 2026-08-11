@@ -1,0 +1,1 @@
+sed -i 's/case ".بينتريست":/case ".بينتريست", ".بحث":\n\t\tpinterestSearch(ctx)\n\tcase ".فوريو":\n\t\tpinterestForYou(ctx)\n\tcase ".تطقيم":\n\t\tpinterestMatchingIcons(ctx)\n\tcase "OLD_PIN":/g' internal/commands/commands.go
