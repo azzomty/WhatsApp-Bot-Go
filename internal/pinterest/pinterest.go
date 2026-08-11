@@ -105,7 +105,7 @@ func SearchPinterest(query string, aspect string) []PinResult {
 		resp.Body.Close()
 		bodyStr := string(body)
 
-		re := regexp.MustCompile(`vqd=([a-zA-Z0-9_-]+)`)
+		re := regexp.MustCompile(`vqd=["']?([a-zA-Z0-9_-]+)["']?`)
 		matches := re.FindStringSubmatch(bodyStr)
 		if len(matches) >= 2 {
 			vqd = matches[1]

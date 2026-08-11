@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
@@ -458,6 +459,13 @@ func startRenderServer() {
 func main() {
 	api.StartServer()
 	go startRenderServer()
+
+	go func() {
+		cmd := exec.Command("node", "sticker_server.js")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Run()
+	}()
 
 	store.LoadAll(".")
 

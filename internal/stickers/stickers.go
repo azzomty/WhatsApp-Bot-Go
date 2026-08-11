@@ -3,42 +3,31 @@ package stickers
 import (
 	"bytes"
 	"fmt"
-	"github.com/google/uuid"
 	"io/ioutil"
-	"os"
-	"os/exec"
-	"path/filepath"
+	"net/http"
 )
 
 // GenerateSticker converts an input file (image or video) to a WebP sticker with EXIF
 func GenerateSticker(inputData []byte, isVideo bool, pack string, author string) ([]byte, error) {
-	tmpId := uuid.New().String()
-	ext := ".jpg"
-	if isVideo {
-		ext = ".mp4"
-	}
-
-	inPath := filepath.Join(os.TempDir(), tmpId+ext)
-	outPath := filepath.Join(os.TempDir(), tmpId+".webp")
-
-	err := ioutil.WriteFile(inPath, inputData, 0644)
+	req, err := http.NewRequest("POST", "http://127.0.0.1:4321/sticker", bytes.NewBuffer(inputData))
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(inPath)
-	defer os.Remove(outPath)
+	req.Header.Set("x-pack", pack)
+	req.Header.Set("x-author", author)
 
-	cmd := exec.Command("node", "./add_exif.js", inPath, outPath, pack, author)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("node error: %v %s", err, stderr.String())
-	}
-
-	webpData, err := ioutil.ReadFile(outPath)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	return webpData, nil
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("sticker server error: %s", string(body))
+	}
+
+	return ioutil.ReadAll(resp.Body)
 }
+
