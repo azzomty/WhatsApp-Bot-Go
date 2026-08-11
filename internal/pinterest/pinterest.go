@@ -119,7 +119,8 @@ func SearchPinterest(query string, aspect string) []PinResult {
 	}
 
 	req2, _ := http.NewRequest("GET", "https://duckduckgo.com/i.js?l=us-en&o=json&q="+query+"&vqd="+vqd+"&f=,,,&p=1", nil)
-	req2.Header.Set("User-Agent", "Mozilla/5.0")
+	req2.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req2.Header.Set("Referer", "https://duckduckgo.com/")
 	resp2, err := client.Do(req2)
 	if err != nil {
 		return nil

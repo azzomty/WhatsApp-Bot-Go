@@ -441,6 +441,8 @@ func eventHandler(evt interface{}) {
 		fmt.Println("تم تسجيل الخروج من الهاتف! جاري حذف الجلسة...")
 		client.Logout(context.Background())
 		os.Exit(0)
+	case *events.Connected:
+		client.SendPresence(types.PresenceAvailable)
 	}
 }
 
