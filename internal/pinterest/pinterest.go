@@ -3,8 +3,10 @@ package pinterest
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -176,68 +178,158 @@ func SearchPinterest(query string, aspect string) []PinResult {
 }
 
 func SearchPinterestLens(base64Image string, aspect string) []PinResult {
-	apiKey := os.Getenv("RAPIDAPI_KEY")
-	if apiKey == "" {
-		fmt.Println("RAPIDAPI_KEY not set")
+	pinToken := os.Getenv("PINTEREST_TOKEN")
+	pinCookie := os.Getenv("PINTEREST_COOKIE")
+	
+	if pinToken == "" || pinCookie == "" {
+		fmt.Println("PINTEREST_TOKEN or PINTEREST_COOKIE not set")
 		return nil
 	}
 
-	url := "https://pinterest-lens-reverse-image-search-api.p.rapidapi.com/search"
-	
-	payloadData := map[string]string{
-		"image_base64": base64Image,
+	imageBytes, err := base64.StdEncoding.DecodeString(base64Image)
+	if err != nil {
+		fmt.Println("Base64 decode error:", err)
+		return nil
 	}
-	payloadBytes, _ := json.Marshal(payloadData)
 
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
-	req.Header.Add("x-rapidapi-key", apiKey)
-	req.Header.Add("x-rapidapi-host", "pinterest-lens-reverse-image-search-api.p.rapidapi.com")
-	req.Header.Add("Content-Type", "application/json")
+	// Step 1: Upload Image
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("image", "image.jpg")
+	if err == nil {
+		part.Write(imageBytes)
+	}
+	writer.Close()
+
+	req1, _ := http.NewRequest("PUT", "https://api.pinterest.com/v3/visual_search/lens/history/", body)
+	req1.Header.Set("Content-Type", writer.FormDataContentType())
+	req1.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	req1.Header.Set("Accept-Language", "en-US")
+	req1.Header.Set("Authorization", pinToken)
+	req1.Header.Set("Cookie", pinCookie)
+	req1.Header.Set("Host", "api.pinterest.com")
+	req1.Header.Set("User-Agent", "Pinterest for Android Tablet/14.23.2 (Nexus 10; 11)")
+	req1.Header.Set("X-Pinterest-AppState", "active")
+	req1.Header.Set("X-Pinterest-Device", "Nexus 10")
+	req1.Header.Set("X-Pinterest-Device-Manufacturer", "Genymobile")
+	req1.Header.Set("X-Pinterest-InstallId", "29ac4b08d4c84efebbb95ac02cdd308")
+	req1.Header.Set("X-Pinterest-WebView-Supported", "false")
 
 	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	resp1, err := client.Do(req1)
 	if err != nil {
-		fmt.Println("RapidAPI Request Error:", err)
+		fmt.Println("Lens upload error:", err)
 		return nil
 	}
-	defer resp.Body.Close()
+	defer resp1.Body.Close()
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	bodyStr := string(bodyBytes)
+	resp1Bytes, _ := ioutil.ReadAll(resp1.Body)
+	var resp1Json map[string]interface{}
+	json.Unmarshal(resp1Bytes, &resp1Json)
 
-	// Extract any pinimg.com URLs from the raw JSON response
-	re := regexp.MustCompile(`https?://i\.pinimg\.com/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png)`)
-	matches := re.FindAllString(bodyStr, -1)
-	
-	// Remove duplicates
-	uniqueURLs := make(map[string]bool)
+	s3Url := ""
+	if data, ok := resp1Json["data"].(map[string]interface{}); ok {
+		if u, ok := data["image_url"].(string); ok && strings.HasPrefix(u, "s3://") {
+			s3Url = u
+		}
+	}
+
+	if s3Url == "" {
+		fmt.Println("Could not extract s3_url from lens history")
+		return nil
+	}
+
+	// Step 2: Search
+	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/visual_search/lens/search/?camera_type=0&source_type=1&url=%s&page_size=24", s3Url)
+	req2, _ := http.NewRequest("GET", searchUrl, nil)
+	req2.Header = req1.Header // reuse headers
+	req2.Header.Set("Content-Type", "") // remove content type
+
+	resp2, err := client.Do(req2)
+	if err != nil {
+		fmt.Println("Lens search error:", err)
+		return nil
+	}
+	defer resp2.Body.Close()
+
+	resp2Bytes, _ := ioutil.ReadAll(resp2.Body)
+	var resp2Json map[string]interface{}
+	json.Unmarshal(resp2Bytes, &resp2Json)
+
 	var results []PinResult
-	
-	for _, match := range matches {
-		// Try to only keep originals or 736x for high quality
-		if strings.Contains(match, "originals") || strings.Contains(match, "736x") {
-			if !uniqueURLs[match] {
-				uniqueURLs[match] = true
-				results = append(results, PinResult{
-					Title: "Pinterest Visual Search",
-					URL:   match,
-				})
+	data, ok := resp2Json["data"].([]interface{})
+	if !ok {
+		// some pinterest endpoints wrap it
+		if d, ok := resp2Json["data"].(map[string]interface{}); ok {
+			if res, ok := d["results"].([]interface{}); ok {
+				data = res
 			}
 		}
 	}
-	
-	// If we still need more images, we can add the 236x or others, but originals/736x are best.
-	if len(results) == 0 {
-		for _, match := range matches {
-			if !uniqueURLs[match] {
-				uniqueURLs[match] = true
-				results = append(results, PinResult{
-					Title: "Pinterest Visual Search",
-					URL:   match,
-				})
+
+	for _, item := range data {
+		pin, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var imgUrl string
+		var w, h float64
+		
+		if images, ok := pin["images"].(map[string]interface{}); ok {
+			for _, key := range []string{"originals", "orig", "736x", "474x"} {
+				if imgData, ok := images[key].(map[string]interface{}); ok {
+					if u, ok := imgData["url"].(string); ok {
+						imgUrl = u
+						if width, ok := imgData["width"].(float64); ok {
+							w = width
+						}
+						if height, ok := imgData["height"].(float64); ok {
+							h = height
+						}
+						break
+					}
+				}
 			}
 		}
+
+		if imgUrl == "" {
+			continue
+		}
+		
+		if w == 0 {
+			w = 1
+		}
+		if h == 0 {
+			h = 1
+		}
+		ratio := w / h
+
+		keep := true
+		if aspect == "icon" && (ratio < 0.7 || ratio > 1.3) {
+			keep = false
+		}
+		if aspect == "wallpaper" && ratio > 0.9 {
+			keep = false
+		}
+		if aspect == "banner" && ratio < 1.1 {
+			keep = false
+		}
+
+		if keep {
+			title := ""
+			if t, ok := pin["title"].(string); ok {
+				title = t
+			} else if desc, ok := pin["description"].(string); ok {
+				title = desc
+			}
+			results = append(results, PinResult{
+				Title: title,
+				URL:   imgUrl,
+			})
+		}
 	}
+	
 	return results
 }
 
