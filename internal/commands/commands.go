@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math/rand"
@@ -519,11 +520,27 @@ func random(ctx *BotContext) {
 
 func pinterestSearch(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(ctx.Text, ".بينتريست", "", 1))
+	
+	isVisual := false
+	base64Image := ""
+
+	if (query == "" || query == "صورة") && ctx.Event.Message.GetExtendedTextMessage() != nil {
+		qMsg := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
+		if qMsg != nil && qMsg.GetImageMessage() != nil {
+			imgData, err := ctx.Client.Download(context.Background(), qMsg.GetImageMessage())
+			if err == nil {
+				isVisual = true
+				base64Image = base64.StdEncoding.EncodeToString(imgData)
+				query = "Visual Search"
+			}
+		}
+	}
+
 	if query == "" {
 		return
 	}
 
-	if ctx.Event.Info.IsFromMe && !strings.HasPrefix(ctx.Event.Message.GetConversation(), ".بينتريست") {
+	if ctx.Event.Info.IsFromMe && !strings.HasPrefix(ctx.Event.Message.GetConversation(), ".بينتريست") && ctx.Event.Message.GetExtendedTextMessage() == nil {
 		return
 	}
 
@@ -551,7 +568,7 @@ func pinterestSearch(ctx *BotContext) {
 		count = 20
 	}
 
-	pinterest.SetPending(ctx.ChatID.String(), query, count)
+	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
 
 	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)

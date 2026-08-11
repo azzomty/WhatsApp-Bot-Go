@@ -291,7 +291,7 @@ func eventHandler(evt interface{}) {
 				}
 
 			RunSearch:
-				pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount)
+				pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount, req.IsVisual, req.Base64Image)
 				pinterest.ClearPending(v.Info.Chat.String())
 				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
 					ExtendedTextMessage: &waProto.ExtendedTextMessage{
@@ -305,7 +305,12 @@ func eventHandler(evt interface{}) {
 				})
 
 				go func() {
-					results := pinterest.SearchPinterest(req.Query+suffix, aspect)
+					var results []pinterest.PinResult
+					if req.IsVisual && req.Base64Image != "" {
+						results = pinterest.SearchPinterestLens(req.Base64Image, aspect)
+					} else {
+						results = pinterest.SearchPinterest(req.Query+suffix, aspect)
+					}
 
 					if len(results) > 0 {
 						rand.Shuffle(len(results), func(i, j int) {

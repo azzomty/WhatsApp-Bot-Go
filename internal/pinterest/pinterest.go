@@ -1,10 +1,13 @@
 package pinterest
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -12,39 +15,44 @@ import (
 )
 
 type PendingRequest struct {
-	Query string
-	Count int
+	Query       string
+	Count       int
+	IsVisual    bool
+	Base64Image string
 }
 
 var (
 	PendingRequests = make(map[string]PendingRequest)
 	LastSearches    = make(map[string]LastSearch)
 	pendingMutex    sync.RWMutex
+	lastSearchMutex sync.RWMutex
 )
 
 type LastSearch struct {
-	Query  string
-	Aspect string
-	Count  int
+	Query       string
+	Aspect      string
+	Count       int
+	IsVisual    bool
+	Base64Image string
 }
 
-func SetLastSearch(chatID, query, aspect string, count int) {
-	pendingMutex.Lock()
-	defer pendingMutex.Unlock()
-	LastSearches[chatID] = LastSearch{Query: query, Aspect: aspect, Count: count}
+func SetLastSearch(chatID, query, aspect string, count int, isVisual bool, base64Image string) {
+	lastSearchMutex.Lock()
+	defer lastSearchMutex.Unlock()
+	LastSearches[chatID] = LastSearch{Query: query, Aspect: aspect, Count: count, IsVisual: isVisual, Base64Image: base64Image}
 }
 
 func GetLastSearch(chatID string) (LastSearch, bool) {
-	pendingMutex.RLock()
-	defer pendingMutex.RUnlock()
+	lastSearchMutex.RLock()
+	defer lastSearchMutex.RUnlock()
 	req, ok := LastSearches[chatID]
 	return req, ok
 }
 
-func SetPending(chatID, query string, count int) {
+func SetPending(chatID, query string, count int, isVisual bool, base64Image string) {
 	pendingMutex.Lock()
 	defer pendingMutex.Unlock()
-	PendingRequests[chatID] = PendingRequest{Query: query, Count: count}
+	PendingRequests[chatID] = PendingRequest{Query: query, Count: count, IsVisual: isVisual, Base64Image: base64Image}
 }
 
 func GetPending(chatID string) (PendingRequest, bool) {
@@ -158,14 +166,78 @@ func SearchPinterest(query string, aspect string) []PinResult {
 
 			if keep {
 				results = append(results, PinResult{
-					URL:    item.Image,
-					Title:  item.Title,
-					PinURL: item.URL,
+					Title: item.Title,
+					URL:   item.Image,
 				})
 			}
 		}
 	}
+	return results
+}
 
+func SearchPinterestLens(base64Image string, aspect string) []PinResult {
+	apiKey := os.Getenv("RAPIDAPI_KEY")
+	if apiKey == "" {
+		fmt.Println("RAPIDAPI_KEY not set")
+		return nil
+	}
+
+	url := "https://pinterest-lens-reverse-image-search-api.p.rapidapi.com/search"
+	
+	payloadData := map[string]string{
+		"image_base64": base64Image,
+	}
+	payloadBytes, _ := json.Marshal(payloadData)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	req.Header.Add("x-rapidapi-key", apiKey)
+	req.Header.Add("x-rapidapi-host", "pinterest-lens-reverse-image-search-api.p.rapidapi.com")
+	req.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("RapidAPI Request Error:", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	bodyStr := string(bodyBytes)
+
+	// Extract any pinimg.com URLs from the raw JSON response
+	re := regexp.MustCompile(`https?://i\.pinimg\.com/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png)`)
+	matches := re.FindAllString(bodyStr, -1)
+	
+	// Remove duplicates
+	uniqueURLs := make(map[string]bool)
+	var results []PinResult
+	
+	for _, match := range matches {
+		// Try to only keep originals or 736x for high quality
+		if strings.Contains(match, "originals") || strings.Contains(match, "736x") {
+			if !uniqueURLs[match] {
+				uniqueURLs[match] = true
+				results = append(results, PinResult{
+					Title: "Pinterest Visual Search",
+					URL:   match,
+				})
+			}
+		}
+	}
+	
+	// If we still need more images, we can add the 236x or others, but originals/736x are best.
+	if len(results) == 0 {
+		for _, match := range matches {
+			if !uniqueURLs[match] {
+				uniqueURLs[match] = true
+				results = append(results, PinResult{
+					Title: "Pinterest Visual Search",
+					URL:   match,
+				})
+			}
+		}
+	}
 	return results
 }
 
