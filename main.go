@@ -442,7 +442,7 @@ func eventHandler(evt interface{}) {
 		client.Logout(context.Background())
 		os.Exit(0)
 	case *events.Connected:
-		client.SendPresence(types.PresenceAvailable)
+		client.SendPresence(context.Background(), types.PresenceAvailable)
 	}
 }
 

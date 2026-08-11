@@ -191,9 +191,9 @@ func Handle(ctx *BotContext) {
 }
 
 func sendMessage(ctx *BotContext, text string) {
-	ctx.Client.SendChatPresence(ctx.ChatID, types.ChatPresenceComposing, types.ChatPresenceMediaText)
+	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresenceComposing, types.ChatPresenceMediaText)
 	time.Sleep(500 * time.Millisecond)
-	ctx.Client.SendChatPresence(ctx.ChatID, types.ChatPresencePaused, types.ChatPresenceMediaText)
+	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresencePaused, types.ChatPresenceMediaText)
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{
 			Text: proto.String(text),
