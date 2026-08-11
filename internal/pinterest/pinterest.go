@@ -18,8 +18,28 @@ type PendingRequest struct {
 
 var (
 	PendingRequests = make(map[string]PendingRequest)
+	LastSearches    = make(map[string]LastSearch)
 	pendingMutex    sync.RWMutex
 )
+
+type LastSearch struct {
+	Query  string
+	Aspect string
+	Count  int
+}
+
+func SetLastSearch(chatID, query, aspect string, count int) {
+	pendingMutex.Lock()
+	defer pendingMutex.Unlock()
+	LastSearches[chatID] = LastSearch{Query: query, Aspect: aspect, Count: count}
+}
+
+func GetLastSearch(chatID string) (LastSearch, bool) {
+	pendingMutex.RLock()
+	defer pendingMutex.RUnlock()
+	req, ok := LastSearches[chatID]
+	return req, ok
+}
 
 func SetPending(chatID, query string, count int) {
 	pendingMutex.Lock()

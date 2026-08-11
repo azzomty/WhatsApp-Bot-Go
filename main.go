@@ -135,16 +135,6 @@ func eventHandler(evt interface{}) {
 
 		text = strings.TrimSpace(text)
 
-		if v.Message.GetReactionMessage() != nil {
-			if v.Info.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
-				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
-					ExtendedTextMessage: &waProto.ExtendedTextMessage{
-						Text: proto.String("شفتك تفاعلت! تم تفعيل اقتراحات Pinterest الخاصة بك بناءً على هذا التفاعل."),
-					},
-				})
-			}
-		}
-
 		// Exclude reactions and non-messages from spam detection
 		isSpamable := true
 		if v.Message.GetReactionMessage() != nil || v.Message.GetProtocolMessage() != nil || text == "" {
@@ -286,10 +276,21 @@ func eventHandler(evt interface{}) {
 					aspect = "wallpaper"
 
 				default:
+					if choice == ".new" || choice == ".refresh" {
+						if last, ok := pinterest.GetLastSearch(v.Info.Chat.String()); ok {
+							req = pinterest.PendingRequest{Query: last.Query, Count: last.Count}
+							suffix = ""
+							aspect = last.Aspect
+							overrideCount = last.Count
+							goto RunSearch
+						}
+					}
 					// Not a valid choice, let commands handle it
 					goto CommandHandling
 				}
 
+			RunSearch:
+				pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount)
 				pinterest.ClearPending(v.Info.Chat.String())
 				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
 					ExtendedTextMessage: &waProto.ExtendedTextMessage{
@@ -386,21 +387,36 @@ func eventHandler(evt interface{}) {
 				}
 			}
 		}
-		if len(v.Demote) > 0 || len(v.Leave) > 0 {
-			protectedLIDs := []string{
-				"966508364121",
-				"963992306978",
-			}
-			affected := append(v.Demote, v.Leave...)
-			for _, participant := range affected {
-				isProtected := false
-				for _, pLID := range protectedLIDs {
-					if strings.Contains(participant.String(), pLID) {
-						isProtected = true
-						break
+
+		// Handle Group Name or Description changes
+		if v.Name != nil || v.Topic != nil {
+			if v.Sender != nil && v.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+				senderLID := getLID(client, *v.Sender)
+				if !store.IsProtectedUser(senderLID) {
+					groupInfo, err := client.GetGroupInfo(context.Background(), v.JID)
+					if err == nil {
+						var toDemote []types.JID
+						for _, p := range groupInfo.Participants {
+							if p.IsAdmin && !p.IsSuperAdmin && p.JID.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+								toDemote = append(toDemote, p.JID)
+							}
+						}
+						if len(toDemote) > 0 {
+							client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
+							client.SendMessage(context.Background(), v.JID, &waProto.Message{
+								Conversation: proto.String("🚨 شخص غير محمي قام بتغيير اسم/وصف القروب! تم سحب إشراف الجميع كإجراء أمني."),
+							})
+						}
 					}
 				}
-				if isProtected {
+			}
+		}
+
+		// Handle Demote or Kick of Protected Users
+		if len(v.Demote) > 0 || len(v.Leave) > 0 {
+			affected := append(v.Demote, v.Leave...)
+			for _, participant := range affected {
+				if store.IsProtectedUser(getLID(client, participant)) {
 					groupInfo, err := client.GetGroupInfo(context.Background(), v.JID)
 					if err == nil {
 						var toDemote []types.JID

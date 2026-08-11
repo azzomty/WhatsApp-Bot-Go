@@ -18,6 +18,7 @@ var (
 	Hebebia        = make([]string, 0)
 	CommandBans    = make(map[string]map[string]bool)
 	TargetGroups   = make(map[string]string)
+	ProtectedUsers = make(map[string]bool)
 	mutedMutex     sync.RWMutex
 	allowedMutex   sync.RWMutex
 	aliasMutex     sync.RWMutex
@@ -28,6 +29,7 @@ var (
 	zotMutex       sync.RWMutex
 	banMutex       sync.RWMutex
 	targetMutex    sync.RWMutex
+	protectMutex   sync.RWMutex
 	ZotCounter     int
 )
 
@@ -56,6 +58,7 @@ func saveJSON(filename string, v interface{}) error {
 
 func LoadAll(baseDir string) {
 	loadJSON(baseDir+"/muted_users.json", &MutedUsers)
+	loadJSON(baseDir+"/protected_users.json", &ProtectedUsers)
 
 	var allowed []string
 	if err := loadJSON(baseDir+"/allowed_users.json", &allowed); err == nil {
@@ -140,11 +143,28 @@ func SaveTargetGroups(baseDir string) {
 	saveJSON(baseDir+"/target_groups.json", TargetGroups)
 }
 
-func SetTargetGroup(key string, groupID string, baseDir string) {
+func SetTargetGroup(key string, groupID string) {
 	targetMutex.Lock()
 	TargetGroups[key] = groupID
 	targetMutex.Unlock()
-	SaveTargetGroups(baseDir)
+	saveJSON("target_groups.json", TargetGroups)
+}
+
+func IsProtectedUser(lid string) bool {
+	protectMutex.RLock()
+	defer protectMutex.RUnlock()
+	return ProtectedUsers[lid] || lid == "966508364121" || lid == "963992306978" // Hardcode owner
+}
+
+func SetProtectedUser(lid string, state bool) {
+	protectMutex.Lock()
+	defer protectMutex.Unlock()
+	if state {
+		ProtectedUsers[lid] = true
+	} else {
+		delete(ProtectedUsers, lid)
+	}
+	saveJSON("protected_users.json", ProtectedUsers)
 }
 
 func GetTargetGroup(key string) string {

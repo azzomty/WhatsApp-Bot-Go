@@ -1,0 +1,55 @@
+[package]
+name = "bot_cmds"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+
+[[bin]]
+name = "baymax"
+path = "src/bin/baymax.rs"
+
+[[bin]]
+name = "mute"
+path = "src/bin/mute.rs"
+
+[[bin]]
+name = "unmute"
+path = "src/bin/unmute.rs"
+
+[[bin]]
+name = "admin"
+path = "src/bin/admin.rs"
+
+[[bin]]
+name = "unadmin"
+path = "src/bin/unadmin.rs"
+
+[[bin]]
+name = "kick"
+path = "src/bin/kick.rs"
+
+[[bin]]
+name = "promote"
+path = "src/bin/promote.rs"
+
+[[bin]]
+name = "close_group"
+path = "src/bin/close_group.rs"
+
+[[bin]]
+name = "open_group"
+path = "src/bin/open_group.rs"
+
+[[bin]]
+name = "get_group_link"
+path = "src/bin/get_group_link.rs"
+
+[[bin]]
+name = "revoke_group_link"
+path = "src/bin/revoke_group_link.rs"
+
+[[bin]]
+name = "set_group_pic"
+path = "src/bin/set_group_pic.rs"

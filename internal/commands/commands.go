@@ -127,12 +127,12 @@ func Handle(ctx *BotContext) {
 		demote(ctx)
 	case ".اساسي":
 		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
-			store.SetTargetGroup("primary", ctx.ChatID.String(), ".")
+			store.SetTargetGroup("primary", ctx.ChatID.String())
 			sendMessage(ctx, "تم تعيين هذا القروب كأساسي لنظام التنبيهات! 🚨")
 		}
 	case ".استقبال":
 		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
-			store.SetTargetGroup("welcome", ctx.ChatID.String(), ".")
+			store.SetTargetGroup("welcome", ctx.ChatID.String())
 			sendMessage(ctx, "تم تعيين هذا القروب للاستقبال! 🌟")
 			ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, ctx.Sender, ctx.Event.Info.ID))
 		}
@@ -181,6 +181,10 @@ func Handle(ctx *BotContext) {
 		repeatMessage(ctx)
 	case ".اسمي":
 		setName(ctx)
+	case ".new", ".refresh":
+		refreshPinterest(ctx)
+	case ".حماية":
+		protectUser(ctx)
 	default:
 		gemini.HandleMessage(ctx.Client, ctx.ChatID, ctx.Sender, ctx.Text, strings.HasSuffix(ctx.ChatID.String(), "@g.us"), ctx.Event.Info.IsFromMe, ctx.Event.Message, ctx.Event.Info.ID, ctx.Event.Info.Sender.String())
 	}
@@ -621,31 +625,38 @@ func makeSticker(ctx *BotContext) {
 		}
 
 		// Reverse them back to send in order
+		// Process and send concurrently for maximum speed
+		var wg sync.WaitGroup
 		for i := len(mediaMsgs) - 1; i >= 0; i-- {
-			data, err := ctx.Client.Download(context.Background(), mediaMsgs[i])
-			if err != nil {
-				continue
-			}
-			webpData, err := stickers.GenerateSticker(data, isVideoList[i], rights["pack"], rights["author"])
-			if err == nil {
-				resp, err := ctx.Client.Upload(context.Background(), webpData, whatsmeow.MediaImage)
-				if err == nil {
-					stickerMsg := &waProto.StickerMessage{
-						URL:           proto.String(resp.URL),
-						DirectPath:    proto.String(resp.DirectPath),
-						MediaKey:      resp.MediaKey,
-						Mimetype:      proto.String("image/webp"),
-						FileEncSHA256: resp.FileEncSHA256,
-						FileSHA256:    resp.FileSHA256,
-						FileLength:    proto.Uint64(uint64(len(webpData))),
-						IsAnimated:    proto.Bool(isVideoList[i]),
-					}
-					ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
-						StickerMessage: stickerMsg,
-					})
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				data, err := ctx.Client.Download(context.Background(), mediaMsgs[idx])
+				if err != nil {
+					return
 				}
-			}
+				webpData, err := stickers.GenerateSticker(data, isVideoList[idx], rights["pack"], rights["author"])
+				if err == nil {
+					resp, err := ctx.Client.Upload(context.Background(), webpData, whatsmeow.MediaImage)
+					if err == nil {
+						stickerMsg := &waProto.StickerMessage{
+							URL:           proto.String(resp.URL),
+							DirectPath:    proto.String(resp.DirectPath),
+							MediaKey:      resp.MediaKey,
+							Mimetype:      proto.String("image/webp"),
+							FileEncSHA256: resp.FileEncSHA256,
+							FileSHA256:    resp.FileSHA256,
+							FileLength:    proto.Uint64(uint64(len(webpData))),
+							IsAnimated:    proto.Bool(isVideoList[idx]),
+						}
+						ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+							StickerMessage: stickerMsg,
+						})
+					}
+				}
+			}(i)
 		}
+		wg.Wait()
 		return
 	}
 
@@ -1372,4 +1383,76 @@ func setGroupPic(ctx *BotContext) {
 	} else {
 		sendMessage(ctx, "تم تغيير صورة القروب بنجاح 🖼️")
 	}
+}
+
+func refreshPinterest(ctx *BotContext) {
+	if last, ok := pinterest.GetLastSearch(ctx.ChatID.String()); ok {
+		sendMessage(ctx, "جاري البحث عن صور جديدة... ⏳")
+		go func() {
+			results := pinterest.SearchPinterest(last.Query, last.Aspect)
+
+			if len(results) > 0 {
+				rand.Shuffle(len(results), func(i, j int) {
+					results[i], results[j] = results[j], results[i]
+				})
+			}
+
+			var urlsToSend []string
+			for i, res := range results {
+				if i >= last.Count {
+					break
+				}
+				urlsToSend = append(urlsToSend, res.URL)
+			}
+
+			count := 0
+			for _, u := range urlsToSend {
+				data, err := pinterest.DownloadImage(u)
+				if err == nil && len(data) > 5000 {
+					resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
+					if err == nil {
+						imgMsg := &waProto.ImageMessage{
+							URL:           proto.String(resp.URL),
+							DirectPath:    proto.String(resp.DirectPath),
+							MediaKey:      resp.MediaKey,
+							Mimetype:      proto.String("image/jpeg"),
+							FileEncSHA256: resp.FileEncSHA256,
+							FileSHA256:    resp.FileSHA256,
+							FileLength:    proto.Uint64(uint64(len(data))),
+							ContextInfo: &waProto.ContextInfo{
+								StanzaID:      proto.String(ctx.Event.Info.ID),
+								Participant:   proto.String(ctx.Event.Info.Sender.String()),
+								QuotedMessage: ctx.Event.Message,
+							},
+						}
+						ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+							ImageMessage: imgMsg,
+						})
+						count++
+					}
+				}
+			}
+			if count == 0 {
+				sendMessage(ctx, "للأسف ما لقيت صور إضافية!")
+			} else if count < last.Count {
+				sendMessage(ctx, "لقيت صور أقل من المطلوب، هذي هي الباقية.")
+			}
+		}()
+	} else {
+		sendMessage(ctx, "ما فيه بحث سابق عشان أحدثه!")
+	}
+}
+
+func protectUser(ctx *BotContext) {
+	targets := getTargets(ctx)
+	if len(targets) == 0 {
+		sendMessage(ctx, "منشن شخص أو رد على رسالته عشان تحميه!")
+		return
+	}
+
+	for _, target := range targets {
+		lid := getLID(ctx, target)
+		store.SetProtectedUser(lid, true)
+	}
+	sendMessage(ctx, "تم تفعيل الحماية! الآن إذا تم سحب إشرافهم أو طردهم، أو لو عدلوا اسم/وصف القروب وأحد غيرهم عدله، راح يتم سحب إشراف الجميع.")
 }
