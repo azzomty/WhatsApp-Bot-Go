@@ -17,7 +17,7 @@ import (
 
 var (
 	client       *genai.Client
-	CurrentModel = "gemini-3.5-flash"
+	CurrentModel = "gemini-3.6-flash"
 	chatSessions = make(map[string]*genai.ChatSession)
 	geminiAPIKey = os.Getenv("GEMINI_API_KEY")
 )
@@ -49,14 +49,16 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 	lowerText := strings.ToLower(text)
 
 	if lowerText == ".models" || lowerText == ".model" {
-		modelsList := "النماذج المتوفرة:\n1- gemini-3.5-flash\n2- gemini-3.1-flash-lite\n\nلتغيير النموذج اكتب داش مع الرقم، مثال:\n-1"
+		modelsList := "النماذج المتوفرة:\n1- gemini-3.5-flash-lite (Fastest answers)\n2- gemini-3.6-flash (All-around help)\n3- gemini-3.1-pro\n\nلتغيير النموذج اكتب داش مع الرقم، مثال:\n-2"
 		sendMessage(clientWA, chatID, modelsList, msg, stanzaID, participant)
 		return true
-	} else if lowerText == "-1" || lowerText == "-2" {
+	} else if lowerText == "-1" || lowerText == "-2" || lowerText == "-3" {
 		if lowerText == "-1" {
-			CurrentModel = "gemini-3.5-flash"
-		} else {
-			CurrentModel = "gemini-3.1-flash-lite"
+			CurrentModel = "gemini-3.5-flash-lite"
+		} else if lowerText == "-2" {
+			CurrentModel = "gemini-3.6-flash"
+		} else if lowerText == "-3" {
+			CurrentModel = "gemini-3.1-pro"
 		}
 		sendMessage(clientWA, chatID, "تم تغيير النموذج بنجاح إلى: "+CurrentModel, msg, stanzaID, participant)
 		return true
@@ -146,7 +148,7 @@ func GeneratePinterestQueryFromImage(imageBytes []byte) (string, error) {
 	if client == nil {
 		return "", fmt.Errorf("Gemini client not initialized")
 	}
-	model := client.GenerativeModel("gemini-3.5-flash")
+	model := client.GenerativeModel("gemini-3.6-flash")
 	model.SystemInstruction = &genai.Content{
 		Parts: []genai.Part{genai.Text("You are an image analyzer. Return ONLY a short English search query (2-4 words) that best describes the main subject of this image for a Pinterest search. Do not include quotes, periods, or any other text.")},
 	}
