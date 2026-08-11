@@ -16,6 +16,8 @@ import (
 )
 
 type PinResult struct {
+	ID    string
+
 	Title string
 	URL   string
 }
@@ -115,6 +117,31 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 			}
 		}
 
+		// Fallback for search/pins/ which returns flat image_large_url
+		if imgUrl == "" {
+			if u, ok := pin["image_large_url"].(string); ok {
+				imgUrl = u
+				if sizeData, ok := pin["image_large_size_pixels"].(map[string]interface{}); ok {
+					if width, ok := sizeData["width"].(float64); ok {
+						w = width
+					}
+					if height, ok := sizeData["height"].(float64); ok {
+						h = height
+					}
+				}
+			} else if u, ok := pin["image_medium_url"].(string); ok {
+				imgUrl = strings.Replace(u, "474x", "736x", 1) // Try to get higher res
+				if sizeData, ok := pin["image_medium_size_pixels"].(map[string]interface{}); ok {
+					if width, ok := sizeData["width"].(float64); ok {
+						w = width
+					}
+					if height, ok := sizeData["height"].(float64); ok {
+						h = height
+					}
+				}
+			}
+		}
+
 		if imgUrl == "" {
 			continue
 		}
@@ -145,7 +172,14 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 			} else if desc, ok := pin["description"].(string); ok {
 				title = desc
 			}
+			
+			id := ""
+			if idStr, ok := pin["id"].(string); ok {
+				id = idStr
+			}
+
 			results = append(results, PinResult{
+				ID:    id,
 				Title: title,
 				URL:   imgUrl,
 			})
@@ -208,72 +242,58 @@ func ForYouPinterest(aspect string) []PinResult {
 }
 
 func SearchPinterestMatchingIcons(query string) []PinResult {
-	query = url.QueryEscape("matching icons " + query)
-	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s", query)
-	req, _ := http.NewRequest("GET", searchUrl, nil)
-	setPinterestHeaders(req)
-	
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
+	// First get search results normally
+	pins := SearchPinterest("matching icons "+query, "all")
+	if len(pins) == 0 {
 		return nil
 	}
-	defer resp.Body.Close()
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	data := extractDataFromJSON(bodyBytes)
-	
+	client := &http.Client{Timeout: 10 * time.Second}
 	var results []PinResult
-	for _, item := range data {
-		pin, ok := item.(map[string]interface{})
-		if !ok {
+
+	for _, p := range pins {
+		if p.ID == "" {
 			continue
 		}
 		
-		// Look for carousel_data
-		if cd, ok := pin["carousel_data"].(map[string]interface{}); ok {
-			if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
-				// extract the two images
-				var urls []string
-				for i := 0; i < 2; i++ {
-					if slot, ok := slots[i].(map[string]interface{}); ok {
-						if images, ok := slot["images"].(map[string]interface{}); ok {
-							for _, key := range []string{"originals", "orig", "736x", "474x"} {
-								if imgData, ok := images[key].(map[string]interface{}); ok {
-									if u, ok := imgData["url"].(string); ok {
-										urls = append(urls, u)
-										break
+		req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+p.ID+"/", nil)
+		setPinterestHeaders(req)
+		
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		
+		var respJson map[string]interface{}
+		json.Unmarshal(bodyBytes, &respJson)
+		
+		if data, ok := respJson["data"].(map[string]interface{}); ok {
+			if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
+				if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
+					var urls []string
+					for i := 0; i < 2; i++ {
+						if slot, ok := slots[i].(map[string]interface{}); ok {
+							if images, ok := slot["images"].(map[string]interface{}); ok {
+								for _, key := range []string{"originals", "orig", "736x", "474x"} {
+									if imgData, ok := images[key].(map[string]interface{}); ok {
+										if u, ok := imgData["url"].(string); ok {
+											urls = append(urls, u)
+											break
+										}
 									}
 								}
 							}
 						}
 					}
-				}
-				if len(urls) >= 2 {
-					results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
-					results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
-					return results // only return the first valid pair!
-				}
-			}
-		} else if images, ok := pin["images"].([]interface{}); ok && len(images) >= 2 {
-			// Some endpoints return a flat array for carousels
-			var urls []string
-			for i := 0; i < 2; i++ {
-				if imgsMap, ok := images[i].(map[string]interface{}); ok {
-					for _, key := range []string{"originals", "orig", "736x", "474x"} {
-						if imgData, ok := imgsMap[key].(map[string]interface{}); ok {
-							if u, ok := imgData["url"].(string); ok {
-								urls = append(urls, u)
-								break
-							}
-						}
+					if len(urls) >= 2 {
+						results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
+						results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
+						return results
 					}
 				}
-			}
-			if len(urls) >= 2 {
-				results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
-				results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
-				return results
 			}
 		}
 	}
