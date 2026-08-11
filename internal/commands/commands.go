@@ -532,9 +532,17 @@ func pinterestSearch(ctx *BotContext) {
 
 	if (query == "" || query == "صورة") && ctx.Event.Message.GetExtendedTextMessage() != nil {
 		qMsg := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
-		if qMsg != nil && qMsg.GetImageMessage() != nil {
-			imgData, err := ctx.Client.Download(context.Background(), qMsg.GetImageMessage())
-			if err == nil {
+		if qMsg != nil {
+			var imgData []byte
+			var err error
+			
+			if qMsg.GetImageMessage() != nil {
+				imgData, err = ctx.Client.Download(context.Background(), qMsg.GetImageMessage())
+			} else if qMsg.GetStickerMessage() != nil {
+				imgData, err = ctx.Client.Download(context.Background(), qMsg.GetStickerMessage())
+			}
+
+			if err == nil && imgData != nil {
 				isVisual = true
 				base64Image = base64.StdEncoding.EncodeToString(imgData)
 				query = "Visual Search"
@@ -576,7 +584,7 @@ func pinterestSearch(ctx *BotContext) {
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
 
-	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n\nاكتب الرقم مع السلاش (مثال: /1)"
+	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- تطقيم (Matching Icons)\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
 }
 
@@ -1484,6 +1492,20 @@ func protectUser(ctx *BotContext) {
 }
 
 func pinterestForYou(ctx *BotContext) {
+	query := strings.TrimSpace(strings.Replace(ctx.Text, ".فوريو", "", 1))
+	count := 5
+	
+	if query != "" {
+		if parsedCount, err := strconv.Atoi(query); err == nil && parsedCount > 0 {
+			count = parsedCount
+		}
+	}
+	if count > 20 {
+		count = 20
+	}
+	
+	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "")
+
 	sendMessage(ctx, "جاري جلب صور للفوريو... ⏳")
 	go func() {
 		results := pinterest.ForYouPinterest("all")
@@ -1493,9 +1515,9 @@ func pinterestForYou(ctx *BotContext) {
 			})
 		}
 		
-		count := 0
+		sentCount := 0
 		for _, res := range results {
-			if count >= 5 {
+			if sentCount >= count {
 				break
 			}
 			data, err := pinterest.DownloadImage(res.URL)
@@ -1512,11 +1534,11 @@ func pinterestForYou(ctx *BotContext) {
 						FileLength:    proto.Uint64(uint64(len(data))),
 					}
 					ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
-					count++
+					sentCount++
 				}
 			}
 		}
-		if count == 0 {
+		if sentCount == 0 {
 			sendMessage(ctx, "للأسف ما قدرت أجيب صور للفوريو!")
 		}
 	}()

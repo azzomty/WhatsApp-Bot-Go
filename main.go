@@ -301,6 +301,9 @@ func eventHandler(evt interface{}) {
 				case "3":
 					suffix = " wallpaper"
 					aspect = "wallpaper"
+				case "4":
+					suffix = " matching icons"
+					aspect = "matching"
 
 				default:
 					if choice == ".new" || choice == ".refresh" {
@@ -332,13 +335,18 @@ func eventHandler(evt interface{}) {
 
 				go func() {
 					var results []pinterest.PinResult
-					if req.IsVisual && req.Base64Image != "" {
+					if aspect == "foryou" {
+						results = pinterest.ForYouPinterest("all")
+					} else if aspect == "matching" {
+						results = pinterest.SearchPinterestMatchingIcons(req.Query)
+						overrideCount = 2 // Match pairs always return 2
+					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect)
 					} else {
 						results = pinterest.SearchPinterest(req.Query+suffix, aspect)
 					}
 
-					if len(results) > 0 {
+					if len(results) > 0 && aspect != "matching" {
 						rand.Shuffle(len(results), func(i, j int) {
 							results[i], results[j] = results[j], results[i]
 						})
