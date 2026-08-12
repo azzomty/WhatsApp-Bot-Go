@@ -1,12 +1,9 @@
 package pinterest
 
 import (
-	"bytes"
 	"encoding/json"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -250,114 +247,125 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	var results []PinResult
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 
-	for _, p := range pins {
+	max := 10
+	if len(pins) < max {
+		max = len(pins)
+	}
+
+	for i := 0; i < max; i++ {
+		p := pins[i]
 		if p.ID == "" {
 			continue
 		}
 		
-		req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+p.ID+"/", nil)
-		setPinterestHeaders(req)
-		
-		resp, err := client.Do(req)
-		if err != nil {
-			continue
-		}
-		
-		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-		
-		var respJson map[string]interface{}
-		json.Unmarshal(bodyBytes, &respJson)
-		
-		if data, ok := respJson["data"].(map[string]interface{}); ok {
-			if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
-				if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
-					var urls []string
-					for i := 0; i < 2; i++ {
-						if slot, ok := slots[i].(map[string]interface{}); ok {
-							if images, ok := slot["images"].(map[string]interface{}); ok {
-								for _, key := range []string{"originals", "orig", "736x", "474x"} {
-									if imgData, ok := images[key].(map[string]interface{}); ok {
-										if u, ok := imgData["url"].(string); ok {
-											urls = append(urls, u)
-											break
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/", nil)
+			setPinterestHeaders(req)
+			
+			resp, err := client.Do(req)
+			if err != nil {
+				return
+			}
+			
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+			
+			var respJson map[string]interface{}
+			json.Unmarshal(bodyBytes, &respJson)
+			
+			if data, ok := respJson["data"].(map[string]interface{}); ok {
+				if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
+					if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
+						var urls []string
+						for i := 0; i < 2; i++ {
+							if slot, ok := slots[i].(map[string]interface{}); ok {
+								if images, ok := slot["images"].(map[string]interface{}); ok {
+									for _, key := range []string{"originals", "orig", "736x", "474x"} {
+										if imgData, ok := images[key].(map[string]interface{}); ok {
+											if u, ok := imgData["url"].(string); ok {
+												urls = append(urls, u)
+												break
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-					if len(urls) >= 2 {
-						results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
-						results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
-						return results
+						if len(urls) >= 2 {
+							mu.Lock()
+							if len(results) == 0 {
+								results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
+								results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
+							}
+							mu.Unlock()
+						}
 					}
 				}
 			}
-		}
+		}(p.ID)
 	}
+	wg.Wait()
 	return results
 }
 
 func SearchPinterestLens(base64Image string, aspect string) []PinResult {
-	imageBytes, err := base64.StdEncoding.DecodeString(base64Image)
-	if err != nil {
-		fmt.Println("Base64 decode error:", err)
-		return nil
-	}
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("image", "image.jpg")
-	if err == nil {
-		part.Write(imageBytes)
-	}
-	writer.Close()
-
-	req1, _ := http.NewRequest("PUT", "https://api.pinterest.com/v3/visual_search/lens/history/", body)
-	req1.Header.Set("Content-Type", writer.FormDataContentType())
-	setPinterestHeaders(req1)
+	payload := fmt.Sprintf(`{"image_base64":"%s"}`, base64Image)
+	req, _ := http.NewRequest("POST", "https://pinterest-lens-reverse-image-search-api.p.rapidapi.com/search", strings.NewReader(payload))
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("x-rapidapi-host", "pinterest-lens-reverse-image-search-api.p.rapidapi.com")
+	req.Header.Add("x-rapidapi-key", os.Getenv("RAPIDAPI_KEY"))
 
 	client := &http.Client{Timeout: 30 * time.Second}
-	resp1, err := client.Do(req1)
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Lens upload error:", err)
 		return nil
 	}
-	defer resp1.Body.Close()
+	defer resp.Body.Close()
 
-	resp1Bytes, _ := ioutil.ReadAll(resp1.Body)
-	var resp1Json map[string]interface{}
-	json.Unmarshal(resp1Bytes, &resp1Json)
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+	var respJson map[string]interface{}
+	json.Unmarshal(bodyBytes, &respJson)
 
-	s3Url := ""
-	if data, ok := resp1Json["data"].(map[string]interface{}); ok {
-		if u, ok := data["image_url"].(string); ok && strings.HasPrefix(u, "s3://") {
-			s3Url = u
+	var results []PinResult
+	if data, ok := respJson["data"].([]interface{}); ok {
+		for _, item := range data {
+			if pin, ok := item.(map[string]interface{}); ok {
+				var imgUrl string
+				// Check normal image structure
+				if images, ok := pin["images"].(map[string]interface{}); ok {
+					for _, key := range []string{"originals", "orig", "736x", "474x"} {
+						if imgData, ok := images[key].(map[string]interface{}); ok {
+							if u, ok := imgData["url"].(string); ok {
+								imgUrl = u
+								break
+							}
+						}
+					}
+				}
+				// Check flat image URLs
+				if imgUrl == "" {
+					if u, ok := pin["image_large_url"].(string); ok {
+						imgUrl = u
+					} else if u, ok := pin["image_medium_url"].(string); ok {
+						imgUrl = strings.Replace(u, "474x", "736x", 1)
+					}
+				}
+				if imgUrl != "" {
+					results = append(results, PinResult{
+						URL: imgUrl,
+					})
+				}
+			}
 		}
 	}
 
-	if s3Url == "" {
-		fmt.Println("Could not extract s3_url from lens history")
-		return nil
-	}
-
-	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/visual_search/lens/search/?camera_type=0&source_type=1&url=%s&page_size=24", url.QueryEscape(s3Url))
-	req2, _ := http.NewRequest("GET", searchUrl, nil)
-	setPinterestHeaders(req2)
-
-	resp2, err := client.Do(req2)
-	if err != nil {
-		fmt.Println("Lens search error:", err)
-		return nil
-	}
-	defer resp2.Body.Close()
-
-	resp2Bytes, _ := ioutil.ReadAll(resp2.Body)
-	data := extractDataFromJSON(resp2Bytes)
-	
-	return parsePinterestData(data, aspect)
+	return results
 }
 
 func GetMatchingPairs(results []PinResult, targetPairs int) []string {
