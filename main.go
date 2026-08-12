@@ -255,6 +255,9 @@ func eventHandler(evt interface{}) {
 
 		// أمر معرفة الـ LID
 		if strings.HasPrefix(text, ".lid") {
+			if !store.IsAllowed(senderID) && !v.Info.IsFromMe {
+				return
+			}
 			targetLid := ""
 			if ctxInfo := v.Message.GetExtendedTextMessage().GetContextInfo(); ctxInfo != nil {
 				if ctxInfo.Participant != nil {
@@ -416,6 +419,10 @@ func eventHandler(evt interface{}) {
 				}
 				return
 			}
+		}
+
+		if !store.IsAllowed(senderID) && !v.Info.IsFromMe {
+			goto CommandHandling
 		}
 
 		if games.HandleGameCommand(ctx) {

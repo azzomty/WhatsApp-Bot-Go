@@ -70,6 +70,10 @@ func Handle(ctx *BotContext) {
 	if ctx.Text == "" {
 		return
 	}
+	
+	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+		return
+	}
 
 	parts := strings.Split(ctx.Text, " ")
 	cmdName := strings.ToLower(parts[0])
