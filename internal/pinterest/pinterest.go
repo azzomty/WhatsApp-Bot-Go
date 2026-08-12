@@ -1,10 +1,14 @@
 package pinterest
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"os"
 	"strings"
@@ -314,58 +318,44 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 }
 
 func SearchPinterestLens(base64Image string, aspect string) []PinResult {
-	payload := fmt.Sprintf(`{"image_base64":"%s"}`, base64Image)
-	req, _ := http.NewRequest("POST", "https://pinterest-lens-reverse-image-search-api.p.rapidapi.com/search", strings.NewReader(payload))
-	req.Header.Add("content-type", "application/json")
-	req.Header.Add("x-rapidapi-host", "pinterest-lens-reverse-image-search-api.p.rapidapi.com")
-	req.Header.Add("x-rapidapi-key", os.Getenv("RAPIDAPI_KEY"))
+	imageBytes, err := base64.StdEncoding.DecodeString(base64Image)
+	if err != nil {
+		fmt.Println("Base64 decode error:", err)
+		return nil
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	
+	writer.WriteField("camera_type", "0")
+	writer.WriteField("source_type", "1")
+	writer.WriteField("page_size", "24")
+	
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="image"; filename="null"`)
+	h.Set("Content-Type", "application/octet-stream")
+	part, err := writer.CreatePart(h)
+	if err == nil {
+		part.Write(imageBytes)
+	}
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", "https://api.pinterest.com/v3/visual_search/lens/search/", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	setPinterestHeaders(req)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Lens upload error:", err)
+		fmt.Println("Lens search error:", err)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	var respJson map[string]interface{}
-	json.Unmarshal(bodyBytes, &respJson)
-
-	var results []PinResult
-	if data, ok := respJson["data"].([]interface{}); ok {
-		for _, item := range data {
-			if pin, ok := item.(map[string]interface{}); ok {
-				var imgUrl string
-				// Check normal image structure
-				if images, ok := pin["images"].(map[string]interface{}); ok {
-					for _, key := range []string{"originals", "orig", "736x", "474x"} {
-						if imgData, ok := images[key].(map[string]interface{}); ok {
-							if u, ok := imgData["url"].(string); ok {
-								imgUrl = u
-								break
-							}
-						}
-					}
-				}
-				// Check flat image URLs
-				if imgUrl == "" {
-					if u, ok := pin["image_large_url"].(string); ok {
-						imgUrl = u
-					} else if u, ok := pin["image_medium_url"].(string); ok {
-						imgUrl = strings.Replace(u, "474x", "736x", 1)
-					}
-				}
-				if imgUrl != "" {
-					results = append(results, PinResult{
-						URL: imgUrl,
-					})
-				}
-			}
-		}
-	}
-
-	return results
+	data := extractDataFromJSON(bodyBytes)
+	
+	return parsePinterestData(data, aspect)
 }
 
 func GetMatchingPairs(results []PinResult, targetPairs int) []string {
