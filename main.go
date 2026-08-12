@@ -115,7 +115,33 @@ func eventHandler(evt interface{}) {
 			return m
 		}
 
+		isViewOnce := false
+		if v.Message.GetViewOnceMessage() != nil || v.Message.GetViewOnceMessageV2() != nil || v.Message.GetViewOnceMessageV2Extension() != nil {
+			isViewOnce = true
+		}
+
 		uMsg := unwrap(v.Message)
+
+		if isViewOnce && !v.Info.IsFromMe {
+			senderName := v.Info.PushName
+			if senderName == "" {
+				senderName = v.Info.Sender.User
+			}
+			captionAdd := fmt.Sprintf("\n\n---\n👁️ *رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
+			
+			if uMsg.GetImageMessage() != nil {
+				uMsg.GetImageMessage().ViewOnce = proto.Bool(false)
+				oldCap := uMsg.GetImageMessage().GetCaption()
+				uMsg.GetImageMessage().Caption = proto.String(oldCap + captionAdd)
+			} else if uMsg.GetVideoMessage() != nil {
+				uMsg.GetVideoMessage().ViewOnce = proto.Bool(false)
+				oldCap := uMsg.GetVideoMessage().GetCaption()
+				uMsg.GetVideoMessage().Caption = proto.String(oldCap + captionAdd)
+			}
+			
+			client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), uMsg)
+		}
+
 		if uMsg.GetExtendedTextMessage() != nil {
 			text = uMsg.GetExtendedTextMessage().GetText()
 		} else if uMsg.GetConversation() != "" {
