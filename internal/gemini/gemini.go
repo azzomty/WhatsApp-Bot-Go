@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	CurrentModel = "gemini-web"
+	CurrentModel = "gemini-3.6-flash"
+	IsExtended = false
 	geminiCookie1PSID   = "g.a000BgkyVrxC8cwsVYW5dLfLHd-KlWxi4gxc32Uv8-Ee8FKXA51i5udy6dsl2ETs9tvosAI61QACgYKATASARUSFQHGX2MivIgMfl2Oqgtdx_Ae5yGcQBoVAUF8yKrTAw1qZVJgsEXATsPto0cv0076"
 	geminiCookie1PSIDTS = "sidts-CjEBPWEu2XHmxY-HfLlcBIfHKBw-4VRrbeyhKEIUv87IgE2p0KtL0uLMwSUi2xWV51NgEAA"
 )
@@ -53,6 +54,17 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 			CurrentModel = "gemini-3.1-pro"
 		}
 		sendMessage(clientWA, chatID, "تم تغيير النموذج بنجاح إلى: "+CurrentModel, msg, stanzaID, participant)
+		return true
+	} else if lowerText == "/extended" {
+		IsExtended = true
+		sendMessage(clientWA, chatID, "تم تفعيل الوضع الموسع (Extended Mode) بنجاح ✅", msg, stanzaID, participant)
+		return true
+	} else if lowerText == "/unextended" {
+		IsExtended = false
+		sendMessage(clientWA, chatID, "تم إيقاف الوضع الموسع (Extended Mode) بنجاح ❌", msg, stanzaID, participant)
+		return true
+	} else if lowerText == ".new chat" {
+		sendMessage(clientWA, chatID, "تم بدء محادثة جديدة مع جيميناي 💬✨", msg, stanzaID, participant)
 		return true
 	}
 
@@ -102,7 +114,15 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		if prompt != "" {
 			sendMessage(clientWA, chatID, "⏳ جاري التفكير...", msg, stanzaID, participant)
 
-			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, prompt)
+			finalPrompt := prompt
+			if CurrentModel != "" {
+				finalPrompt = "[System Note: Act as " + CurrentModel + ".]\n" + finalPrompt
+			}
+			if IsExtended {
+				finalPrompt = "[System Note: Please provide a highly detailed, comprehensive, and extended answer.]\n" + finalPrompt
+			}
+
+			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, finalPrompt)
 			out, err := cmd.CombinedOutput()
 			
 			if err != nil {

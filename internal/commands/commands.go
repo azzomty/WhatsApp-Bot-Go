@@ -1555,13 +1555,15 @@ func pinterestMatchingIcons(ctx *BotContext) {
 	sendMessage(ctx, "جاري البحث عن تطقيمات... 🔍")
 	go func() {
 		results := pinterest.SearchPinterestMatchingIcons(query)
-		if len(results) >= 2 {
+		pairs := pinterest.GetMatchingPairs(results, 1)
+		
+		if len(pairs) >= 2 {
 			count := 0
-			for _, res := range results {
+			for _, imgUrl := range pairs {
 				if count >= 2 {
 					break
 				}
-				data, err := pinterest.DownloadImage(res.URL)
+				data, err := pinterest.DownloadImage(imgUrl)
 				if err == nil && len(data) > 5000 {
 					resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
 					if err == nil {
