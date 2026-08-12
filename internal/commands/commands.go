@@ -1317,13 +1317,9 @@ func repeatMessage(ctx *BotContext) {
 		return
 	}
 
-	// Send multiple messages to spam as requested by the user
-	go func() {
-		for i := 0; i < count; i++ {
-			sendMessage(ctx, msg)
-			time.Sleep(200 * time.Millisecond) // Small delay to prevent rate limit
-		}
-	}()
+	// Send a single message containing the repeated string
+	repeatedMsg := strings.Repeat(msg+" ", count)
+	sendMessage(ctx, strings.TrimSpace(repeatedMsg))
 }
 
 func closeGroup(ctx *BotContext) {

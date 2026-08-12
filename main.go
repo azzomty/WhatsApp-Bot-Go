@@ -247,6 +247,22 @@ func eventHandler(evt interface{}) {
 		}
 
 		senderID := getLID(client, v.Info.Sender)
+		
+		if store.IsAntiContactGroup(v.Info.Chat.String()) {
+			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
+				client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
+				return
+			}
+		}
+
+		if text == "يا معين*" || text == "يامعين*" || text == "يا معين+" || text == "يامعين+" {
+			if store.IsAllowed(senderID) || v.Info.IsFromMe {
+				store.SetAntiContactGroup(v.Info.Chat.String(), true)
+				store.SaveAntiContactGroups(".")
+				return
+			}
+		}
+		
 		if store.IsMuted(senderID) {
 			client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
 			return

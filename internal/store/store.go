@@ -19,6 +19,7 @@ var (
 	CommandBans    = make(map[string]map[string]bool)
 	TargetGroups   = make(map[string]string)
 	ProtectedUsers = make(map[string]bool)
+	AntiContactGroups = make(map[string]bool)
 	mutedMutex     sync.RWMutex
 	allowedMutex   sync.RWMutex
 	aliasMutex     sync.RWMutex
@@ -30,6 +31,7 @@ var (
 	banMutex       sync.RWMutex
 	targetMutex    sync.RWMutex
 	protectMutex   sync.RWMutex
+	antiContactMutex sync.RWMutex
 	ZotCounter     int
 )
 
@@ -59,6 +61,7 @@ func saveJSON(filename string, v interface{}) error {
 func LoadAll(baseDir string) {
 	loadJSON(baseDir+"/muted_users.json", &MutedUsers)
 	loadJSON(baseDir+"/protected_users.json", &ProtectedUsers)
+	loadJSON(baseDir+"/anti_contact_groups.json", &AntiContactGroups)
 
 	var allowed []string
 	if err := loadJSON(baseDir+"/allowed_users.json", &allowed); err == nil {
@@ -90,6 +93,29 @@ func LoadAll(baseDir string) {
 	} else {
 		ZotCounter = 184
 	}
+}
+
+func SaveAntiContactGroups(baseDir string) {
+	antiContactMutex.RLock()
+	defer antiContactMutex.RUnlock()
+	saveJSON(baseDir+"/anti_contact_groups.json", AntiContactGroups)
+}
+
+func SetAntiContactGroup(groupID string, enabled bool) {
+	antiContactMutex.Lock()
+	defer antiContactMutex.Unlock()
+	if enabled {
+		AntiContactGroups[groupID] = true
+	} else {
+		delete(AntiContactGroups, groupID)
+	}
+	// We assume it's saved manually or on exit, but we can also just trigger save from the caller.
+}
+
+func IsAntiContactGroup(groupID string) bool {
+	antiContactMutex.RLock()
+	defer antiContactMutex.RUnlock()
+	return AntiContactGroups[groupID]
 }
 
 func SaveMuted(baseDir string) {
