@@ -1423,7 +1423,12 @@ func refreshPinterest(ctx *BotContext) {
 	if last, ok := pinterest.GetLastSearch(ctx.ChatID.String()); ok {
 		sendMessage(ctx, "جاري البحث عن صور جديدة... ⏳")
 		go func() {
-			results := pinterest.SearchPinterest(last.Query, last.Aspect)
+			var results []pinterest.PinResult
+			if last.IsVisual {
+				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect)
+			} else {
+				results = pinterest.SearchPinterest(last.Query, last.Aspect)
+			}
 
 			if len(results) > 0 {
 				rand.Shuffle(len(results), func(i, j int) {

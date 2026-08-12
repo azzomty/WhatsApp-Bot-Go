@@ -98,6 +98,13 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 			continue
 		}
 
+		if promoted, ok := pin["is_promoted"].(bool); ok && promoted {
+			continue
+		}
+		if typeStr, ok := pin["type"].(string); ok && typeStr == "ad" {
+			continue
+		}
+
 		var imgUrl string
 		var w, h float64
 		
