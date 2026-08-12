@@ -4,31 +4,23 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"os/exec"
 	"strings"
 
-	"github.com/google/generative-ai-go/genai"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/types"
-	"google.golang.org/api/option"
 	"google.golang.org/protobuf/proto"
 )
 
 var (
-	client       *genai.Client
-	CurrentModel = "gemini-3.6-flash"
-	chatSessions = make(map[string]*genai.ChatSession)
-	geminiAPIKey = os.Getenv("GEMINI_API_KEY")
+	CurrentModel = "gemini-web"
+	geminiCookie1PSID   = "g.a000BgkyVrxC8cwsVYW5dLfLHd-KlWxi4gxc32Uv8-Ee8FKXA51i5udy6dsl2ETs9tvosAI61QACgYKATASARUSFQHGX2MivIgMfl2Oqgtdx_Ae5yGcQBoVAUF8yKrTAw1qZVJgsEXATsPto0cv0076"
+	geminiCookie1PSIDTS = "sidts-CjEBPWEu2XHmxY-HfLlcBIfHKBw-4VRrbeyhKEIUv87IgE2p0KtL0uLMwSUi2xWV51NgEAA"
 )
 
 func init() {
-	ctx := context.Background()
-	c, err := genai.NewClient(ctx, option.WithAPIKey(geminiAPIKey))
-	if err != nil {
-		log.Printf("Failed to create genai client: %v", err)
-	}
-	client = c
+	// Web API doesn't need init
 }
 
 func sendMessage(clientWA *whatsmeow.Client, chatID types.JID, text string, quotedMsg *waProto.Message, stanzaID string, participant string) {
@@ -108,34 +100,24 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		prompt = strings.TrimSpace(prompt)
 
 		if prompt != "" {
-			if client == nil {
-				sendMessage(clientWA, chatID, "Gemini client not initialized", msg, stanzaID, participant)
-				return true
-			}
-			chatStr := chatID.String()
-			session, ok := chatSessions[chatStr]
-			if !ok {
-				model := client.GenerativeModel(CurrentModel)
-				model.SystemInstruction = &genai.Content{
-					Parts: []genai.Part{genai.Text("أنت ذكاء اصطناعي اسمك جيميناي. أجب باختصار وبشكل مفيد.")},
-				}
-				session = model.StartChat()
-				chatSessions[chatStr] = session
-			}
+			sendMessage(clientWA, chatID, "⏳ جاري التفكير...", msg, stanzaID, participant)
 
-			resp, err := session.SendMessage(context.Background(), genai.Text(prompt))
+			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, prompt)
+			out, err := cmd.CombinedOutput()
+			
 			if err != nil {
-				log.Printf("Gemini Error: %v", err)
-				delete(chatSessions, chatStr)
+				log.Printf("Gemini Error: %v\nOutput: %s", err, string(out))
 				sendMessage(clientWA, chatID, fmt.Sprintf("حدث خطأ في الذكاء الاصطناعي:\n%v", err), msg, stanzaID, participant)
 				return true
 			}
 
-			if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
-				if part, ok := resp.Candidates[0].Content.Parts[0].(genai.Text); ok {
-					sendMessage(clientWA, chatID, string(part), msg, stanzaID, participant)
-				}
+			response := strings.TrimSpace(string(out))
+			if response == "" {
+				response = "عذراً، لم أتمكن من توليد رد."
 			}
+			
+			sendMessage(clientWA, chatID, response, msg, stanzaID, participant)
+
 		} else if hasGeminiCommand {
 			sendMessage(clientWA, chatID, "يرجى كتابة سؤالك.", msg, stanzaID, participant)
 		}
