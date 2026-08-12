@@ -19,7 +19,7 @@ var (
 	CurrentModel = "gemini-3.6-flash"
 	IsExtended = false
 	geminiCookie1PSID   = "g.a000BgkyVrxC8cwsVYW5dLfLHd-KlWxi4gxc32Uv8-Ee8FKXA51i5udy6dsl2ETs9tvosAI61QACgYKATASARUSFQHGX2MivIgMfl2Oqgtdx_Ae5yGcQBoVAUF8yKrTAw1qZVJgsEXATsPto0cv0076"
-	geminiCookie1PSIDTS = "sidts-CjEBPWEu2XHmxY-HfLlcBIfHKBw-4VRrbeyhKEIUv87IgE2p0KtL0uLMwSUi2xWV51NgEAA"
+	geminiCookie1PSIDTS = "sidts-CjEBPWEu2TWIKCjZnktXjfqufZhV0n3B2UtIkHgwbwWdj63gKml8QJX76MdD-j_2-85-EAA"
 )
 
 func init() {

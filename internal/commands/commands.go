@@ -1424,13 +1424,17 @@ func refreshPinterest(ctx *BotContext) {
 		sendMessage(ctx, "جاري البحث عن صور جديدة... ⏳")
 		go func() {
 			var results []pinterest.PinResult
-			if last.IsVisual {
+			if last.Aspect == "foryou" {
+				results = pinterest.ForYouPinterest("all")
+			} else if last.Aspect == "matching" {
+				results = pinterest.SearchPinterestMatchingIcons(last.Query)
+			} else if last.IsVisual {
 				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect)
 			} else {
 				results = pinterest.SearchPinterest(last.Query, last.Aspect)
 			}
 
-			if len(results) > 0 {
+			if len(results) > 0 && last.Aspect != "matching" {
 				rand.Shuffle(len(results), func(i, j int) {
 					results[i], results[j] = results[j], results[i]
 				})
