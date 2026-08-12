@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -257,76 +256,10 @@ func SearchPinterest(query string, aspect string) []PinResult {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		data := extractDataFromJSON(bodyBytes)
 		results := parsePinterestData(data, aspect)
-		if len(results) > 0 {
-			return results
-		}
+		return results
 	}
 
-	q = url.QueryEscape(query + " site:pinterest.com")
-	req, _ = http.NewRequest("GET", "https://duckduckgo.com/?q="+q, nil)
-	req.Header.Set("User-Agent", UserAgents[rand.Intn(len(UserAgents))])
-
-	client = &http.Client{Timeout: 10 * time.Second}
-	resp, err = client.Do(req)
-	if err != nil {
-		return nil
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	bodyStr := string(body)
-
-	re := regexp.MustCompile(`vqd=["']?([a-zA-Z0-9_-]+)["']?`)
-	matches := re.FindStringSubmatch(bodyStr)
-	if len(matches) < 2 {
-		return nil
-	}
-	vqd := matches[1]
-
-	req2, _ := http.NewRequest("GET", "https://duckduckgo.com/i.js?l=us-en&o=json&q="+q+"&vqd="+vqd+"&f=,,,&p=1", nil)
-	req2.Header.Set("User-Agent", UserAgents[rand.Intn(len(UserAgents))])
-	resp2, err := client.Do(req2)
-	if err != nil {
-		return nil
-	}
-	defer resp2.Body.Close()
-
-	var ddgResp DDGResponse
-	if err := json.NewDecoder(resp2.Body).Decode(&ddgResp); err != nil {
-		return nil
-	}
-
-	var results []PinResult
-	for _, item := range ddgResp.Results {
-		if strings.Contains(item.Image, "pinimg.com") {
-			w := float64(item.Width)
-			h := float64(item.Height)
-			if w == 0 { w = 1 }
-			if h == 0 { h = 1 }
-			ratio := w / h
-
-			keep := true
-			if aspect == "icon" && (ratio < 0.7 || ratio > 1.3) {
-				keep = false
-			}
-			if aspect == "wallpaper" && ratio > 0.9 {
-				keep = false
-			}
-			if aspect == "banner" && ratio < 1.1 {
-				keep = false
-			}
-
-			if keep {
-				results = append(results, PinResult{
-					URL:    item.Image,
-					Title:  item.Title,
-					PinURL: item.URL,
-				})
-			}
-		}
-	}
-
-	return results
+	return nil
 }
 
 func ForYouPinterest(aspect string) []PinResult {
