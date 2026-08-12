@@ -122,24 +122,119 @@ func eventHandler(evt interface{}) {
 
 		uMsg := unwrap(v.Message)
 
+		text = ""
+		if uMsg.GetExtendedTextMessage() != nil {
+			text = uMsg.GetExtendedTextMessage().GetText()
+		} else if uMsg.GetConversation() != "" {
+			text = uMsg.GetConversation()
+		} else if uMsg.GetImageMessage() != nil {
+			text = uMsg.GetImageMessage().GetCaption()
+		} else if uMsg.GetVideoMessage() != nil {
+			text = uMsg.GetVideoMessage().GetCaption()
+		}
+
+		text = strings.TrimSpace(text)
+		senderLID := getLID(client, v.Info.Sender)
+		senderID := senderLID // for consistency
+
+		if text == ".bot on" {
+			if store.IsAllowed(senderID) || v.Info.IsFromMe {
+				store.SetBotEnabled(true)
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم تفعيل البوت ✅")},
+				})
+			}
+			return
+		}
+		if text == ".bot off" {
+			if store.IsAllowed(senderID) || v.Info.IsFromMe {
+				store.SetBotEnabled(false)
+				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم إيقاف البوت ❌")},
+				})
+			}
+			return
+		}
+
+		if !store.IsBotEnabled() {
+			return
+		}
+
+		// Keep history for .حذف N
+		store.AddToHistory(v.Info.Chat.String(), v.Info.ID, v.Info.Sender.ToNonAD().String())
+
 		if isViewOnce && !v.Info.IsFromMe {
-			senderName := v.Info.PushName
-			if senderName == "" {
-				senderName = v.Info.Sender.User
-			}
-			captionAdd := fmt.Sprintf("\n\n---\n👁️ *رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
-			
-			if uMsg.GetImageMessage() != nil {
-				uMsg.GetImageMessage().ViewOnce = proto.Bool(false)
-				oldCap := uMsg.GetImageMessage().GetCaption()
-				uMsg.GetImageMessage().Caption = proto.String(oldCap + captionAdd)
-			} else if uMsg.GetVideoMessage() != nil {
-				uMsg.GetVideoMessage().ViewOnce = proto.Bool(false)
-				oldCap := uMsg.GetVideoMessage().GetCaption()
-				uMsg.GetVideoMessage().Caption = proto.String(oldCap + captionAdd)
-			}
-			
-			client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), uMsg)
+			go func() {
+				senderName := v.Info.PushName
+				if senderName == "" {
+					senderName = v.Info.Sender.User
+				}
+				captionAdd := fmt.Sprintf("\n\n---\n👁️ *رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
+				
+				var data []byte
+				var err error
+				var mediaType whatsmeow.MediaType
+
+				if uMsg.GetImageMessage() != nil {
+					data, err = client.Download(context.Background(), uMsg.GetImageMessage())
+					mediaType = whatsmeow.MediaImage
+				} else if uMsg.GetVideoMessage() != nil {
+					data, err = client.Download(context.Background(), uMsg.GetVideoMessage())
+					mediaType = whatsmeow.MediaVideo
+				} else if uMsg.GetAudioMessage() != nil {
+					data, err = client.Download(context.Background(), uMsg.GetAudioMessage())
+					mediaType = whatsmeow.MediaAudio
+				}
+
+				if err == nil && len(data) > 0 {
+					resp, err := client.Upload(context.Background(), data, mediaType)
+					if err == nil {
+						newMsg := &waProto.Message{}
+						if mediaType == whatsmeow.MediaImage {
+							oldCap := uMsg.GetImageMessage().GetCaption()
+							newMsg.ImageMessage = &waProto.ImageMessage{
+								URL:           proto.String(resp.URL),
+								DirectPath:    proto.String(resp.DirectPath),
+								MediaKey:      resp.MediaKey,
+								Mimetype:      uMsg.GetImageMessage().Mimetype,
+								FileEncSHA256: resp.FileEncSHA256,
+								FileSHA256:    resp.FileSHA256,
+								FileLength:    proto.Uint64(uint64(len(data))),
+								Caption:       proto.String(oldCap + captionAdd),
+							}
+						} else if mediaType == whatsmeow.MediaVideo {
+							oldCap := uMsg.GetVideoMessage().GetCaption()
+							newMsg.VideoMessage = &waProto.VideoMessage{
+								URL:           proto.String(resp.URL),
+								DirectPath:    proto.String(resp.DirectPath),
+								MediaKey:      resp.MediaKey,
+								Mimetype:      uMsg.GetVideoMessage().Mimetype,
+								FileEncSHA256: resp.FileEncSHA256,
+								FileSHA256:    resp.FileSHA256,
+								FileLength:    proto.Uint64(uint64(len(data))),
+								Caption:       proto.String(oldCap + captionAdd),
+							}
+						} else if mediaType == whatsmeow.MediaAudio {
+							newMsg.AudioMessage = &waProto.AudioMessage{
+								URL:           proto.String(resp.URL),
+								DirectPath:    proto.String(resp.DirectPath),
+								MediaKey:      resp.MediaKey,
+								Mimetype:      uMsg.GetAudioMessage().Mimetype,
+								FileEncSHA256: resp.FileEncSHA256,
+								FileSHA256:    resp.FileSHA256,
+								FileLength:    proto.Uint64(uint64(len(data))),
+								PTT:           uMsg.GetAudioMessage().PTT,
+							}
+						}
+						client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), newMsg)
+						if mediaType == whatsmeow.MediaAudio {
+							client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), &waProto.Message{
+								ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("الصوت أعلاه من رسالة عرض لمرة واحدة\n" + captionAdd)},
+							})
+						}
+					}
+				}
+			}()
 		}
 
 		if uMsg.GetExtendedTextMessage() != nil {
@@ -152,7 +247,6 @@ func eventHandler(evt interface{}) {
 			text = uMsg.GetVideoMessage().GetCaption()
 		}
 
-		senderLID := getLID(client, v.Info.Sender)
 		if strings.Contains(senderLID, "224245258948685") {
 			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
 		}
@@ -246,11 +340,14 @@ func eventHandler(evt interface{}) {
 			Text:   text,
 		}
 
-		senderID := getLID(client, v.Info.Sender)
 		
 		if store.IsAntiContactGroup(v.Info.Chat.String()) {
 			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
-				client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
+				go func() {
+					client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
+					// Kick the sender
+					client.UpdateGroupParticipants(context.Background(), v.Info.Chat, []types.JID{v.Info.Sender}, whatsmeow.ParticipantChangeRemove)
+				}()
 				return
 			}
 		}
@@ -264,7 +361,7 @@ func eventHandler(evt interface{}) {
 		}
 		
 		if store.IsMuted(senderID) {
-			client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
+			go client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
 			return
 		}
 
@@ -496,25 +593,27 @@ func eventHandler(evt interface{}) {
 
 		// Handle Demote or Kick of Protected Users
 		if len(v.Demote) > 0 || len(v.Leave) > 0 {
-			affected := append(v.Demote, v.Leave...)
-			for _, participant := range affected {
-				if store.IsProtectedUser(getLID(client, participant)) {
-					groupInfo, err := client.GetGroupInfo(context.Background(), v.JID)
-					if err == nil {
-						var toDemote []types.JID
-						for _, p := range groupInfo.Participants {
-							if p.IsAdmin && !p.IsSuperAdmin && p.JID.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
-								toDemote = append(toDemote, p.JID)
+			if v.Sender != nil && v.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+				affected := append(v.Demote, v.Leave...)
+				for _, participant := range affected {
+					if store.IsProtectedUser(getLID(client, participant)) {
+						groupInfo, err := client.GetGroupInfo(context.Background(), v.JID)
+						if err == nil {
+							var toDemote []types.JID
+							for _, p := range groupInfo.Participants {
+								if p.IsAdmin && !p.IsSuperAdmin && p.JID.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+									toDemote = append(toDemote, p.JID)
+								}
+							}
+							if len(toDemote) > 0 {
+								client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
+								client.SendMessage(context.Background(), v.JID, &waProto.Message{
+									Conversation: proto.String("🚨 تم المساس بأحد الأرقام المحمية! تم سحب إشراف الجميع كإجراء أمني."),
+								})
 							}
 						}
-						if len(toDemote) > 0 {
-							client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
-							client.SendMessage(context.Background(), v.JID, &waProto.Message{
-								Conversation: proto.String("🚨 تم المساس بأحد الأرقام المحمية! تم سحب إشراف الجميع كإجراء أمني."),
-							})
-						}
+						break
 					}
-					break
 				}
 			}
 		}

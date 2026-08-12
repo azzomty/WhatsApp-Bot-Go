@@ -33,7 +33,48 @@ var (
 	protectMutex   sync.RWMutex
 	antiContactMutex sync.RWMutex
 	ZotCounter     int
+
+	BotEnabled      bool = true
+	botEnabledMutex sync.RWMutex
+
+	ChatHistory   = make(map[string][]MsgInfo)
+	historyMutex  sync.RWMutex
 )
+
+type MsgInfo struct {
+	ID     string
+	Sender string // JID string
+}
+
+func SetBotEnabled(b bool) {
+	botEnabledMutex.Lock()
+	defer botEnabledMutex.Unlock()
+	BotEnabled = b
+}
+
+func IsBotEnabled() bool {
+	botEnabledMutex.RLock()
+	defer botEnabledMutex.RUnlock()
+	return BotEnabled
+}
+
+func AddToHistory(chat string, id string, sender string) {
+	historyMutex.Lock()
+	defer historyMutex.Unlock()
+	ChatHistory[chat] = append(ChatHistory[chat], MsgInfo{ID: id, Sender: sender})
+	if len(ChatHistory[chat]) > 1000 {
+		ChatHistory[chat] = ChatHistory[chat][100:] // Keep recent 900
+	}
+}
+
+func GetHistory(chat string) []MsgInfo {
+	historyMutex.RLock()
+	defer historyMutex.RUnlock()
+	// Return a copy to avoid race conditions
+	hist := make([]MsgInfo, len(ChatHistory[chat]))
+	copy(hist, ChatHistory[chat])
+	return hist
+}
 
 func loadJSON(filename string, v interface{}) error {
 	file, err := os.Open(filename)

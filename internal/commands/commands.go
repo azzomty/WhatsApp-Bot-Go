@@ -176,7 +176,7 @@ func Handle(ctx *BotContext) {
 	case ".add", ".اضافة":
 		hebebiaAdd(ctx)
 	case ".delete", ".حذف":
-		hebebiaDelete(ctx)
+		handleDeleteMsgOrHebebia(ctx)
 	case ".الاقاب", ".الالقاب", ".انذار", ".لقبه", ".لقبي", ".متوفر", ".حجز", ".توقيف", ".ورك":
 		// Handled by Node.js Bot, silently return
 		return
@@ -1015,11 +1015,85 @@ func hebebiaAdd(ctx *BotContext) {
 	}
 }
 
-func hebebiaDelete(ctx *BotContext) {
+func handleDeleteMsgOrHebebia(ctx *BotContext) {
+	parts := strings.Fields(ctx.Text)
+
+	if ctx.Event.Message.GetExtendedTextMessage() != nil {
+		ctxInfo := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo()
+		if ctxInfo.GetStanzaID() != "" {
+			if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+				return
+			}
+			count := 1
+			if len(parts) > 1 {
+				parsedCount, err := strconv.Atoi(parts[1])
+				if err == nil && parsedCount > 0 {
+					count = parsedCount
+				}
+			}
+
+			targetJID, _ := types.ParseJID(ctxInfo.GetParticipant())
+			if count == 1 {
+				ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, targetJID, ctxInfo.GetStanzaID()))
+				return
+			}
+
+			targetID := targetJID.ToNonAD().String()
+			history := store.GetHistory(ctx.ChatID.String())
+			var toDelete []string
+			for i := len(history) - 1; i >= 0; i-- {
+				if history[i].Sender == targetID {
+					toDelete = append(toDelete, history[i].ID)
+					if len(toDelete) >= count {
+						break
+					}
+				}
+			}
+			if len(toDelete) > 0 {
+				go func() {
+					for _, msgID := range toDelete {
+						ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, targetJID, msgID))
+					}
+				}()
+			}
+			return
+		} else if len(ctxInfo.GetMentionedJID()) > 0 {
+			if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
+				return
+			}
+			count := 1
+			if len(parts) > 1 {
+				parsedCount, err := strconv.Atoi(parts[1])
+				if err == nil && parsedCount > 0 {
+					count = parsedCount
+				}
+			}
+			targetJID, _ := types.ParseJID(ctxInfo.GetMentionedJID()[0])
+			targetID := targetJID.ToNonAD().String()
+			history := store.GetHistory(ctx.ChatID.String())
+			var toDelete []string
+			for i := len(history) - 1; i >= 0; i-- {
+				if history[i].Sender == targetID {
+					toDelete = append(toDelete, history[i].ID)
+					if len(toDelete) >= count {
+						break
+					}
+				}
+			}
+			if len(toDelete) > 0 {
+				go func() {
+					for _, msgID := range toDelete {
+						ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, targetJID, msgID))
+					}
+				}()
+			}
+			return
+		}
+	}
+
 	if !ctx.Event.Info.IsFromMe && getLID(ctx, ctx.Sender) != "224245258948685@lid" {
 		return
 	}
-	parts := strings.Split(ctx.Text, " ")
 	if len(parts) > 1 {
 		num, err := strconv.Atoi(parts[1])
 		if err == nil {
@@ -1030,7 +1104,7 @@ func hebebiaDelete(ctx *BotContext) {
 			}
 		}
 	}
-	sendMessage(ctx, "رقم غير صحيح.")
+	sendMessage(ctx, "رقم غير صحيح أو ما منشنت/رديت على أحد عشان أحذف رسائله.")
 }
 
 func setName(ctx *BotContext) {
