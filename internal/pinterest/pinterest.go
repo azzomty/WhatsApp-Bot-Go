@@ -315,7 +315,103 @@ func ForYouPinterest(aspect string) []PinResult {
 }
 
 func SearchPinterestMatchingIcons(query string) []PinResult {
-	return SearchPinterest("matching icons "+query, "all")
+	if os.Getenv("PINTEREST_TOKEN") != "" {
+		// V3 Native API Method
+		q := url.QueryEscape("matching icons " + query)
+		searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s", q)
+		req, _ := http.NewRequest("GET", searchUrl, nil)
+		setPinterestHeaders(req)
+		
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			data := extractDataFromJSON(bodyBytes)
+			pins := parsePinterestData(data, "all")
+			
+			var results []PinResult
+			var wg sync.WaitGroup
+			var mu sync.Mutex
+
+			max := 10
+			if len(pins) < max {
+				max = len(pins)
+			}
+
+			for i := 0; i < max; i++ {
+				p := pins[i]
+				if p.ID == "" {
+					continue
+				}
+				
+				wg.Add(1)
+				go func(id string) {
+					defer wg.Done()
+					req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/", nil)
+					setPinterestHeaders(req)
+					
+					resp, err := client.Do(req)
+					if err != nil {
+						return
+					}
+					
+					bodyBytes, _ := ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
+					
+					var respJson map[string]interface{}
+					json.Unmarshal(bodyBytes, &respJson)
+					
+					if data, ok := respJson["data"].(map[string]interface{}); ok {
+						if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
+							if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
+								var urls []string
+								for i := 0; i < 2; i++ {
+									if slot, ok := slots[i].(map[string]interface{}); ok {
+										if images, ok := slot["images"].(map[string]interface{}); ok {
+											for _, key := range []string{"originals", "orig", "736x", "474x"} {
+												if imgData, ok := images[key].(map[string]interface{}); ok {
+													if u, ok := imgData["url"].(string); ok {
+														urls = append(urls, u)
+														break
+													}
+												}
+											}
+										}
+									}
+								}
+								if len(urls) >= 2 {
+									mu.Lock()
+									if len(results) == 0 {
+										results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
+										results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
+									}
+									mu.Unlock()
+								}
+							}
+						}
+					}
+				}(p.ID)
+			}
+			wg.Wait()
+			if len(results) > 0 {
+				return results
+			}
+		}
+	}
+	
+	// Fallback to DuckDuckGo Method
+	pins := SearchPinterest("matching icons "+query, "all")
+	if len(pins) == 0 {
+		return nil
+	}
+	
+	pairs := GetMatchingPairs(pins, 1)
+	var results []PinResult
+	for _, url := range pairs {
+		results = append(results, PinResult{URL: url})
+	}
+	return results
 }
 
 func SearchPinterestLens(base64Image string, aspect string) []PinResult {
