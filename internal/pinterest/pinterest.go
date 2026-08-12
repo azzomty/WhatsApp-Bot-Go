@@ -229,6 +229,26 @@ func extractDataFromJSON(bodyBytes []byte) []interface{} {
 }
 
 func SearchPinterest(query string, aspect string) []PinResult {
+	if os.Getenv("PINTEREST_TOKEN") != "" {
+		// V3 Native API Method
+		q := url.QueryEscape(query)
+		searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s", q)
+		req, _ := http.NewRequest("GET", searchUrl, nil)
+		setPinterestHeaders(req)
+		
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			data := extractDataFromJSON(bodyBytes)
+			results := parsePinterestData(data, aspect)
+			if len(results) > 0 {
+				return results
+			}
+		}
+	}
+
 	q := url.QueryEscape(query + " site:pinterest.com")
 	req, _ := http.NewRequest("GET", "https://duckduckgo.com/?q="+q, nil)
 	req.Header.Set("User-Agent", UserAgents[rand.Intn(len(UserAgents))])
