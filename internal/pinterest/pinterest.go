@@ -2,11 +2,14 @@ package pinterest
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"os"
 	"regexp"
@@ -443,68 +446,44 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 }
 
 func SearchPinterestLens(base64Image string, aspect string) []PinResult {
-	apiKey := os.Getenv("RAPIDAPI_KEY")
-	if apiKey == "" {
-		fmt.Println("RAPIDAPI_KEY not set")
+	imageBytes, err := base64.StdEncoding.DecodeString(base64Image)
+	if err != nil {
+		fmt.Println("Base64 decode error:", err)
 		return nil
 	}
 
-	apiUrl := "https://pinterest-lens-reverse-image-search-api.p.rapidapi.com/search"
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
 	
-	payloadData := map[string]string{
-		"image_base64": base64Image,
+	writer.WriteField("camera_type", "0")
+	writer.WriteField("source_type", "1")
+	writer.WriteField("page_size", "24")
+	
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="image"; filename="null"`)
+	h.Set("Content-Type", "application/octet-stream")
+	part, err := writer.CreatePart(h)
+	if err == nil {
+		part.Write(imageBytes)
 	}
-	payloadBytes, _ := json.Marshal(payloadData)
+	writer.Close()
 
-	req, _ := http.NewRequest("POST", apiUrl, bytes.NewBuffer(payloadBytes))
-	req.Header.Add("x-rapidapi-key", apiKey)
-	req.Header.Add("x-rapidapi-host", "pinterest-lens-reverse-image-search-api.p.rapidapi.com")
-	req.Header.Add("Content-Type", "application/json")
+	req, _ := http.NewRequest("POST", "https://api.pinterest.com/v3/visual_search/lens/search/", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	setPinterestHeaders(req)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("RapidAPI Request Error:", err)
+		fmt.Println("Lens search error:", err)
 		return nil
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	bodyStr := string(bodyBytes)
-
-	// Extract any pinimg.com URLs from the raw JSON response
-	re := regexp.MustCompile(`https?://i\.pinimg\.com/[a-zA-Z0-9_/-]+\.(jpg|jpeg|png)`)
-	matches := re.FindAllString(bodyStr, -1)
+	data := extractDataFromJSON(bodyBytes)
 	
-	// Remove duplicates
-	uniqueURLs := make(map[string]bool)
-	var results []PinResult
-	
-	for _, match := range matches {
-		// Try to only keep originals or 736x for high quality
-		if strings.Contains(match, "originals") || strings.Contains(match, "736x") {
-			if !uniqueURLs[match] {
-				uniqueURLs[match] = true
-				results = append(results, PinResult{
-					Title: "Pinterest Visual Search",
-					URL:   match,
-				})
-			}
-		}
-	}
-	
-	if len(results) == 0 {
-		for _, match := range matches {
-			if !uniqueURLs[match] {
-				uniqueURLs[match] = true
-				results = append(results, PinResult{
-					Title: "Pinterest Visual Search",
-					URL:   match,
-				})
-			}
-		}
-	}
-	return results
+	return parsePinterestData(data, aspect)
 }
 
 func GetMatchingPairs(results []PinResult, targetPairs int) []string {
