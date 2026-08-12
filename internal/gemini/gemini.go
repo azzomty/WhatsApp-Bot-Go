@@ -72,8 +72,6 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 	}
 
 	hasGeminiCommand := strings.Contains(lowerText, ".جيميناي") || strings.Contains(lowerText, "جيميناي.") || strings.Contains(lowerText, ".حيميناي") || strings.Contains(lowerText, "حيميناي.")
-	hasImageCommand := strings.HasPrefix(lowerText, ".تخيل") || strings.HasPrefix(lowerText, ".صورة")
-	hasVideoCommand := strings.HasPrefix(lowerText, ".فيديو")
 
 	isMentioned := false
 	if msg != nil && msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil {
@@ -92,24 +90,17 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		prompt = strings.ReplaceAll(prompt, "جيميناي.", "")
 		prompt = strings.ReplaceAll(prompt, ".حيميناي", "")
 		prompt = strings.ReplaceAll(prompt, "حيميناي.", "")
-	} else if hasImageCommand {
-		prompt = strings.ReplaceAll(prompt, ".تخيل", "")
-		prompt = strings.ReplaceAll(prompt, ".صورة", "")
-		prompt = "[System Note: The user wants to generate an image. Please generate an image of:]\n" + prompt
-	} else if hasVideoCommand {
-		prompt = strings.ReplaceAll(prompt, ".فيديو", "")
-		prompt = "[System Note: The user wants to generate a video using Veo/Video model. Please generate a video of:]\n" + prompt
 	}
 	prompt = strings.TrimSpace(prompt)
 
 	if isGroup && !isFromMe {
-		if hasGeminiCommand || hasImageCommand || hasVideoCommand || isMentioned {
+		if hasGeminiCommand || isMentioned {
 			// Do not process Gemini commands for others in groups
 			return false
 		}
 	}
 
-	if hasGeminiCommand || hasImageCommand || hasVideoCommand || isMentioned {
+	if hasGeminiCommand || isMentioned {
 		if msg != nil && msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil && msg.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
 			qMsg := msg.ExtendedTextMessage.ContextInfo.QuotedMessage
 			qText := qMsg.GetConversation()
@@ -197,7 +188,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 				}
 			}
 
-		} else if hasGeminiCommand || hasImageCommand || hasVideoCommand {
+		} else if hasGeminiCommand {
 			sendMessage(clientWA, chatID, "يرجى كتابة طلبك بعد الأمر.", msg, stanzaID, participant)
 		}
 		return true

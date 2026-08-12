@@ -9,8 +9,7 @@ try:
     client = Gemini(cookies=cookies)
     resp = client.generate_content("generate an image of a cat")
     print(resp.text)
-    print(dir(resp))
-    if hasattr(resp, 'images'): print("images:", resp.images)
-    if hasattr(resp, 'generated_images'): print("generated_images:", resp.generated_images)
+    if hasattr(resp, 'web_images'): print("web_images:", resp.web_images)
+    print("response_dict:", resp.response_dict)
 except Exception as e:
     print(e)
