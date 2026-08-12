@@ -3,7 +3,9 @@ package gemini
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os/exec"
 	"strings"
 
@@ -69,6 +71,8 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 	}
 
 	hasGeminiCommand := strings.Contains(lowerText, ".جيميناي") || strings.Contains(lowerText, "جيميناي.") || strings.Contains(lowerText, ".حيميناي") || strings.Contains(lowerText, "حيميناي.")
+	hasImageCommand := strings.HasPrefix(lowerText, ".تخيل") || strings.HasPrefix(lowerText, ".صورة")
+	hasVideoCommand := strings.HasPrefix(lowerText, ".فيديو")
 
 	isMentioned := false
 	if msg != nil && msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil {
@@ -87,17 +91,24 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		prompt = strings.ReplaceAll(prompt, "جيميناي.", "")
 		prompt = strings.ReplaceAll(prompt, ".حيميناي", "")
 		prompt = strings.ReplaceAll(prompt, "حيميناي.", "")
+	} else if hasImageCommand {
+		prompt = strings.ReplaceAll(prompt, ".تخيل", "")
+		prompt = strings.ReplaceAll(prompt, ".صورة", "")
+		prompt = "[System Note: The user wants to generate an image. Please generate an image of:]\n" + prompt
+	} else if hasVideoCommand {
+		prompt = strings.ReplaceAll(prompt, ".فيديو", "")
+		prompt = "[System Note: The user wants to generate a video using Veo/Video model. Please generate a video of:]\n" + prompt
 	}
 	prompt = strings.TrimSpace(prompt)
 
 	if isGroup && !isFromMe {
-		if hasGeminiCommand || isMentioned {
+		if hasGeminiCommand || hasImageCommand || hasVideoCommand || isMentioned {
 			// Do not process Gemini commands for others in groups
 			return false
 		}
 	}
 
-	if hasGeminiCommand || isMentioned {
+	if hasGeminiCommand || hasImageCommand || hasVideoCommand || isMentioned {
 		if msg != nil && msg.ExtendedTextMessage != nil && msg.ExtendedTextMessage.ContextInfo != nil && msg.ExtendedTextMessage.ContextInfo.QuotedMessage != nil {
 			qMsg := msg.ExtendedTextMessage.ContextInfo.QuotedMessage
 			qText := qMsg.GetConversation()
@@ -135,11 +146,58 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 			if response == "" {
 				response = "عذراً، لم أتمكن من توليد رد."
 			}
-			
-			sendMessage(clientWA, chatID, response, msg, stanzaID, participant)
 
-		} else if hasGeminiCommand {
-			sendMessage(clientWA, chatID, "يرجى كتابة سؤالك.", msg, stanzaID, participant)
+			parts := strings.Split(response, "---MEDIA---")
+			textContent := strings.TrimSpace(parts[0])
+
+			if textContent != "" {
+				sendMessage(clientWA, chatID, textContent, msg, stanzaID, participant)
+			} else {
+				sendMessage(clientWA, chatID, "تم توليد الوسائط:", msg, stanzaID, participant)
+			}
+
+			if len(parts) > 1 {
+				mediaUrls := strings.Split(strings.TrimSpace(parts[1]), "\n")
+				for _, mUrl := range mediaUrls {
+					mUrl = strings.TrimSpace(mUrl)
+					if mUrl == "" {
+						continue
+					}
+					
+					// Download the image
+					resp, err := http.Get(mUrl)
+					if err == nil {
+						imgData, _ := ioutil.ReadAll(resp.Body)
+						resp.Body.Close()
+						
+						if len(imgData) > 0 {
+							uploadResp, err := clientWA.Upload(context.Background(), imgData, whatsmeow.MediaImage)
+							if err == nil {
+								imgMsg := &waProto.ImageMessage{
+									URL:           proto.String(uploadResp.URL),
+									DirectPath:    proto.String(uploadResp.DirectPath),
+									MediaKey:      uploadResp.MediaKey,
+									Mimetype:      proto.String("image/jpeg"),
+									FileEncSHA256: uploadResp.FileEncSHA256,
+									FileSHA256:    uploadResp.FileSHA256,
+									FileLength:    proto.Uint64(uint64(len(imgData))),
+									ContextInfo: &waProto.ContextInfo{
+										StanzaID:      proto.String(stanzaID),
+										Participant:   proto.String(participant),
+										QuotedMessage: msg,
+									},
+								}
+								clientWA.SendMessage(context.Background(), chatID, &waProto.Message{
+									ImageMessage: imgMsg,
+								})
+							}
+						}
+					}
+				}
+			}
+
+		} else if hasGeminiCommand || hasImageCommand || hasVideoCommand {
+			sendMessage(clientWA, chatID, "يرجى كتابة طلبك بعد الأمر.", msg, stanzaID, participant)
 		}
 		return true
 	}
