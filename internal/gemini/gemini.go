@@ -20,6 +20,7 @@ var (
 	IsExtended = false
 	geminiCookie1PSID   = "g.a000BgkyVrxC8cwsVYW5dLfLHd-KlWxi4gxc32Uv8-Ee8FKXA51i5udy6dsl2ETs9tvosAI61QACgYKATASARUSFQHGX2MivIgMfl2Oqgtdx_Ae5yGcQBoVAUF8yKrTAw1qZVJgsEXATsPto0cv0076"
 	geminiCookie1PSIDTS = "sidts-CjEBPWEu2TWIKCjZnktXjfqufZhV0n3B2UtIkHgwbwWdj63gKml8QJX76MdD-j_2-85-EAA"
+	geminiCookie1PSIDCC = "" // YOU MUST SET THIS LATER
 )
 
 func init() {
@@ -133,7 +134,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 				finalPrompt = "[System Note: Please provide a highly detailed, comprehensive, and extended answer.]\n" + finalPrompt
 			}
 
-			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, finalPrompt)
+			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, geminiCookie1PSIDCC, finalPrompt)
 			out, err := cmd.CombinedOutput()
 			
 			if err != nil {

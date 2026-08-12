@@ -3,18 +3,21 @@ from gemini import Gemini
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
-    if len(sys.argv) < 4:
-        print("Usage: gemini_cli <cookie_1psid> <cookie_1psidts> <prompt>")
+    if len(sys.argv) < 5:
+        print("Usage: gemini_cli <cookie_1psid> <cookie_1psidts> <cookie_1psidcc> <prompt>")
         sys.exit(1)
     
     cookie_1psid = sys.argv[1]
     cookie_1psidts = sys.argv[2]
-    prompt = sys.argv[3]
+    cookie_1psidcc = sys.argv[3]
+    prompt = sys.argv[4]
     
     cookies = {
         "__Secure-1PSID": cookie_1psid,
         "__Secure-1PSIDTS": cookie_1psidts
     }
+    if cookie_1psidcc != "":
+        cookies["__Secure-1PSIDCC"] = cookie_1psidcc
     
     try:
         client = Gemini(cookies=cookies)
