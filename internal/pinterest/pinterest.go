@@ -97,11 +97,171 @@ func GetPending(chatID string) (PendingRequest, bool) {
 func setPinterestHeaders(req *http.Request) {
 	token := os.Getenv("PINTEREST_TOKEN")
 	if token == "" {
-		token = "Bearer pina" + "_AEATFWAVAAPDYAQAGBAGGD6W3DSPDHYBABHO2LFZZGGZJ4ODDM46P5VVRHTQLEQMNJUIUZ6N4LWYFSV3HCGCNBRMWQYOJMAA"
+		token = "Bearer pin" + "a_AEATFWAVAAPDYAQAGBAGGD6W3DSPDHYBABHO2LFZZGGZJ4ODDM46P5VVRHTQLEQMNJUIUZ6N4LWYFSV3HCGCNBRMWQYOJMAA
+Connection:
+Keep-Alive
+Cookie:
+_b=AZehPVTHje5FSKPWa+hL4qmM/XEDJuxk13yIX8h3VBWeJwNgD6CaB3qWfEhPQT8YcaY=; _pinterest_ct=TWc9PSZnZWpBakE1TFQzdkViSURTRTN5VkNqRjZtMUdjeDU1SEpONzNZU0dVc0w2S2ZXVGZTeFNqNVJOSkF4UTFFMUVwaXcrWUZyczl3UmJrdEdSeHMrcHcyc0NuTEQ4NXBPdkdKemVGcG1hVm43OD0mM240em12M0R4eEJNZ2d4YjZLaVZtUHpIWXI0PQ==; _ir=0
+Host:
+api.pinterest.com
+User-Agent:
+Pinterest for Android Tablet/14.23.2 (Nexus 10; 11)
+X-B3-ParentSpanId:
+f33f89f3a4fa073e
+X-B3-SpanId:
+bb5bf5ecb0605f58
+X-B3-TraceId:
+d610a8c9776e184a
+X-Node-ID:
+true
+X-Pinterest-Advertising-Id:
+00000000-0000-0000-0000-000000000000
+X-Pinterest-App-Type-Detailed:
+4
+X-Pinterest-AppState:
+active
+X-Pinterest-Device:
+Nexus 10
+X-Pinterest-Device-Manufacturer:
+Genymobile
+X-Pinterest-InstallId:
+29ac4b08d4c84efebbb95ac02cdd308
+X-Pinterest-Platform-BID:
+AZehPVTHje5FSKPWa+hL4qmM/XEDJuxk13yIX8h3VBWeJwNgD6CaB3qWfEhPQT8YcaY=
+X-Pinterest-WebView-Supported:
+false
+x-pinterest-webview-user-agent:
+Mozilla/5.0 (Linux; Android 11; Nexus 10 Build/RQ1A.210105.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.120 Safari/537.36
+200
+Status: 200 OK
+Headers
+AKAMAI-GRN:
+0.e75e3356.1786556481.2ba4274e
+Cache-Control:
+no-cache, no-store, must-revalidate
+Connection:
+keep-alive
+Content-Encoding:
+br
+Content-Length:
+34871
+Content-Type:
+application/json
+Date:
+Wed, 12 Aug 2026 17:41:23 GMT
+Link:
+<https://i.pinimg.com/474x/4f/36/94/4f36945bb2655c659f8230eea2d27326.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/a1/6b/f3/a16bf3cf14278f47ee4d5c3cb9cbc079.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/0e/90/c1/0e90c111a70202dcb8cc8446c528860d.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/e7/fb/9d/e7fb9d42a0c8141f2a292257ca6c5854.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pin...
+pinterest-generated-by:
+coreapp-ngapi-prod-0a010aa6
+pinterest-version:
+9f4847b
+Set-Cookie:
+_ir=0; Max-Age=1800; HttpOnly; Path=/; Secure
+Vary:
+Accept-Encoding
+X-CDN:
+akamai
+x-content-type-options:
+nosniff
+x-envoy-upstream-service-time:
+836
+x-frame-options:
+DENY
+x-pinterest-direct:
+true
+x-pinterest-rid:
+3875976237662580
+x-pinterest-rid-128bit:
+9198b16b8202ed5735ca3bda33bbaef7
+
+
+269.4 kB
+
+JSON
+1234567891011121314151617181920
+{"
 	}
 	cookie := os.Getenv("PINTEREST_COOKIE")
 	if cookie == "" {
-		cookie = "_b=AZehPVTHje5FSKPWa+hL4qmM/XEDJuxk13yIX8h3VBWeJwNgD6CaB3qWfEhPQT8YcaY=; _pinterest_ct=TWc9PSZnZWpBakE1TFQzdkViSURTRTN5VkNqRjZtMUdjeDU1SEpONzNZU0dVc0w2S2ZXVGZTeFNqNVJOSkF4UTFFMUVwaXcrWUZyczl3UmJrdEdSeHMrcHcyc0NuTEQ4NXBPdkdKemVGcG1hVm43OD0mM240em12M0R4eEJNZ2d4YjZLaVZtUHpIWXI0PQ==; _ir=0"
+		cookie = "_b=AZehPVTHje5FSKPWa+hL4qmM/XEDJuxk13yIX8h3VBWeJwNgD6CaB3qWfEhPQT8YcaY=; _pinterest_ct=TWc9PSZnZWpBakE1TFQzdkViSURTRTN5VkNqRjZtMUdjeDU1SEpONzNZU0dVc0w2S2ZXVGZTeFNqNVJOSkF4UTFFMUVwaXcrWUZyczl3UmJrdEdSeHMrcHcyc0NuTEQ4NXBPdkdKemVGcG1hVm43OD0mM240em12M0R4eEJNZ2d4YjZLaVZtUHpIWXI0PQ==; _ir=0
+Host:
+api.pinterest.com
+User-Agent:
+Pinterest for Android Tablet/14.23.2 (Nexus 10; 11)
+X-B3-ParentSpanId:
+f33f89f3a4fa073e
+X-B3-SpanId:
+bb5bf5ecb0605f58
+X-B3-TraceId:
+d610a8c9776e184a
+X-Node-ID:
+true
+X-Pinterest-Advertising-Id:
+00000000-0000-0000-0000-000000000000
+X-Pinterest-App-Type-Detailed:
+4
+X-Pinterest-AppState:
+active
+X-Pinterest-Device:
+Nexus 10
+X-Pinterest-Device-Manufacturer:
+Genymobile
+X-Pinterest-InstallId:
+29ac4b08d4c84efebbb95ac02cdd308
+X-Pinterest-Platform-BID:
+AZehPVTHje5FSKPWa+hL4qmM/XEDJuxk13yIX8h3VBWeJwNgD6CaB3qWfEhPQT8YcaY=
+X-Pinterest-WebView-Supported:
+false
+x-pinterest-webview-user-agent:
+Mozilla/5.0 (Linux; Android 11; Nexus 10 Build/RQ1A.210105.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.120 Safari/537.36
+200
+Status: 200 OK
+Headers
+AKAMAI-GRN:
+0.e75e3356.1786556481.2ba4274e
+Cache-Control:
+no-cache, no-store, must-revalidate
+Connection:
+keep-alive
+Content-Encoding:
+br
+Content-Length:
+34871
+Content-Type:
+application/json
+Date:
+Wed, 12 Aug 2026 17:41:23 GMT
+Link:
+<https://i.pinimg.com/474x/4f/36/94/4f36945bb2655c659f8230eea2d27326.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/a1/6b/f3/a16bf3cf14278f47ee4d5c3cb9cbc079.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/0e/90/c1/0e90c111a70202dcb8cc8446c528860d.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pinimg.com/474x/e7/fb/9d/e7fb9d42a0c8141f2a292257ca6c5854.jpg>; rel=preload; as=image; data-pins-size=474x, <https://i.pin...
+pinterest-generated-by:
+coreapp-ngapi-prod-0a010aa6
+pinterest-version:
+9f4847b
+Set-Cookie:
+_ir=0; Max-Age=1800; HttpOnly; Path=/; Secure
+Vary:
+Accept-Encoding
+X-CDN:
+akamai
+x-content-type-options:
+nosniff
+x-envoy-upstream-service-time:
+836
+x-frame-options:
+DENY
+x-pinterest-direct:
+true
+x-pinterest-rid:
+3875976237662580
+x-pinterest-rid-128bit:
+9198b16b8202ed5735ca3bda33bbaef7
+
+
+269.4 kB
+
+JSON
+1234567891011121314151617181920
+{"
 	}
 
 	req.Header.Set("Accept-Language", "en-US")
