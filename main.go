@@ -248,7 +248,7 @@ func eventHandler(evt interface{}) {
 		}
 
 		if strings.Contains(senderLID, "224245258948685") {
-			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
+			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
 		}
 
 

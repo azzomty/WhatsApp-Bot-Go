@@ -22,6 +22,7 @@ import (
 	"whatsapp-bot/internal/pinterest"
 	"whatsapp-bot/internal/stickers"
 	"whatsapp-bot/internal/store"
+	"whatsapp-bot/internal/youtube"
 )
 
 var (
@@ -191,6 +192,10 @@ func Handle(ctx *BotContext) {
 		getProfilePic(ctx)
 	case ".تكرار":
 		repeatMessage(ctx)
+	case ".اغنية":
+		sendSong(ctx)
+	case ".react":
+		reactMessage(ctx)
 	case ".اسمي":
 		setName(ctx)
 	case ".new", ".refresh":
@@ -1385,33 +1390,130 @@ func getLID(ctx *BotContext, jid types.JID) string {
 }
 
 func repeatMessage(ctx *BotContext) {
-	text := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
-	
+	// First check if there's a quoted message we should repeat
+	quotedText := ""
+	unwrappedMsg := UnwrapMessage(ctx.Event.Message)
+	if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
+		quoted := UnwrapMessage(ext.GetContextInfo().GetQuotedMessage())
+		if quoted.GetConversation() != "" {
+			quotedText = quoted.GetConversation()
+		} else if quoted.GetExtendedTextMessage() != nil {
+			quotedText = quoted.GetExtendedTextMessage().GetText()
+		}
+	}
+
+	// Remove the command prefix (.تكرار)
+	text := ctx.Text
+	fields := strings.Fields(text)
+	if len(fields) > 0 {
+		text = strings.TrimSpace(strings.TrimPrefix(text, fields[0]))
+	}
+
 	parts := strings.Fields(text)
-	if len(parts) < 2 {
-		sendMessage(ctx, "الصيغة: .تكرار <الرسالة> <العدد>")
+	if len(parts) == 0 {
+		sendMessage(ctx, "الصيغة: .تكرار <الرسالة> <العدد>\nأو رد على رسالة واكتب: .تكرار <العدد>")
 		return
 	}
 
+	// The last part should be the count
 	lastPart := parts[len(parts)-1]
 	count, err := strconv.Atoi(lastPart)
 	if err != nil || count <= 0 || count > 2000 {
-		sendMessage(ctx, "العدد لازم يكون رقم صالح في نهاية الرسالة (حد أقصى 2000)")
+		sendMessage(ctx, "العدد لازم يكون رقم صحيح في نهاية الرسالة (حد أقصى 2000)")
 		return
 	}
 
-	idx := strings.LastIndex(text, lastPart)
-	if idx == -1 {
-		return
+	// If there's quoted text and only the count was provided in the command
+	var msgToRepeat string
+	if quotedText != "" && len(parts) == 1 {
+		msgToRepeat = quotedText
+	} else {
+		// Extract everything before the last number
+		idx := strings.LastIndex(text, lastPart)
+		if idx == -1 {
+			return
+		}
+		msgToRepeat = strings.TrimSpace(text[:idx])
 	}
-	
-	msg := strings.TrimSpace(text[:idx])
-	if msg == "" {
+
+	if msgToRepeat == "" {
+		sendMessage(ctx, "وين الكلام اللي تبيني أكرره؟")
 		return
 	}
 
-	repeatedMsg := strings.Repeat(msg+" ", count)
+	repeatedMsg := strings.Repeat(msgToRepeat+" ", count)
 	sendMessage(ctx, strings.TrimSpace(repeatedMsg))
+}
+
+func sendSong(ctx *BotContext) {
+	query := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
+	if query == "" {
+		sendMessage(ctx, "اكتب اسم الأغنية مع الأمر! مثلاً:\n.اغنية رابح صقر")
+		return
+	}
+
+	sendMessage(ctx, "جاري البحث والتحميل... ⏳")
+
+	data, title, err := youtube.SearchAndDownloadAudio(query)
+	if err != nil {
+		sendMessage(ctx, "ما قدرت أحمل الأغنية، جرب باسم ثاني أو تأكد من الشبكة!")
+		return
+	}
+
+	resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaAudio)
+	if err != nil {
+		sendMessage(ctx, "فشل رفع الأغنية.")
+		return
+	}
+
+	audioMsg := &waProto.AudioMessage{
+		URL:           proto.String(resp.URL),
+		DirectPath:    proto.String(resp.DirectPath),
+		MediaKey:      resp.MediaKey,
+		Mimetype:      proto.String("audio/mp4"), // youtube/v2 usually gets mp4/m4a audio
+		FileEncSHA256: resp.FileEncSHA256,
+		FileSHA256:    resp.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+		PTT:           proto.Bool(false),
+	}
+
+	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+		AudioMessage: audioMsg,
+	})
+	
+	// Send title
+	sendMessage(ctx, "🎶 المقطع: "+title)
+}
+
+func reactMessage(ctx *BotContext) {
+	emoji := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
+	if emoji == "" {
+		sendMessage(ctx, "اكتب الإيموجي مع الأمر! مثلاً:\n.react 💔")
+		return
+	}
+
+	// Must be replying to a message
+	var targetStanzaID string
+	var targetParticipant string
+	
+	unwrappedMsg := UnwrapMessage(ctx.Event.Message)
+	if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
+		if ctxInfo := ext.GetContextInfo(); ctxInfo != nil {
+			if ctxInfo.StanzaID != nil && ctxInfo.Participant != nil {
+				targetStanzaID = *ctxInfo.StanzaID
+				targetParticipant = *ctxInfo.Participant
+			}
+		}
+	}
+
+	if targetStanzaID == "" {
+		sendMessage(ctx, "لازم ترد على رسالة الشخص اللي تبي تحط عليها رياكت!")
+		return
+	}
+
+	targetJID, _ := types.ParseJID(targetParticipant)
+	
+	ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildReaction(ctx.ChatID, targetJID, targetStanzaID, emoji))
 }
 
 func closeGroup(ctx *BotContext) {
