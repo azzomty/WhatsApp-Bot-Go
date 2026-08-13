@@ -1,9 +1,9 @@
 package pinterest
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -27,9 +27,17 @@ func SearchPinterestMedia(query string, ext string) []PinResult {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	max := 20
+	max := 15
 	if len(pins) < max {
 		max = len(pins)
+	}
+
+	// Regex to find media URLs
+	var regex *regexp.Regexp
+	if ext == ".mp4" {
+		regex = regexp.MustCompile(`https://[^"']+\.mp4`)
+	} else {
+		regex = regexp.MustCompile(`https://[^"']+\.gif`)
 	}
 
 	for i := 0; i < max; i++ {
@@ -41,31 +49,28 @@ func SearchPinterestMedia(query string, ext string) []PinResult {
 		wg.Add(1)
 		go func(id string, origTitle string) {
 			defer wg.Done()
-			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/?fields=carousel_data,story_pin_data,images,videos,image_large_url,image_medium_url", nil)
-			setPinterestHeaders(req)
+			req, _ := http.NewRequest("GET", "https://www.pinterest.com/pin/"+id+"/", nil)
+			req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 			
 			resp, err := client.Do(req)
 			if err != nil {
 				return
 			}
+			defer resp.Body.Close()
 			
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
+			htmlStr := string(bodyBytes)
 			
-			var respJson map[string]interface{}
-			json.Unmarshal(bodyBytes, &respJson)
-			
-			if data, ok := respJson["data"].(map[string]interface{}); ok {
-				url := extractMediaByExtension(data, ext)
-				if url != "" {
-					mu.Lock()
-					results = append(results, PinResult{
-						ID:    id,
-						Title: origTitle,
-						URL:   url,
-					})
-					mu.Unlock()
-				}
+			match := regex.FindString(htmlStr)
+			if match != "" {
+				// Avoid returning thumbnail or weird formats if possible
+				mu.Lock()
+				results = append(results, PinResult{
+					ID:    id,
+					Title: origTitle,
+					URL:   match,
+				})
+				mu.Unlock()
 			}
 		}(p.ID, p.Title)
 	}
