@@ -597,7 +597,7 @@ func pinterestSearch(ctx *BotContext) {
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
 
-	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- تطقيم (Matching Icons)\n\nاكتب الرقم مع السلاش (مثال: /1)"
+	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- تطقيم (Matching Icons)\n5- متحركة (GIF)\n6- فيديوهات (Video)\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
 }
 
@@ -1656,7 +1656,7 @@ func pinterestMatchingIcons(ctx *BotContext) {
 					break
 				}
 				data, err := pinterest.DownloadImage(imgUrl)
-				if err == nil && len(data) > 5000 {
+				if err == nil && len(data) > 100 {
 					resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
 					if err == nil {
 						imgMsg := &waProto.ImageMessage{

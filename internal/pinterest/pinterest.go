@@ -90,6 +90,27 @@ func setPinterestHeaders(req *http.Request) {
 	req.Header.Set("X-Pinterest-WebView-Supported", "false")
 }
 
+func extractMediaByExtension(data interface{}, ext string) string {
+	switch v := data.(type) {
+	case map[string]interface{}:
+		if u, ok := v["url"].(string); ok && strings.HasSuffix(strings.ToLower(u), ext) {
+			return u
+		}
+		for _, val := range v {
+			if res := extractMediaByExtension(val, ext); res != "" {
+				return res
+			}
+		}
+	case []interface{}:
+		for _, val := range v {
+			if res := extractMediaByExtension(val, ext); res != "" {
+				return res
+			}
+		}
+	}
+	return ""
+}
+
 func parsePinterestData(data []interface{}, aspect string) []PinResult {
 	var results []PinResult
 	for _, item := range data {
@@ -108,18 +129,27 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 		var imgUrl string
 		var w, h float64
 		
-		if images, ok := pin["images"].(map[string]interface{}); ok {
-			for _, key := range []string{"originals", "orig", "736x", "474x"} {
-				if imgData, ok := images[key].(map[string]interface{}); ok {
-					if u, ok := imgData["url"].(string); ok {
-						imgUrl = u
-						if width, ok := imgData["width"].(float64); ok {
-							w = width
+		if aspect == "video" {
+			imgUrl = extractMediaByExtension(pin, ".mp4")
+		} else if aspect == "gif" {
+			imgUrl = extractMediaByExtension(pin, ".gif")
+			// Sometimes GIFs are just labeled .gif in images.originals.url, which is also caught
+		}
+
+		if imgUrl == "" {
+			if images, ok := pin["images"].(map[string]interface{}); ok {
+				for _, key := range []string{"originals", "orig", "736x", "474x"} {
+					if imgData, ok := images[key].(map[string]interface{}); ok {
+						if u, ok := imgData["url"].(string); ok {
+							imgUrl = u
+							if width, ok := imgData["width"].(float64); ok {
+								w = width
+							}
+							if height, ok := imgData["height"].(float64); ok {
+								h = height
+							}
+							break
 						}
-						if height, ok := imgData["height"].(float64); ok {
-							h = height
-						}
-						break
 					}
 				}
 			}
@@ -430,8 +460,14 @@ func SearchPinterestLens(base64Image string, aspect string) []PinResult {
 }
 
 func GetMatchingPairs(results []PinResult, targetPairs int) []string {
-	// Not really needed anymore if SearchPinterestMatchingIcons handles it directly, but keeping it so main.go doesn't break
-	return nil
+	var urls []string
+	for _, p := range results {
+		urls = append(urls, p.URL)
+		if len(urls) >= targetPairs*2 {
+			break
+		}
+	}
+	return urls
 }
 
 func DownloadImage(url string) ([]byte, error) {

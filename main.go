@@ -450,6 +450,12 @@ func eventHandler(evt interface{}) {
 				case "4":
 					suffix = " matching icons"
 					aspect = "matching"
+				case "5":
+					suffix = " gif"
+					aspect = "gif"
+				case "6":
+					suffix = " video"
+					aspect = "video"
 
 				default:
 					if choice == ".new" || choice == ".refresh" {
@@ -509,26 +515,57 @@ func eventHandler(evt interface{}) {
 					count := 0
 					for _, u := range urlsToSend {
 						data, err := pinterest.DownloadImage(u)
-						if err == nil && len(data) > 5000 {
-							resp, err := client.Upload(context.Background(), data, whatsmeow.MediaImage)
+						if err == nil && len(data) > 100 {
+							// Determine if video/gif based on URL
+							isVid := strings.HasSuffix(strings.ToLower(u), ".mp4") || aspect == "video"
+							isGif := strings.HasSuffix(strings.ToLower(u), ".gif") || aspect == "gif"
+							
+							mediaType := whatsmeow.MediaImage
+							if isVid || isGif {
+								mediaType = whatsmeow.MediaVideo
+							}
+							
+							resp, err := client.Upload(context.Background(), data, mediaType)
 							if err == nil {
-								imgMsg := &waProto.ImageMessage{
-									URL:           proto.String(resp.URL),
-									DirectPath:    proto.String(resp.DirectPath),
-									MediaKey:      resp.MediaKey,
-									Mimetype:      proto.String("image/jpeg"),
-									FileEncSHA256: resp.FileEncSHA256,
-									FileSHA256:    resp.FileSHA256,
-									FileLength:    proto.Uint64(uint64(len(data))),
-									ContextInfo: &waProto.ContextInfo{
-										StanzaID:      proto.String(v.Info.ID),
-										Participant:   proto.String(v.Info.Sender.String()),
-										QuotedMessage: v.Message,
-									},
+								msg := &waProto.Message{}
+								if isVid || isGif {
+									vidMsg := &waProto.VideoMessage{
+										URL:           proto.String(resp.URL),
+										DirectPath:    proto.String(resp.DirectPath),
+										MediaKey:      resp.MediaKey,
+										Mimetype:      proto.String("video/mp4"), // WhatsApp uses video/mp4 even for gifs
+										FileEncSHA256: resp.FileEncSHA256,
+										FileSHA256:    resp.FileSHA256,
+										FileLength:    proto.Uint64(uint64(len(data))),
+										ContextInfo: &waProto.ContextInfo{
+											StanzaID:      proto.String(v.Info.ID),
+											Participant:   proto.String(v.Info.Sender.String()),
+											QuotedMessage: v.Message,
+										},
+									}
+									if isGif {
+										vidMsg.GifPlayback = proto.Bool(true)
+									}
+									msg.VideoMessage = vidMsg
+								} else {
+									imgMsg := &waProto.ImageMessage{
+										URL:           proto.String(resp.URL),
+										DirectPath:    proto.String(resp.DirectPath),
+										MediaKey:      resp.MediaKey,
+										Mimetype:      proto.String("image/jpeg"),
+										FileEncSHA256: resp.FileEncSHA256,
+										FileSHA256:    resp.FileSHA256,
+										FileLength:    proto.Uint64(uint64(len(data))),
+										ContextInfo: &waProto.ContextInfo{
+											StanzaID:      proto.String(v.Info.ID),
+											Participant:   proto.String(v.Info.Sender.String()),
+											QuotedMessage: v.Message,
+										},
+									}
+									msg.ImageMessage = imgMsg
 								}
-								client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
-									ImageMessage: imgMsg,
-								})
+								
+								client.SendMessage(context.Background(), v.Info.Chat, msg)
 								count++
 							}
 						}
