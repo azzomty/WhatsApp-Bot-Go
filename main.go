@@ -494,6 +494,10 @@ func eventHandler(evt interface{}) {
 						overrideCount = 2 // Match pairs always return 2
 					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect)
+					} else if aspect == "gif" {
+						results = pinterest.SearchPinterestMedia(req.Query, ".gif")
+					} else if aspect == "video" {
+						results = pinterest.SearchPinterestMedia(req.Query, ".mp4")
 					} else {
 						results = pinterest.SearchPinterest(req.Query+suffix, aspect)
 					}
