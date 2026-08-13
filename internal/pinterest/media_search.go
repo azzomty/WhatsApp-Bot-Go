@@ -32,13 +32,8 @@ func SearchPinterestMedia(query string, ext string) []PinResult {
 		max = len(pins)
 	}
 
-	// Regex to find media URLs
-	var regex *regexp.Regexp
-	if ext == ".mp4" {
-		regex = regexp.MustCompile(`https://[^"']+\.mp4`)
-	} else {
-		regex = regexp.MustCompile(`https://[^"']+\.gif`)
-	}
+	// Regex to always find .mp4 media URLs (because WhatsApp requires mp4 for auto-playing GIFs)
+	regex := regexp.MustCompile(`https://[^"']+\.mp4`)
 
 	for i := 0; i < max; i++ {
 		p := pins[i]

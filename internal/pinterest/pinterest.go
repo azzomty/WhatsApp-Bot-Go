@@ -476,5 +476,8 @@ func DownloadImage(url string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad status: %d", resp.StatusCode)
+	}
 	return ioutil.ReadAll(resp.Body)
 }

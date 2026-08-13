@@ -520,9 +520,8 @@ func eventHandler(evt interface{}) {
 					for _, u := range urlsToSend {
 						data, err := pinterest.DownloadImage(u)
 						if err == nil && len(data) > 100 {
-							// Determine if video/gif based on URL strictly
+							// Determine if video based on URL strictly
 							isVid := strings.HasSuffix(strings.ToLower(u), ".mp4") || strings.HasSuffix(strings.ToLower(u), ".m3u8")
-							isGif := strings.HasSuffix(strings.ToLower(u), ".gif")
 							
 							mediaType := whatsmeow.MediaImage
 							if isVid {
@@ -547,26 +546,10 @@ func eventHandler(evt interface{}) {
 											QuotedMessage: v.Message,
 										},
 									}
-									msg.VideoMessage = vidMsg
-								} else if isGif {
-									// Send GIF as document to ensure it doesn't get corrupted as a VideoMessage
-									docMsg := &waProto.DocumentMessage{
-										URL:           proto.String(resp.URL),
-										DirectPath:    proto.String(resp.DirectPath),
-										MediaKey:      resp.MediaKey,
-										Mimetype:      proto.String("image/gif"),
-										Title:         proto.String("image.gif"),
-										FileName:      proto.String("image.gif"),
-										FileEncSHA256: resp.FileEncSHA256,
-										FileSHA256:    resp.FileSHA256,
-										FileLength:    proto.Uint64(uint64(len(data))),
-										ContextInfo: &waProto.ContextInfo{
-											StanzaID:      proto.String(v.Info.ID),
-											Participant:   proto.String(v.Info.Sender.String()),
-											QuotedMessage: v.Message,
-										},
+									if aspect == "gif" {
+										vidMsg.GifPlayback = proto.Bool(true)
 									}
-									msg.DocumentMessage = docMsg
+									msg.VideoMessage = vidMsg
 								} else {
 									imgMsg := &waProto.ImageMessage{
 										URL:           proto.String(resp.URL),
