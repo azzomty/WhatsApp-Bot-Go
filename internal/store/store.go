@@ -37,9 +37,66 @@ var (
 	BotEnabled      bool = true
 	botEnabledMutex sync.RWMutex
 
+	DisabledCommands = make(map[string]bool)
+	disabledCmdMutex sync.RWMutex
+
+	AutoReactUsers = make(map[string]string) // senderLID -> emoji
+	autoReactMutex sync.RWMutex
+
+	WelcomeGroups = make(map[string]string) // groupJID -> custom text
+	welcomeMutex  sync.RWMutex
+
 	ChatHistory   = make(map[string][]MsgInfo)
 	historyMutex  sync.RWMutex
 )
+
+func SetCommandDisabled(cmd string, disabled bool, baseDir string) {
+	disabledCmdMutex.Lock()
+	defer disabledCmdMutex.Unlock()
+	DisabledCommands[cmd] = disabled
+	saveJSON(baseDir+"/disabled_commands.json", DisabledCommands)
+}
+
+func IsCommandDisabled(cmd string) bool {
+	disabledCmdMutex.RLock()
+	defer disabledCmdMutex.RUnlock()
+	return DisabledCommands[cmd]
+}
+
+func SetAutoReact(sender string, emoji string, baseDir string) {
+	autoReactMutex.Lock()
+	defer autoReactMutex.Unlock()
+	if emoji == "" {
+		delete(AutoReactUsers, sender)
+	} else {
+		AutoReactUsers[sender] = emoji
+	}
+	saveJSON(baseDir+"/auto_react_users.json", AutoReactUsers)
+}
+
+func GetAutoReact(sender string) string {
+	autoReactMutex.RLock()
+	defer autoReactMutex.RUnlock()
+	return AutoReactUsers[sender]
+}
+
+func SetWelcomeGroup(group string, text string, baseDir string) {
+	welcomeMutex.Lock()
+	defer welcomeMutex.Unlock()
+	if text == "" {
+		delete(WelcomeGroups, group)
+	} else {
+		WelcomeGroups[group] = text
+	}
+	saveJSON(baseDir+"/welcome_groups.json", WelcomeGroups)
+}
+
+func GetWelcomeGroup(group string) (string, bool) {
+	welcomeMutex.RLock()
+	defer welcomeMutex.RUnlock()
+	text, exists := WelcomeGroups[group]
+	return text, exists
+}
 
 type MsgInfo struct {
 	ID     string
@@ -103,6 +160,11 @@ func LoadAll(baseDir string) {
 	loadJSON(baseDir+"/muted_users.json", &MutedUsers)
 	loadJSON(baseDir+"/protected_users.json", &ProtectedUsers)
 	loadJSON(baseDir+"/anti_contact_groups.json", &AntiContactGroups)
+	loadJSON(baseDir+"/command_bans.json", &CommandBans)
+	loadJSON(baseDir+"/target_groups.json", &TargetGroups)
+	loadJSON(baseDir+"/disabled_commands.json", &DisabledCommands)
+	loadJSON(baseDir+"/auto_react_users.json", &AutoReactUsers)
+	loadJSON(baseDir+"/welcome_groups.json", &WelcomeGroups)
 
 	var allowed []string
 	if err := loadJSON(baseDir+"/allowed_users.json", &allowed); err == nil {

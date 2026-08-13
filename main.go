@@ -368,8 +368,8 @@ func eventHandler(evt interface{}) {
 			return
 		}
 
-		if strings.Contains(senderID, "224245258948685") {
-			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
+		if emoji := store.GetAutoReact(senderID); emoji != "" {
+			client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, emoji))
 		}
 
 		if strings.Contains(senderID, "224245258948685") && strings.Contains(text, ".اسمعوا") {
@@ -567,7 +567,8 @@ func eventHandler(evt interface{}) {
 	case *events.GroupInfo:
 		if len(v.Join) > 0 {
 			groupStr := v.JID.String()
-			if store.GetTargetGroup("welcome") == groupStr || store.GetTargetGroup("primary") == groupStr {
+			_, enabled := store.GetWelcomeGroup(groupStr)
+			if enabled {
 				for _, joiner := range v.Join {
 					commands.SendWelcomeMessage(client, v.JID, joiner)
 				}

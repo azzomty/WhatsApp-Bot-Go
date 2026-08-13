@@ -80,8 +80,14 @@ func Handle(ctx *BotContext) {
 
 	if len(parts) > 1 {
 		twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
-		if twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" {
+		if twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" {
 			cmdName = twoWordCmd
+		}
+	}
+
+	if store.IsCommandDisabled(cmdName) {
+		if cmdName != ".فك كومنت" { // ensure .فك كومنت itself can't be locked out forever if disabled by mistake
+			return
 		}
 	}
 
@@ -141,12 +147,7 @@ func Handle(ctx *BotContext) {
 			store.SetTargetGroup("primary", ctx.ChatID.String())
 			sendMessage(ctx, "تم تعيين هذا القروب كأساسي لنظام التنبيهات! 🚨")
 		}
-	case ".استقبال":
-		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
-			store.SetTargetGroup("welcome", ctx.ChatID.String())
-			sendMessage(ctx, "تم تعيين هذا القروب للاستقبال! 🌟")
-			ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildRevoke(ctx.ChatID, ctx.Sender, ctx.Event.Info.ID))
-		}
+
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":
@@ -196,6 +197,14 @@ func Handle(ctx *BotContext) {
 		refreshPinterest(ctx)
 	case ".حماية":
 		protectUser(ctx)
+	case ".كومنت":
+		disableCommand(ctx, parts)
+	case ".فك كومنت":
+		enableCommand(ctx, parts)
+	case ".رياكت":
+		setAutoReact(ctx, parts)
+	case ".استقبال":
+		setWelcomeFeature(ctx)
 	default:
 		gemini.HandleMessage(ctx.Client, ctx.ChatID, ctx.Sender, ctx.Text, strings.HasSuffix(ctx.ChatID.String(), "@g.us"), ctx.Event.Info.IsFromMe, ctx.Event.Message, ctx.Event.Info.ID, ctx.Event.Info.Sender.String())
 	}
@@ -1308,6 +1317,11 @@ func getProfilePic(ctx *BotContext) {
 }
 
 func SendWelcomeMessage(clientWA *whatsmeow.Client, groupJID types.JID, joinedUser types.JID) {
+	customText, ok := store.GetWelcomeGroup(groupJID.String())
+	if !ok || customText == "" {
+		return // Not enabled or no text for this group
+	}
+
 	pic, err := clientWA.GetProfilePictureInfo(context.Background(), joinedUser, &whatsmeow.GetProfilePictureParams{})
 	var data []byte
 	if err == nil && pic != nil && pic.URL != "" {
@@ -1318,7 +1332,7 @@ func SendWelcomeMessage(clientWA *whatsmeow.Client, groupJID types.JID, joinedUs
 		}
 	}
 
-	text := fmt.Sprintf("@%s\nمرحبا بك في الحصن", joinedUser.User)
+	text := fmt.Sprintf("@%s\n%s", joinedUser.User, customText)
 
 	if len(data) > 0 {
 		uploaded, err := clientWA.Upload(context.Background(), data, whatsmeow.MediaImage)
@@ -1702,4 +1716,79 @@ func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte)
 			}
 		}
 	}
+}
+
+func disableCommand(ctx *BotContext, parts []string) {
+	if len(parts) < 2 {
+		sendMessage(ctx, "الصيغة: .كومنت <الأمر>\nمثال: .كومنت .ميوت")
+		return
+	}
+	cmd := strings.ToLower(parts[1])
+	if !strings.HasPrefix(cmd, ".") {
+		cmd = "." + cmd
+	}
+	store.SetCommandDisabled(cmd, true, ".")
+	sendMessage(ctx, fmt.Sprintf("تم إيقاف الأمر %s بنجاح! 🚫", cmd))
+}
+
+func enableCommand(ctx *BotContext, parts []string) {
+	if len(parts) < 3 {
+		sendMessage(ctx, "الصيغة: .فك كومنت <الأمر>\nمثال: .فك كومنت .ميوت")
+		return
+	}
+	cmd := strings.ToLower(parts[2])
+	if !strings.HasPrefix(cmd, ".") {
+		cmd = "." + cmd
+	}
+	store.SetCommandDisabled(cmd, false, ".")
+	sendMessage(ctx, fmt.Sprintf("تم تفعيل الأمر %s بنجاح! ✅", cmd))
+}
+
+func setAutoReact(ctx *BotContext, parts []string) {
+	if len(parts) < 2 {
+		sendMessage(ctx, "الصيغة: .رياكت <ايموجي> (مع منشن أو ريبلاي)\nأو .رياكت مسح (للإلغاء)")
+		return
+	}
+	
+	emoji := parts[1]
+	
+	targets := getTargets(ctx)
+	if len(targets) == 0 {
+		sendMessage(ctx, "لازم تسوي منشن أو ريبلاي على الشخص!")
+		return
+	}
+	
+	targetID := getLID(ctx, targets[0])
+	
+	if emoji == "مسح" {
+		store.SetAutoReact(targetID, "", ".")
+		sendMessage(ctx, "تم إزالة التفاعل التلقائي عن هذا الشخص.")
+		return
+	}
+
+	store.SetAutoReact(targetID, emoji, ".")
+	sendMessage(ctx, fmt.Sprintf("تم! الحين أي رسالة يرسلها راح يتفاعل عليها البوت بـ %s", emoji))
+}
+
+func setWelcomeFeature(ctx *BotContext) {
+	if !ctx.Event.Info.IsGroup {
+		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
+		return
+	}
+	
+	// text can be just ".استقبال" or ".استقبال كلام طويل..."
+	text := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
+	
+	if text == "مسح" || text == "ايقاف" || text == "إيقاف" {
+		store.SetWelcomeGroup(ctx.ChatID.String(), "", ".")
+		sendMessage(ctx, "تم إيقاف الاستقبال التلقائي في هذا القروب.")
+		return
+	}
+
+	if text == "" {
+		text = "مرحبا بك في الحصن"
+	}
+	
+	store.SetWelcomeGroup(ctx.ChatID.String(), text, ".")
+	sendMessage(ctx, "تم تفعيل الاستقبال في هذا القروب بنجاح! أي شخص بيدخل راح تترسل صورته مع الكابشن اللي اخترته.")
 }
