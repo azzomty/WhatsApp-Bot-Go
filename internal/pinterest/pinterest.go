@@ -275,7 +275,7 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 		wg.Add(1)
 		go func(id string) {
 			defer wg.Done()
-			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/", nil)
+			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/?fields=carousel_data,story_pin_data,images,image_large_url,image_medium_url", nil)
 			setPinterestHeaders(req)
 			
 			resp, err := client.Do(req)
@@ -346,6 +346,30 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 								}
 							}
 						}
+					}
+				}
+
+				if len(urls) < 2 {
+					var singleUrl string
+					if images, ok := data["images"].(map[string]interface{}); ok {
+						for _, key := range []string{"originals", "orig", "1200x", "736x", "474x"} {
+							if imgData, ok := images[key].(map[string]interface{}); ok {
+								if u, ok := imgData["url"].(string); ok {
+									singleUrl = u
+									break
+								}
+							}
+						}
+					}
+					if singleUrl == "" {
+						if u, ok := data["image_large_url"].(string); ok {
+							singleUrl = u
+						} else if u, ok := data["image_medium_url"].(string); ok {
+							singleUrl = strings.Replace(u, "474x", "736x", 1)
+						}
+					}
+					if singleUrl != "" {
+						urls = []string{singleUrl, "https://i.imgur.com/RoC2Bv6.png"} // White image fallback
 					}
 				}
 

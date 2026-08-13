@@ -1385,34 +1385,31 @@ func getLID(ctx *BotContext, jid types.JID) string {
 }
 
 func repeatMessage(ctx *BotContext) {
-	parts := strings.Split(ctx.Text, " ")
-	if len(parts) < 3 {
+	text := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
+	
+	parts := strings.Fields(text)
+	if len(parts) < 2 {
 		sendMessage(ctx, "الصيغة: .تكرار <الرسالة> <العدد>")
 		return
 	}
 
 	lastPart := parts[len(parts)-1]
-	count := 0
-	for _, char := range lastPart {
-		if char >= '0' && char <= '9' {
-			count = count*10 + int(char-'0')
-		} else {
-			count = -1
-			break
-		}
-	}
-
-	if count <= 0 || count > 2000 {
-		sendMessage(ctx, "العدد لازم يكون رقم صالح (حد أقصى 2000)")
+	count, err := strconv.Atoi(lastPart)
+	if err != nil || count <= 0 || count > 2000 {
+		sendMessage(ctx, "العدد لازم يكون رقم صالح في نهاية الرسالة (حد أقصى 2000)")
 		return
 	}
 
-	msg := strings.Join(parts[1:len(parts)-1], " ")
+	idx := strings.LastIndex(text, lastPart)
+	if idx == -1 {
+		return
+	}
+	
+	msg := strings.TrimSpace(text[:idx])
 	if msg == "" {
 		return
 	}
 
-	// Send a single message containing the repeated string
 	repeatedMsg := strings.Repeat(msg+" ", count)
 	sendMessage(ctx, strings.TrimSpace(repeatedMsg))
 }
