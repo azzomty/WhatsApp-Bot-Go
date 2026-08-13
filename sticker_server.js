@@ -1,5 +1,10 @@
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const http = require('http');
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(require('ffmpeg-static'));
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/sticker') {
@@ -11,7 +16,40 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             const buffer = Buffer.concat(body);
             try {
-                const sticker = new Sticker(buffer, {
+                // Determine if it's a video by checking magic bytes (mp4 usually starts with ftyp, m3u8, etc)
+                // For simplicity, we can just try Sticker first, and if it throws pixel limit, we fallback to ffmpeg
+                // But it's safer to just check if it's an mp4 (0x00 0x00 0x00 ... ftyp)
+                const isMp4 = buffer.length > 8 && buffer.slice(4, 8).toString('ascii') === 'ftyp';
+                
+                let stickerBuffer = buffer;
+                if (isMp4) {
+                    const inputPath = path.join(os.tmpdir(), `input_${Date.now()}.mp4`);
+                    const outputPath = path.join(os.tmpdir(), `output_${Date.now()}.webp`);
+                    fs.writeFileSync(inputPath, buffer);
+                    
+                    await new Promise((resolve, reject) => {
+                        ffmpeg(inputPath)
+                            .outputOptions([
+                                '-vcodec', 'libwebp',
+                                '-vf', "scale='min(512,iw)':'min(512,ih)':force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black@0",
+                                '-lossless', '0',
+                                '-qscale', '50',
+                                '-loop', '0',
+                                '-preset', 'default',
+                                '-an', '-vsync', '0',
+                                '-t', '00:00:10' // max 10 seconds
+                            ])
+                            .save(outputPath)
+                            .on('end', resolve)
+                            .on('error', reject);
+                    });
+                    
+                    stickerBuffer = fs.readFileSync(outputPath);
+                    fs.unlinkSync(inputPath);
+                    fs.unlinkSync(outputPath);
+                }
+
+                const sticker = new Sticker(stickerBuffer, {
                     pack: pack,
                     author: author,
                     type: StickerTypes.DEFAULT,
