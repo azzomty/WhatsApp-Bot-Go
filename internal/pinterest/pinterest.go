@@ -290,9 +290,10 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 			json.Unmarshal(bodyBytes, &respJson)
 			
 			if data, ok := respJson["data"].(map[string]interface{}); ok {
+				var urls []string
+				
 				if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
 					if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
-						var urls []string
 						for i := 0; i < 2; i++ {
 							if slot, ok := slots[i].(map[string]interface{}); ok {
 								if images, ok := slot["images"].(map[string]interface{}); ok {
@@ -307,15 +308,54 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 								}
 							}
 						}
-						if len(urls) >= 2 {
-							mu.Lock()
-							if len(results) == 0 {
-								results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
-								results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
+					}
+				}
+				
+				if len(urls) < 2 {
+					urls = nil // reset if we didn't find 2
+					if spd, ok := data["story_pin_data"].(map[string]interface{}); ok {
+						if pages, ok := spd["pages"].([]interface{}); ok && len(pages) >= 2 {
+							for i := 0; i < 2; i++ {
+								if page, ok := pages[i].(map[string]interface{}); ok {
+									if blocks, ok := page["blocks"].([]interface{}); ok && len(blocks) > 0 {
+										if block, ok := blocks[0].(map[string]interface{}); ok {
+											if image, ok := block["image"].(map[string]interface{}); ok {
+												for _, key := range []string{"originals", "orig", "1200x", "736x", "474x"} {
+													if imgData, ok := image[key].(map[string]interface{}); ok {
+														if u, ok := imgData["url"].(string); ok {
+															urls = append(urls, u)
+															break
+														}
+													}
+												}
+											}
+										}
+									}
+									if len(urls) <= i { // if not found in blocks, try directly on page
+										if image, ok := page["image"].(map[string]interface{}); ok {
+											for _, key := range []string{"originals", "orig", "1200x", "736x", "474x"} {
+												if imgData, ok := image[key].(map[string]interface{}); ok {
+													if u, ok := imgData["url"].(string); ok {
+														urls = append(urls, u)
+														break
+													}
+												}
+											}
+										}
+									}
+								}
 							}
-							mu.Unlock()
 						}
 					}
+				}
+
+				if len(urls) >= 2 {
+					mu.Lock()
+					if len(results) == 0 {
+						results = append(results, PinResult{Title: "Matching Left", URL: urls[0]})
+						results = append(results, PinResult{Title: "Matching Right", URL: urls[1]})
+					}
+					mu.Unlock()
 				}
 			}
 		}(p.ID)
