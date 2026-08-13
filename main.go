@@ -516,24 +516,24 @@ func eventHandler(evt interface{}) {
 					for _, u := range urlsToSend {
 						data, err := pinterest.DownloadImage(u)
 						if err == nil && len(data) > 100 {
-							// Determine if video/gif based on URL
-							isVid := strings.HasSuffix(strings.ToLower(u), ".mp4") || aspect == "video"
-							isGif := strings.HasSuffix(strings.ToLower(u), ".gif") || aspect == "gif"
+							// Determine if video/gif based on URL strictly
+							isVid := strings.HasSuffix(strings.ToLower(u), ".mp4") || strings.HasSuffix(strings.ToLower(u), ".m3u8")
+							isGif := strings.HasSuffix(strings.ToLower(u), ".gif")
 							
 							mediaType := whatsmeow.MediaImage
-							if isVid || isGif {
+							if isVid {
 								mediaType = whatsmeow.MediaVideo
 							}
 							
 							resp, err := client.Upload(context.Background(), data, mediaType)
 							if err == nil {
 								msg := &waProto.Message{}
-								if isVid || isGif {
+								if isVid {
 									vidMsg := &waProto.VideoMessage{
 										URL:           proto.String(resp.URL),
 										DirectPath:    proto.String(resp.DirectPath),
 										MediaKey:      resp.MediaKey,
-										Mimetype:      proto.String("video/mp4"), // WhatsApp uses video/mp4 even for gifs
+										Mimetype:      proto.String("video/mp4"),
 										FileEncSHA256: resp.FileEncSHA256,
 										FileSHA256:    resp.FileSHA256,
 										FileLength:    proto.Uint64(uint64(len(data))),
@@ -543,10 +543,26 @@ func eventHandler(evt interface{}) {
 											QuotedMessage: v.Message,
 										},
 									}
-									if isGif {
-										vidMsg.GifPlayback = proto.Bool(true)
-									}
 									msg.VideoMessage = vidMsg
+								} else if isGif {
+									// Send GIF as document to ensure it doesn't get corrupted as a VideoMessage
+									docMsg := &waProto.DocumentMessage{
+										URL:           proto.String(resp.URL),
+										DirectPath:    proto.String(resp.DirectPath),
+										MediaKey:      resp.MediaKey,
+										Mimetype:      proto.String("image/gif"),
+										Title:         proto.String("image.gif"),
+										FileName:      proto.String("image.gif"),
+										FileEncSHA256: resp.FileEncSHA256,
+										FileSHA256:    resp.FileSHA256,
+										FileLength:    proto.Uint64(uint64(len(data))),
+										ContextInfo: &waProto.ContextInfo{
+											StanzaID:      proto.String(v.Info.ID),
+											Participant:   proto.String(v.Info.Sender.String()),
+											QuotedMessage: v.Message,
+										},
+									}
+									msg.DocumentMessage = docMsg
 								} else {
 									imgMsg := &waProto.ImageMessage{
 										URL:           proto.String(resp.URL),
