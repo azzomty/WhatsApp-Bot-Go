@@ -153,10 +153,14 @@ func Handle(ctx *BotContext) {
 		closeGroup(ctx)
 	case ".فتح":
 		openGroup(ctx)
-	case ".رابط", ".الرابط":
+	case ".الرابط", ".رابط":
 		if len(parts) > 1 && parts[1] == "القروب" {
 			getGroupLink(ctx)
 		}
+	case ".نص", ".لخص":
+		transcribeAudio(ctx)
+	case ".ترجم":
+		translateMessage(ctx)
 	case ".تغيير":
 		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
 			revokeGroupLink(ctx)
@@ -604,7 +608,7 @@ func pinterestSearch(ctx *BotContext) {
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
 
-	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons (افتارات)\n2- Banner (هيدر/بانر)\n3- Wallpaper (خلفيات)\n4- تطقيم (Matching Icons)\n5- متحركة (GIF)\n6- فيديوهات (Video)\n\nاكتب الرقم مع السلاش (مثال: /1)"
+	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons\n2- Banner\n3- Wallpaper\n4- Matching Icons\n5- GIF\n6- Video\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
 }
 

@@ -61,7 +61,20 @@ func eventHandler(evt interface{}) {
 		}
 
 		if v.Message.GetReactionMessage() != nil {
-			if v.Message.GetReactionMessage().GetText() == "🔍" {
+			reactText := v.Message.GetReactionMessage().GetText()
+			
+			// Auto-kick for middle finger
+			if strings.HasPrefix(reactText, "🖕") && v.Info.Chat.Server == "g.us" {
+				go func() {
+					// Target is the person who sent the reaction
+					target := []types.JID{v.Info.Sender.ToNonAD()}
+					// Try to remove them. If not admin, this fails silently.
+					client.UpdateGroupParticipants(context.Background(), v.Info.Chat, target, whatsmeow.ParticipantChangeRemove)
+				}()
+				return
+			}
+
+			if reactText == "🔍" {
 				msgList := commands.MessageStore[v.Info.Chat.String()]
 				var origMsg *events.Message
 				for _, m := range msgList {
@@ -96,6 +109,8 @@ func eventHandler(evt interface{}) {
 
 		text := ""
 		
+		isViewOnce := false
+		
 		unwrap := func(m *waProto.Message) *waProto.Message {
 			for m != nil {
 				if m.EphemeralMessage != nil && m.EphemeralMessage.Message != nil {
@@ -103,21 +118,23 @@ func eventHandler(evt interface{}) {
 					continue
 				}
 				if m.ViewOnceMessage != nil && m.ViewOnceMessage.Message != nil {
+					isViewOnce = true
 					m = m.ViewOnceMessage.Message
 					continue
 				}
 				if m.ViewOnceMessageV2 != nil && m.ViewOnceMessageV2.Message != nil {
+					isViewOnce = true
 					m = m.ViewOnceMessageV2.Message
+					continue
+				}
+				if m.ViewOnceMessageV2Extension != nil && m.ViewOnceMessageV2Extension.Message != nil {
+					isViewOnce = true
+					m = m.ViewOnceMessageV2Extension.Message
 					continue
 				}
 				break
 			}
 			return m
-		}
-
-		isViewOnce := false
-		if v.Message.GetViewOnceMessage() != nil || v.Message.GetViewOnceMessageV2() != nil || v.Message.GetViewOnceMessageV2Extension() != nil {
-			isViewOnce = true
 		}
 
 		uMsg := unwrap(v.Message)
