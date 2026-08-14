@@ -193,7 +193,9 @@ func Handle(ctx *BotContext) {
 	case ".تكرار":
 		repeatMessage(ctx)
 	case ".اغنية":
-		sendSong(ctx)
+		processYoutubeMedia(ctx, true)
+	case ".فيديو":
+		processYoutubeMedia(ctx, false)
 	case ".react":
 		reactMessage(ctx)
 	case ".اسمي":
@@ -1445,44 +1447,124 @@ func repeatMessage(ctx *BotContext) {
 	sendMessage(ctx, strings.TrimSpace(repeatedMsg))
 }
 
-func sendSong(ctx *BotContext) {
+func processYoutubeMedia(ctx *BotContext, isAudio bool) {
+	cmdName := ".اغنية"
+	if !isAudio {
+		cmdName = ".فيديو"
+	}
 	query := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
 	if query == "" {
-		sendMessage(ctx, "اكتب اسم الأغنية مع الأمر! مثلاً:\n.اغنية رابح صقر")
+		sendMessage(ctx, fmt.Sprintf("اكتب اسم المقطع مع الأمر! مثلاً:\n%s رابح صقر", cmdName))
 		return
 	}
 
-	sendMessage(ctx, "جاري البحث والتحميل... ⏳")
+	sendMessage(ctx, "جاري البحث... 🔍")
 
-	data, title, err := youtube.SearchAndDownloadAudio(query)
+	// 1. Search YouTube (requires API Key)
+	videoID, err := youtube.SearchVideo(query)
 	if err != nil {
-		sendMessage(ctx, "ما قدرت أحمل الأغنية، جرب باسم ثاني أو تأكد من الشبكة!")
+		sendMessage(ctx, "ما قدرت ألقى المقطع، تأكد من مفتاح الـ API أو حاول باسم ثاني!")
 		return
 	}
 
-	resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaAudio)
+	// 2. Get Video Details
+	info, err := youtube.GetVideoDetails(videoID)
 	if err != nil {
-		sendMessage(ctx, "فشل رفع الأغنية.")
+		sendMessage(ctx, "جبت المقطع بس فشلت في استخراج تفاصيله!")
 		return
 	}
 
-	audioMsg := &waProto.AudioMessage{
-		URL:           proto.String(resp.URL),
-		DirectPath:    proto.String(resp.DirectPath),
-		MediaKey:      resp.MediaKey,
-		Mimetype:      proto.String("audio/mp4"), // youtube/v2 usually gets mp4/m4a audio
-		FileEncSHA256: resp.FileEncSHA256,
-		FileSHA256:    resp.FileSHA256,
-		FileLength:    proto.Uint64(uint64(len(data))),
-		PTT:           proto.Bool(false),
+	// 3. Download Thumbnail
+	var thumbData []byte
+	if info.Thumbnail != "" {
+		if resp, err := http.Get(info.Thumbnail); err == nil {
+			thumbData, _ = io.ReadAll(resp.Body)
+			resp.Body.Close()
+		}
 	}
 
-	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
-		AudioMessage: audioMsg,
-	})
-	
-	// Send title
-	sendMessage(ctx, "🎶 المقطع: "+title)
+	// 4. Send Thumbnail with Caption
+	caption := youtube.FormatCaption(info)
+	var thumbMsgID string
+	if len(thumbData) > 0 {
+		uploadedThumb, err := ctx.Client.Upload(context.Background(), thumbData, whatsmeow.MediaImage)
+		if err == nil {
+			imgMsg := &waProto.ImageMessage{
+				URL:           proto.String(uploadedThumb.URL),
+				DirectPath:    proto.String(uploadedThumb.DirectPath),
+				MediaKey:      uploadedThumb.MediaKey,
+				Mimetype:      proto.String("image/jpeg"),
+				FileEncSHA256: uploadedThumb.FileEncSHA256,
+				FileSHA256:    uploadedThumb.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(thumbData))),
+				Caption:       proto.String(caption),
+			}
+			resp, _ := ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+			thumbMsgID = resp.ID
+		}
+	}
+
+	if thumbMsgID == "" {
+		resp, _ := ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+			ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(caption)},
+		})
+		thumbMsgID = resp.ID
+	}
+
+	// 5. Download Media
+	mediaData, err := youtube.DownloadMedia(videoID, isAudio)
+	if err != nil {
+		sendMessage(ctx, "فشل تحميل المقطع، ممكن يكون طويل جداً أو فيه مشكلة بالشبكة!")
+		return
+	}
+
+	// 6. Upload and Reply to Thumbnail
+	mediaType := whatsmeow.MediaAudio
+	mimeType := "audio/mp4"
+	if !isAudio {
+		mediaType = whatsmeow.MediaVideo
+		mimeType = "video/mp4"
+	}
+
+	uploadedMedia, err := ctx.Client.Upload(context.Background(), mediaData, mediaType)
+	if err != nil {
+		sendMessage(ctx, "فشل رفع المقطع للواتساب!")
+		return
+	}
+
+	finalMsg := &waProto.Message{}
+	if isAudio {
+		finalMsg.AudioMessage = &waProto.AudioMessage{
+			URL:           proto.String(uploadedMedia.URL),
+			DirectPath:    proto.String(uploadedMedia.DirectPath),
+			MediaKey:      uploadedMedia.MediaKey,
+			Mimetype:      proto.String(mimeType),
+			FileEncSHA256: uploadedMedia.FileEncSHA256,
+			FileSHA256:    uploadedMedia.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(mediaData))),
+			PTT:           proto.Bool(false),
+			ContextInfo: &waProto.ContextInfo{
+				StanzaID:    proto.String(thumbMsgID),
+				Participant: proto.String(ctx.Client.Store.ID.ToNonAD().String()),
+			},
+		}
+	} else {
+		finalMsg.VideoMessage = &waProto.VideoMessage{
+			URL:           proto.String(uploadedMedia.URL),
+			DirectPath:    proto.String(uploadedMedia.DirectPath),
+			MediaKey:      uploadedMedia.MediaKey,
+			Mimetype:      proto.String(mimeType),
+			FileEncSHA256: uploadedMedia.FileEncSHA256,
+			FileSHA256:    uploadedMedia.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(mediaData))),
+			ContextInfo: &waProto.ContextInfo{
+				StanzaID:    proto.String(thumbMsgID),
+				Participant: proto.String(ctx.Client.Store.ID.ToNonAD().String()),
+			},
+		}
+	}
+
+	ctx.Client.SendMessage(context.Background(), ctx.ChatID, finalMsg)
 }
 
 func reactMessage(ctx *BotContext) {

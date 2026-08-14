@@ -2,67 +2,143 @@ package youtube
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
-	"regexp"
+	"time"
 
 	"github.com/kkdai/youtube/v2"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
-// SearchAndDownloadAudio searches YouTube and returns the best audio stream as bytes
-func SearchAndDownloadAudio(query string) ([]byte, string, error) {
-	// 1. Search YouTube
-	searchURL := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
+var APIKey = "AIzaSyD1Rnl8ANpNH2DBN1GibmpcU_VYXVGbiu4"
+
+type VideoInfo struct {
+	ID          string
+	Title       string
+	Author      string
+	Duration    time.Duration
+	Views       int
+	Likes       int
+	PublishDate time.Time
+	Thumbnail   string
+}
+
+// SearchVideo searches YouTube via the official API and returns the video ID
+func SearchVideo(query string) (string, error) {
+	if APIKey == "" {
+		return "", fmt.Errorf("API key is missing")
+	}
+
+	searchURL := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=video&maxResults=1&key=%s", url.QueryEscape(query), APIKey)
 	resp, err := http.Get(searchURL)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to search: %v", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, "", err
+	var result struct {
+		Items []struct {
+			ID struct {
+				VideoId string `json:"videoId"`
+			} `json:"id"`
+		} `json:"items"`
 	}
 
-	// 2. Extract first video ID using regex
-	re := regexp.MustCompile(`"videoId":"([a-zA-Z0-9_-]{11})"`)
-	matches := re.FindStringSubmatch(string(body))
-	if len(matches) < 2 {
-		return nil, "", fmt.Errorf("no results found")
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
 	}
-	videoID := matches[1]
 
-	// 3. Download Audio using kkdai/youtube/v2
+	if len(result.Items) == 0 {
+		return "", fmt.Errorf("no results found")
+	}
+
+	return result.Items[0].ID.VideoId, nil
+}
+
+// GetVideoDetails gets all the details needed for the thumbnail message
+func GetVideoDetails(videoID string) (*VideoInfo, error) {
 	client := youtube.Client{}
-	video, err := client.GetVideo(videoID)
+	vid, err := client.GetVideo(videoID)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	// Try to find the best audio format
-	formats := video.Formats.WithAudioChannels()
-	if len(formats) == 0 {
-		return nil, "", fmt.Errorf("no audio format found")
+	// We can use the YouTube Data API to get likes if needed, but youtube/v2 doesn't provide likes directly.
+	// We'll leave likes as 0 or we can fetch it via API.
+	
+	info := &VideoInfo{
+		ID:          vid.ID,
+		Title:       vid.Title,
+		Author:      vid.Author,
+		Duration:    vid.Duration,
+		PublishDate: vid.PublishDate,
+	}
+
+	if len(vid.Thumbnails) > 0 {
+		// Get highest quality thumbnail
+		info.Thumbnail = vid.Thumbnails[len(vid.Thumbnails)-1].URL
+	}
+
+	return info, nil
+}
+
+func FormatCaption(info *VideoInfo) string {
+	p := message.NewPrinter(language.Arabic)
+	return p.Sprintf("🎬 *العنوان:* %s\n👤 *القناة:* %s\n⏱️ *المدة:* %v\n📅 *تاريخ النشر:* %s\n\nجاري التحميل... ⏳",
+		info.Title, info.Author, info.Duration, info.PublishDate.Format("2006-01-02"))
+}
+
+// DownloadMedia downloads the audio or video
+func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
+	client := youtube.Client{}
+	vid, err := client.GetVideo(videoID)
+	if err != nil {
+		return nil, err
+	}
+
+	formats := vid.Formats.WithAudioChannels()
+	if !isAudio {
+		formats = vid.Formats
 	}
 	
-	// Sort by bitrate (descending) to get the best quality
+	if len(formats) == 0 {
+		return nil, fmt.Errorf("no format found")
+	}
 	formats.Sort()
-	bestFormat := formats[0]
 
-	stream, _, err := client.GetStream(video, &bestFormat)
+	var bestFormat youtube.Format
+	if isAudio {
+		bestFormat = formats[0]
+	} else {
+		// Try to find a good quality video with audio (like 720p mp4)
+		found := false
+		for _, f := range formats {
+			if f.AudioChannels > 0 && (f.QualityLabel == "720p" || f.QualityLabel == "480p" || f.QualityLabel == "360p") {
+				bestFormat = f
+				found = true
+				break
+			}
+		}
+		if !found {
+			bestFormat = formats[0] // fallback
+		}
+	}
+
+	stream, _, err := client.GetStream(vid, &bestFormat)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	defer stream.Close()
 
-	// Read stream into buffer
 	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(stream)
+	_, err = io.Copy(buf, stream)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	return buf.Bytes(), video.Title, nil
+	return buf.Bytes(), nil
 }

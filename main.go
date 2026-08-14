@@ -495,7 +495,7 @@ func eventHandler(evt interface{}) {
 					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect)
 					} else if aspect == "gif" {
-						results = pinterest.SearchPinterestMedia(req.Query, ".gif")
+						results = pinterest.SearchPinterest(req.Query+" gif", "gif")
 					} else if aspect == "video" {
 						results = pinterest.SearchPinterestMedia(req.Query, ".mp4")
 					} else {
@@ -520,8 +520,30 @@ func eventHandler(evt interface{}) {
 					for _, u := range urlsToSend {
 						data, err := pinterest.DownloadImage(u)
 						if err == nil && len(data) > 100 {
-							// Determine if video based on URL strictly
 							isVid := strings.HasSuffix(strings.ToLower(u), ".mp4") || strings.HasSuffix(strings.ToLower(u), ".m3u8")
+
+							if aspect == "gif" && strings.HasSuffix(strings.ToLower(u), ".gif") {
+								// Convert .gif to .mp4 using ffmpeg-static
+								tmpGif := fmt.Sprintf("/tmp/temp_%d.gif", time.Now().UnixNano())
+								tmpMp4 := fmt.Sprintf("/tmp/temp_%d.mp4", time.Now().UnixNano())
+								os.WriteFile(tmpGif, data, 0644)
+								
+								// Get ffmpeg path from node_modules if possible, else use "ffmpeg"
+								ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
+								if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
+									ffmpegPath = "ffmpeg"
+								}
+
+								cmd := exec.Command(ffmpegPath, "-i", tmpGif, "-pix_fmt", "yuv420p", "-c:v", "libx264", "-crf", "24", "-y", tmpMp4)
+								if err := cmd.Run(); err == nil {
+									if mp4Data, err := os.ReadFile(tmpMp4); err == nil {
+										data = mp4Data
+										isVid = true
+									}
+								}
+								os.Remove(tmpGif)
+								os.Remove(tmpMp4)
+							}
 							
 							mediaType := whatsmeow.MediaImage
 							if isVid {

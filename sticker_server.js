@@ -32,10 +32,12 @@ const server = http.createServer(async (req, res) => {
                             .outputOptions([
                                 '-vcodec', 'libwebp',
                                 '-vf', "scale='min(512,iw)':'min(512,ih)':force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black@0",
+                                '-r', '15', // Reduce framerate to 15fps to speed up encoding by 2x
                                 '-lossless', '0',
+                                '-compression_level', '0', // Fastest encoding speed
                                 '-qscale', '50',
                                 '-loop', '0',
-                                '-preset', 'default',
+                                '-preset', 'picture', // Faster preset
                                 '-an', '-vsync', '0',
                                 '-t', '00:00:10' // max 10 seconds
                             ])
