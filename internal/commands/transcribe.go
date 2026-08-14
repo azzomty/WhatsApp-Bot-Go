@@ -15,7 +15,7 @@ var GroqAPIKey = os.Getenv("GROQ_API_KEY")
 
 func transcribeAudio(ctx *BotContext) {
 	if ctx.Event.Message.GetExtendedTextMessage() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() == nil {
-		sendMessage(ctx, "يرجى الرد (Reply) على بصمة صوتية واستخدام الأمر .لخص أو .نص")
+		sendMessage(ctx, "يرجى الرد (Reply) على بصمة صوتية واستخدام الأمر .نص")
 		return
 	}
 

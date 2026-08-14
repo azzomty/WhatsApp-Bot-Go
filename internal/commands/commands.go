@@ -115,8 +115,10 @@ func Handle(ctx *BotContext) {
 		mute(ctx)
 	case ".فك ميوت":
 		unmute(ctx)
-	case ".تعديل امر", ".تعديل رد":
-		return
+	case ".تعديل امر":
+		editAlias(ctx)
+	case ".تعديل رد":
+		editOutput(ctx)
 	case ".اشراف":
 		promote(ctx)
 	case ".زرف":
