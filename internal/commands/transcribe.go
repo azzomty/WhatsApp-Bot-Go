@@ -49,6 +49,7 @@ func transcribeAudio(ctx *BotContext) {
 	writer.WriteField("model", "whisper-large-v3")
 	// Add an Arabic prompt to force better accuracy and native dialect understanding
 	writer.WriteField("prompt", "هذا تسجيل صوتي، يرجى كتابته بدقة عالية جداً وبشكل واضح وصحيح إملائياً، مع مراعاة اللهجة.")
+	writer.WriteField("language", "ar") // Force Arabic language
 	err = writer.Close()
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ داخلي ❌")
