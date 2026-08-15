@@ -2,7 +2,6 @@ package youtube
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
