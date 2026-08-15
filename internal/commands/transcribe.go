@@ -8,6 +8,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
+
+	"github.com/bregydoc/gtranslate"
 )
 
 var GroqAPIKey = "gsk_" + "8ajx4QBmJbK9LfSJWTf0WGdyb3FYZBPpZArcJuqxLYtHMIqg7ImZ"
@@ -45,7 +48,7 @@ func transcribeAudio(ctx *BotContext) {
 	}
 	part.Write(audioData)
 	
-	writer.WriteField("model", "whisper-large-v3-turbo")
+	writer.WriteField("model", "whisper-large-v3")
 	err = writer.Close()
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ داخلي ❌")
@@ -84,10 +87,25 @@ func transcribeAudio(ctx *BotContext) {
 		return
 	}
 	
-	if result.Text == "" {
-		sendMessage(ctx, "لم يتمكن الذكاء الاصطناعي من فهم أي كلمات في المقطع 🤫")
-		return
+	finalText := result.Text
+
+	if strings.HasPrefix(ctx.Text, ".دبلج") {
+		sendMessage(ctx, "جاري ترجمة المقطع للعربية... 🌍⏳")
+		translated, err := gtranslate.TranslateWithParams(
+			result.Text,
+			gtranslate.TranslationParams{
+				From: "auto",
+				To:   "ar",
+			},
+		)
+		if err == nil {
+			finalText = "عفواً الصوت يقول:\n\n" + translated
+		} else {
+			finalText = "فشلت الترجمة، هذا النص الأصلي:\n\n" + result.Text
+		}
+	} else {
+		finalText = "🎙️ *التفريغ الصوتي:*\n\n" + result.Text
 	}
 
-	sendMessage(ctx, "🎙️ *التفريغ الصوتي:*\n\n"+result.Text)
+	sendMessage(ctx, finalText)
 }

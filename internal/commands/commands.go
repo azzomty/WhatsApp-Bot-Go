@@ -159,10 +159,30 @@ func Handle(ctx *BotContext) {
 		if len(parts) > 1 && parts[1] == "القروب" {
 			getGroupLink(ctx)
 		}
-	case ".نص", ".لخص":
+	case ".نص", ".لخص", ".دبلج":
 		transcribeAudio(ctx)
-	case ".ترجم":
-		translateMessage(ctx)
+	case ".ترجم", ".عربي":
+		translateMessage(ctx, "ar")
+	case ".انجليزي":
+		translateMessage(ctx, "en")
+	case ".ياباني":
+		translateMessage(ctx, "ja")
+	case ".كوري":
+		translateMessage(ctx, "ko")
+	case ".صيني":
+		translateMessage(ctx, "zh")
+	case ".روسي":
+		translateMessage(ctx, "ru")
+	case ".فرنسي":
+		translateMessage(ctx, "fr")
+	case ".اسباني":
+		translateMessage(ctx, "es")
+	case ".تركي":
+		translateMessage(ctx, "tr")
+	case ".الماني":
+		translateMessage(ctx, "de")
+	case ".هندي":
+		translateMessage(ctx, "hi")
 	case ".تغيير":
 		if len(parts) > 2 && parts[1] == "رابط" && parts[2] == "القروب" {
 			revokeGroupLink(ctx)

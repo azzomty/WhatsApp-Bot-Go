@@ -5,9 +5,9 @@ import (
 	"github.com/bregydoc/gtranslate"
 )
 
-func translateMessage(ctx *BotContext) {
+func translateMessage(ctx *BotContext, targetLang string) {
 	if ctx.Event.Message.GetExtendedTextMessage() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() == nil {
-		sendMessage(ctx, "يرجى الرد (Reply) على رسالة نصية واستخدام الأمر .ترجم")
+		sendMessage(ctx, "يرجى الرد (Reply) على رسالة نصية واستخدام الأمر")
 		return
 	}
 
@@ -34,7 +34,7 @@ func translateMessage(ctx *BotContext) {
 		textToTranslate,
 		gtranslate.TranslationParams{
 			From: "auto",
-			To:   "ar",
+			To:   targetLang,
 		},
 	)
 
@@ -43,5 +43,5 @@ func translateMessage(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, "🇸🇦 *الترجمة:*\n\n"+translated)
+	sendMessage(ctx, "🌍 *الترجمة:*\n\n"+translated)
 }
