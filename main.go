@@ -264,6 +264,34 @@ func eventHandler(evt interface{}) {
 			text = uMsg.GetVideoMessage().GetCaption()
 		}
 
+		// Anti-swear logic
+		if v.Info.IsGroup {
+			swearWords := []string{"قحبة", "قحبه", "قحبتي", "قحباني", "خنزير", "خنزيري", "خنزيرتي", "خنزيرة", "خنزيره", "شرموط", "شرموطة", "شرموطه", "زاني", "زانية", "زانيه", "كس", "كسمك", "زب", "زبي", "معرص", "عرص", "منيوك", "منيوكة", "منيوكه"}
+			containsSwear := false
+			
+			// We check for exact word matches to avoid false positives (e.g. "عكس" shouldn't trigger "كس")
+			words := strings.Fields(text)
+			for _, w := range words {
+				for _, swear := range swearWords {
+					if w == swear {
+						containsSwear = true
+						break
+					}
+				}
+				if containsSwear {
+					break
+				}
+			}
+
+			if containsSwear && !v.Info.IsFromMe {
+				// Delete the message
+				client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
+				// Kick the user
+				client.UpdateGroupParticipants(context.Background(), v.Info.Chat, []types.JID{v.Info.Sender}, whatsmeow.ParticipantChangeRemove)
+				return
+			}
+		}
+
 		if strings.Contains(senderLID, "224245258948685") {
 			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
 		}
