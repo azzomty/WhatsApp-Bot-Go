@@ -1476,7 +1476,7 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 	// 2. Get Video Details
 	info, err := youtube.GetVideoDetails(videoID)
 	if err != nil {
-		sendMessage(ctx, "جبت المقطع بس فشلت في استخراج تفاصيله!")
+		sendMessage(ctx, fmt.Sprintf("جبت المقطع بس فشلت في استخراج تفاصيله!\nالسبب: %s", err.Error()))
 		return
 	}
 

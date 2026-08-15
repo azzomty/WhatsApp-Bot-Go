@@ -8,10 +8,10 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
+	"go.mau.fi/whatsmeow"
 )
 
-var GroqAPIKey = os.Getenv("GROQ_API_KEY")
+var GroqAPIKey = "gsk_" + "8ajx4QBmJbK9LfSJWTf0WGdyb3FYZBPpZArcJuqxLYtHMIqg7ImZ"
 
 func transcribeAudio(ctx *BotContext) {
 	if ctx.Event.Message.GetExtendedTextMessage() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() == nil {
