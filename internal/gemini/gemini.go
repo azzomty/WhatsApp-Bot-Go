@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	CurrentModel = "gemini-3.6-flash"
-	IsExtended = false
+	CurrentModel        = "gemini-3.6-flash"
+	IsExtended          = false
 	geminiCookie1PSID   = "g.a000BgkyVrxC8cwsVYW5dLfLHd-KlWxi4gxc32Uv8-Ee8FKXA51i5udy6dsl2ETs9tvosAI61QACgYKATASARUSFQHGX2MivIgMfl2Oqgtdx_Ae5yGcQBoVAUF8yKrTAw1qZVJgsEXATsPto0cv0076"
 	geminiCookie1PSIDTS = "sidts-CjEBPWEu2Qdx4paX5rcNpwudpzTgTl1EKLjkScswFeHZj8FjKmm0dgbCVl54AbeKfwDnEAA"
 	geminiCookie1PSIDCC = "AKEyXzXKC-oKhMpOZ8e3mYtnJ-ShXiMOZLMrrkDJJ49zPPaJcPJm5Zoy3sPfmZ6sPFG3KkEQfZRm"
@@ -127,7 +127,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 
 			cmd := exec.Command("./gemini_cli", geminiCookie1PSID, geminiCookie1PSIDTS, geminiCookie1PSIDCC, finalPrompt)
 			out, err := cmd.CombinedOutput()
-			
+
 			if err != nil {
 				log.Printf("Gemini Error: %v\nOutput: %s", err, string(out))
 				sendMessage(clientWA, chatID, fmt.Sprintf("حدث خطأ في الذكاء الاصطناعي:\n%v", err), msg, stanzaID, participant)
@@ -155,13 +155,13 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 					if mUrl == "" {
 						continue
 					}
-					
+
 					// Download the image
 					resp, err := http.Get(mUrl)
 					if err == nil {
 						imgData, _ := ioutil.ReadAll(resp.Body)
 						resp.Body.Close()
-						
+
 						if len(imgData) > 0 {
 							uploadResp, err := clientWA.Upload(context.Background(), imgData, whatsmeow.MediaImage)
 							if err == nil {

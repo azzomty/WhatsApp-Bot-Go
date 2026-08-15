@@ -40,22 +40,22 @@ func SearchPinterestMedia(query string, ext string) []PinResult {
 		if p.ID == "" {
 			continue
 		}
-		
+
 		wg.Add(1)
 		go func(id string, origTitle string) {
 			defer wg.Done()
 			req, _ := http.NewRequest("GET", "https://www.pinterest.com/pin/"+id+"/", nil)
 			req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-			
+
 			resp, err := client.Do(req)
 			if err != nil {
 				return
 			}
 			defer resp.Body.Close()
-			
+
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			htmlStr := string(bodyBytes)
-			
+
 			match := regex.FindString(htmlStr)
 			if match != "" {
 				// Avoid returning thumbnail or weird formats if possible

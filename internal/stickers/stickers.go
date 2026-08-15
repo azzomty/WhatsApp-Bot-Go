@@ -30,4 +30,3 @@ func GenerateSticker(inputData []byte, isVideo bool, pack string, author string)
 
 	return ioutil.ReadAll(resp.Body)
 }
-

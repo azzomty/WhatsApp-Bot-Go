@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"strings"
 	"github.com/bregydoc/gtranslate"
+	"strings"
 )
 
 func translateMessage(ctx *BotContext, targetLang string) {
@@ -13,7 +13,7 @@ func translateMessage(ctx *BotContext, targetLang string) {
 
 	quoted := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
 	textToTranslate := ""
-	
+
 	if quoted.GetConversation() != "" {
 		textToTranslate = quoted.GetConversation()
 	} else if quoted.GetExtendedTextMessage() != nil {

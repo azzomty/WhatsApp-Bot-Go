@@ -22,7 +22,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	}
 
 	quoted := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
-	
+
 	if quoted.GetAudioMessage() == nil {
 		sendMessage(ctx, "الرسالة لا تحتوي على صوت قابل للتحويل.")
 		return
@@ -38,14 +38,14 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	// Prepare multipart form
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	
+
 	part, err := writer.CreateFormFile("file", "audio.ogg")
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ داخلي ❌")
 		return
 	}
 	part.Write(audioData)
-	
+
 	writer.WriteField("model", "whisper-large-v3")
 	// Add an Arabic prompt to force better accuracy and native dialect understanding if Arabic is selected
 	if targetLang == "ar" {
@@ -65,10 +65,10 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 		sendMessage(ctx, "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي ❌")
 		return
 	}
-	
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Authorization", "Bearer "+GroqAPIKey)
-	
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -76,9 +76,9 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 		return
 	}
 	defer resp.Body.Close()
-	
+
 	respBody, _ := io.ReadAll(resp.Body)
-	
+
 	if resp.StatusCode != 200 {
 		sendMessage(ctx, fmt.Sprintf("فشل التحويل (كود %d): %s", resp.StatusCode, string(respBody)))
 		return
@@ -91,7 +91,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 		sendMessage(ctx, "فشل في قراءة النتيجة ❌")
 		return
 	}
-	
+
 	finalText := strings.TrimSpace(result.Text)
 
 	if strings.HasPrefix(ctx.Text, ".دبلج") {

@@ -17,7 +17,7 @@ import (
 )
 
 type PinResult struct {
-	ID    string
+	ID string
 
 	Title string
 	URL   string
@@ -128,7 +128,7 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 
 		var imgUrl string
 		var w, h float64
-		
+
 		if aspect == "video" {
 			imgUrl = extractMediaByExtension(pin, ".mp4")
 		} else if aspect == "gif" {
@@ -183,7 +183,7 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 		if imgUrl == "" {
 			continue
 		}
-		
+
 		if w == 0 {
 			w = 1
 		}
@@ -210,7 +210,7 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 			} else if desc, ok := pin["description"].(string); ok {
 				title = desc
 			}
-			
+
 			id := ""
 			if idStr, ok := pin["id"].(string); ok {
 				id = idStr
@@ -247,7 +247,7 @@ func SearchPinterest(query string, aspect string) []PinResult {
 	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s", query)
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -257,7 +257,7 @@ func SearchPinterest(query string, aspect string) []PinResult {
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	data := extractDataFromJSON(bodyBytes)
-	
+
 	return parsePinterestData(data, aspect)
 }
 
@@ -265,7 +265,7 @@ func ForYouPinterest(aspect string) []PinResult {
 	searchUrl := "https://api.pinterest.com/v3/feeds/home/?item_count=0&pinrep_img_width=474x"
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -275,7 +275,7 @@ func ForYouPinterest(aspect string) []PinResult {
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	data := extractDataFromJSON(bodyBytes)
-	
+
 	return parsePinterestData(data, aspect)
 }
 
@@ -301,27 +301,27 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 		if p.ID == "" {
 			continue
 		}
-		
+
 		wg.Add(1)
 		go func(id string) {
 			defer wg.Done()
 			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/?fields=carousel_data,story_pin_data,images,image_large_url,image_medium_url", nil)
 			setPinterestHeaders(req)
-			
+
 			resp, err := client.Do(req)
 			if err != nil {
 				return
 			}
-			
+
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
-			
+
 			var respJson map[string]interface{}
 			json.Unmarshal(bodyBytes, &respJson)
-			
+
 			if data, ok := respJson["data"].(map[string]interface{}); ok {
 				var urls []string
-				
+
 				if cd, ok := data["carousel_data"].(map[string]interface{}); ok {
 					if slots, ok := cd["carousel_slots"].([]interface{}); ok && len(slots) >= 2 {
 						for i := 0; i < 2; i++ {
@@ -340,7 +340,7 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 						}
 					}
 				}
-				
+
 				if len(urls) < 2 {
 					urls = nil // reset if we didn't find 2
 					if spd, ok := data["story_pin_data"].(map[string]interface{}); ok {
@@ -427,11 +427,11 @@ func SearchPinterestLens(base64Image string, aspect string) []PinResult {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	
+
 	writer.WriteField("camera_type", "0")
 	writer.WriteField("source_type", "1")
 	writer.WriteField("page_size", "24")
-	
+
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", `form-data; name="image"; filename="null"`)
 	h.Set("Content-Type", "application/octet-stream")
@@ -455,7 +455,7 @@ func SearchPinterestLens(base64Image string, aspect string) []PinResult {
 
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	data := extractDataFromJSON(bodyBytes)
-	
+
 	return parsePinterestData(data, aspect)
 }
 

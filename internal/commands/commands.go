@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -17,7 +18,6 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
 
-	"sync"
 	"whatsapp-bot/internal/gemini"
 	"whatsapp-bot/internal/pinterest"
 	"whatsapp-bot/internal/stickers"
@@ -68,6 +68,9 @@ func AddMessage(chatID string, msg *events.Message) {
 }
 
 func Handle(ctx *BotContext) {
+	if handleInteractiveReply(ctx) {
+		return
+	}
 	if ctx.Text == "" {
 		return
 	}
@@ -123,6 +126,12 @@ func Handle(ctx *BotContext) {
 		promote(ctx)
 	case ".زرف":
 		zarf(ctx)
+	case ".mp3":
+		convertToMp3(ctx)
+	case ".يوتيوب":
+		interactiveYoutube(ctx)
+	case ".تحميل":
+		universalDownload(ctx)
 	case ".بينتريست", ".بحث":
 		pinterestSearch(ctx)
 	case ".فوريو":
@@ -240,13 +249,13 @@ func Handle(ctx *BotContext) {
 	case ".اغنية":
 		processYoutubeMedia(ctx, true)
 	case ".فيديو":
-		processYoutubeMedia(ctx, false)
+		multiVideoSearch(ctx)
 	case ".react":
 		reactMessage(ctx)
 	case ".اسمي":
 		setName(ctx)
 	case ".new", ".refresh":
-		refreshPinterest(ctx)
+		handleNewCommand(ctx)
 	case ".مواعيد صلاة", ".مواعيد الصلاة":
 		address := ""
 		if len(parts) > 2 {
@@ -275,6 +284,9 @@ func Handle(ctx *BotContext) {
 }
 
 func sendMessage(ctx *BotContext, text string) {
+	text = strings.ReplaceAll(text, "...", "")
+	text = strings.ReplaceAll(text, "..", "")
+	text = strings.ReplaceAll(text, ",,,", "")
 	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresenceComposing, types.ChatPresenceMediaText)
 	time.Sleep(500 * time.Millisecond)
 	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresencePaused, types.ChatPresenceMediaText)
@@ -952,7 +964,7 @@ func baymax(ctx *BotContext) {
 	name := store.GetBaymaxName(getLID(ctx, ctx.Sender))
 	if name != "" {
 		sendMessage(ctx, name)
-	} else if ctx.ChatID.String() == "218386906775558@lid" {
+	} else if ctx.Sender.User == "966508364121" {
 		sendMessage(ctx, "هاي هبهب 🎀")
 	} else {
 		sendMessage(ctx, "هاي عزام سينباي 🎀")
@@ -960,9 +972,10 @@ func baymax(ctx *BotContext) {
 }
 
 func showCommands(ctx *BotContext) {
-	cmds := `اليك كل الاوامر المتوفرة بالبوت:
+	cmds := `[ قائمة الأوامر الشاملة ]
+====================
 
-🛠️ أوامر الإدارة:
+[ أوامر الإدارة والحماية ]
 .طرد
 .ميوت
 .فك ميوت
@@ -974,53 +987,46 @@ func showCommands(ctx *BotContext) {
 .حذف
 .كومنت
 .فك كومنت
-
-🖼️ الصور والملصقات:
-.بينتريست
-.ملصق
-.sticker
-.سرقة
-.تعديل ملصق
-.تعديل حزمة
-.حقوق
 .تعديل حقوق
+.تعديل حزمة
+.تعديل ملصق
+
+[ أوامر التحميل والميديا ]
+.اغنية (لتحميل المقاطع كصوتيات مع التفاصيل)
+.يوتيوب (للبحث التفاعلي في اليوتيوب)
+.تحميل (لتحميل المقاطع من تيك توك، إنستقرام، إكس، سناب شات)
+.فيديو [كلمة] [عدد] (للبحث وتنزيل مقاطع المتعددة بصمت)
+.new (لجلب مقاطع جديدة من بحثك السابق)
+.mp3 (تحويل أي فيديو إلى صوت بالرد عليه)
+.ملصق (لتحويل الصور والفيديوهات لملصقات)
+.بينتريست (للبحث عن صور)
+.فوريو (صور عشوائية)
+.تطقيم (صور متطابقة)
+.زرف (لسحب ملصق وتغيير حقوقه)
+
+[ أوامر الألعاب والترفيه ]
+.حوم
+.كت
+.لو
+.نسبة
+.سؤال
+.هل
+.صراحة
+.فعالية
+.عقاب
+.انمي
+.اقتباس
+
+[ أوامر أخرى ]
 .بروفايل
+.مواعيد الصلاة
+.استهبال
+.baymax (لتفعيل البوت في القروب)
+.bot off (لتعطيل البوت في القروب)
 
-🤖 الذكاء الاصطناعي:
-.baymax
-.جيميناي
-.models
-.model
-
-🎮 الألعاب:
-.العاب
-.uno
-.xo (أو .تكتك / .اكس_او)
-.hangman (أو .مشنقة)
-.دخول
-.بدء
-.لعب
-.سحب
-.لون
-.حرف
-.خمن
-.انهاء
-.استسلام
-.save
-.load
-
-⚙️ أخرى:
-.كل الاوامر
-.الاوامر
-.اسمي
-.تكرار
-.رياكت
-.اساسي
-.استقبال
-.الرابط
-.تغيير رابط القروب
-.قفل
-.فتح`
+====================
+ملاحظة: البوت الآن مبرمج للعمل بهدوء بدون أي علامات ترقيم مزعجة.`
+	
 	sendMessage(ctx, cmds)
 }
 
@@ -1515,33 +1521,59 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 		return
 	}
 
-	sendMessage(ctx, "جاري البحث")
-
-	// 1. Search YouTube (requires API Key)
 	videoID, err := youtube.SearchVideo(query)
 	if err != nil {
 		sendMessage(ctx, "ما قدرت ألقى المقطع، تأكد من مفتاح الـ API أو حاول باسم ثاني!")
 		return
 	}
 
-	// 2. Get Video Details
-	info, err := youtube.GetVideoDetails(videoID)
-	if err != nil {
-		sendMessage(ctx, fmt.Sprintf("جبت المقطع بس فشلت في استخراج تفاصيله!\nالسبب: %s", err.Error()))
+	var infoWg sync.WaitGroup
+	var mediaWg sync.WaitGroup
+	var info *youtube.VideoInfo
+	var infoErr error
+	var thumbData []byte
+	var mediaData []byte
+	var mediaErr error
+
+	infoWg.Add(1)
+	go func() {
+		defer infoWg.Done()
+		info, infoErr = youtube.GetVideoDetails(videoID)
+		if infoErr == nil && info.Thumbnail != "" {
+			if resp, err := http.Get(info.Thumbnail); err == nil {
+				if resp.StatusCode != 200 {
+					resp.Body.Close()
+					// Fallback to hqdefault
+					if fallback, err2 := http.Get(fmt.Sprintf("https://i.ytimg.com/vi/%s/hqdefault.jpg", videoID)); err2 == nil {
+						data, _ := io.ReadAll(fallback.Body)
+						fallback.Body.Close()
+						thumbData, _ = youtube.CropTo16x9(data)
+					}
+				} else {
+					data, _ := io.ReadAll(resp.Body)
+					resp.Body.Close()
+					thumbData, _ = youtube.CropTo16x9(data)
+				}
+			}
+		}
+	}()
+
+	mediaWg.Add(1)
+	go func() {
+		defer mediaWg.Done()
+		mediaData, mediaErr = youtube.DownloadMedia(videoID, isAudio)
+	}()
+
+	// Wait ONLY for info and thumbnail so we can send it instantly!
+	infoWg.Wait()
+
+	if infoErr != nil {
+		sendMessage(ctx, fmt.Sprintf("جبت المقطع بس فشلت في استخراج تفاصيله!\nالسبب: %s", infoErr.Error()))
 		return
 	}
 
-	// 3. Download Thumbnail
-	var thumbData []byte
-	if info.Thumbnail != "" {
-		if resp, err := http.Get(info.Thumbnail); err == nil {
-			thumbData, _ = io.ReadAll(resp.Body)
-			resp.Body.Close()
-		}
-	}
-
-	// 4. Send Thumbnail with Caption
 	caption := youtube.FormatCaption(info)
+
 	var thumbMsgID string
 	if len(thumbData) > 0 {
 		uploadedThumb, err := ctx.Client.Upload(context.Background(), thumbData, whatsmeow.MediaImage)
@@ -1568,14 +1600,15 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 		thumbMsgID = resp.ID
 	}
 
-	// 5. Download Media
-	mediaData, err := youtube.DownloadMedia(videoID, isAudio)
-	if err != nil {
+	// Now wait for the actual media download to finish!
+	mediaWg.Wait()
+
+	if mediaErr != nil {
+		fmt.Printf("DownloadMedia Error for %s: %v\n", videoID, mediaErr)
 		sendMessage(ctx, "فشل تحميل المقطع، ممكن يكون طويل جداً أو فيه مشكلة بالشبكة!")
 		return
 	}
 
-	// 6. Upload and Reply to Thumbnail
 	mediaType := whatsmeow.MediaAudio
 	mimeType := "audio/mp4"
 	if !isAudio {
@@ -1599,10 +1632,12 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 			FileEncSHA256: uploadedMedia.FileEncSHA256,
 			FileSHA256:    uploadedMedia.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(mediaData))),
-			PTT:           proto.Bool(false),
 			ContextInfo: &waProto.ContextInfo{
 				StanzaID:    proto.String(thumbMsgID),
-				Participant: proto.String(ctx.Client.Store.ID.ToNonAD().String()),
+				Participant: proto.String(ctx.Client.Store.ID.String()),
+				QuotedMessage: &waProto.Message{
+					ImageMessage: &waProto.ImageMessage{Caption: proto.String(caption)},
+				},
 			},
 		}
 	} else {
@@ -1616,7 +1651,10 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 			FileLength:    proto.Uint64(uint64(len(mediaData))),
 			ContextInfo: &waProto.ContextInfo{
 				StanzaID:    proto.String(thumbMsgID),
-				Participant: proto.String(ctx.Client.Store.ID.ToNonAD().String()),
+				Participant: proto.String(ctx.Client.Store.ID.String()),
+				QuotedMessage: &waProto.Message{
+					ImageMessage: &waProto.ImageMessage{Caption: proto.String(caption)},
+				},
 			},
 		}
 	}

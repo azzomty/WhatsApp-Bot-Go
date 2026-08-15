@@ -8,31 +8,33 @@ import (
 )
 
 var (
-	MutedUsers     = make(map[string]bool)
-	AllowedUsers   = make(map[string]bool)
-	CommandAliases = make(map[string]map[string]string)
-	CustomOutputs  = make(map[string]map[string]string)
-	StickerAuthors = make(map[string]map[string]string)
-	BaymaxNames    = make(map[string]string)
-	Words          = make(map[string]interface{})
-	Hebebia        = make([]string, 0)
-	CommandBans    = make(map[string]map[string]bool)
-	TargetGroups   = make(map[string]string)
-	ProtectedUsers = make(map[string]bool)
+	ActivatedGroups   = make(map[string]bool)
+	activatedMutex    sync.RWMutex
+	MutedUsers        = make(map[string]bool)
+	AllowedUsers      = make(map[string]bool)
+	CommandAliases    = make(map[string]map[string]string)
+	CustomOutputs     = make(map[string]map[string]string)
+	StickerAuthors    = make(map[string]map[string]string)
+	BaymaxNames       = make(map[string]string)
+	Words             = make(map[string]interface{})
+	Hebebia           = make([]string, 0)
+	CommandBans       = make(map[string]map[string]bool)
+	TargetGroups      = make(map[string]string)
+	ProtectedUsers    = make(map[string]bool)
 	AntiContactGroups = make(map[string]bool)
-	mutedMutex     sync.RWMutex
-	allowedMutex   sync.RWMutex
-	aliasMutex     sync.RWMutex
-	OutputMutex    sync.RWMutex
-	stickerMutex   sync.RWMutex
-	baymaxMutex    sync.RWMutex
-	hebebiaMutex   sync.RWMutex
-	zotMutex       sync.RWMutex
-	banMutex       sync.RWMutex
-	targetMutex    sync.RWMutex
-	protectMutex   sync.RWMutex
-	antiContactMutex sync.RWMutex
-	ZotCounter     int
+	mutedMutex        sync.RWMutex
+	allowedMutex      sync.RWMutex
+	aliasMutex        sync.RWMutex
+	OutputMutex       sync.RWMutex
+	stickerMutex      sync.RWMutex
+	baymaxMutex       sync.RWMutex
+	hebebiaMutex      sync.RWMutex
+	zotMutex          sync.RWMutex
+	banMutex          sync.RWMutex
+	targetMutex       sync.RWMutex
+	protectMutex      sync.RWMutex
+	antiContactMutex  sync.RWMutex
+	ZotCounter        int
 
 	BotEnabled      bool = true
 	botEnabledMutex sync.RWMutex
@@ -46,8 +48,8 @@ var (
 	WelcomeGroups = make(map[string]string) // groupJID -> custom text
 	welcomeMutex  sync.RWMutex
 
-	ChatHistory   = make(map[string][]MsgInfo)
-	historyMutex  sync.RWMutex
+	ChatHistory  = make(map[string][]MsgInfo)
+	historyMutex sync.RWMutex
 )
 
 func SetCommandDisabled(cmd string, disabled bool, baseDir string) {
@@ -509,4 +511,38 @@ func AllowCommand(userID string, cmd string, baseDir string) {
 	AllowedCommands[userID][cmd] = true
 	allowedCmdMutex.Unlock()
 	saveJSON(baseDir+"/allowed_commands.json", AllowedCommands)
+}
+
+func IsGroupActivated(groupID string) bool {
+	activatedMutex.RLock()
+	defer activatedMutex.RUnlock()
+	return ActivatedGroups[groupID]
+}
+
+func ActivateGroup(groupID string) {
+	activatedMutex.Lock()
+	defer activatedMutex.Unlock()
+	ActivatedGroups[groupID] = true
+}
+
+func DeactivateGroup(groupID string) {
+	activatedMutex.Lock()
+	defer activatedMutex.Unlock()
+	ActivatedGroups[groupID] = false
+}
+
+func SaveActivatedGroups(dir string) {
+	activatedMutex.RLock()
+	defer activatedMutex.RUnlock()
+	data, _ := json.MarshalIndent(ActivatedGroups, "", "  ")
+	os.WriteFile(dir+"/activated_groups.json", data, 0644)
+}
+
+func LoadActivatedGroups(dir string) {
+	data, err := os.ReadFile(dir + "/activated_groups.json")
+	if err == nil {
+		activatedMutex.Lock()
+		defer activatedMutex.Unlock()
+		json.Unmarshal(data, &ActivatedGroups)
+	}
 }

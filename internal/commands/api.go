@@ -106,7 +106,7 @@ func HandleCurrentTime(ctx *BotContext, address string) {
 	}
 
 	formattedTime := currentTime.Format(timeFormat)
-	
+
 	// Translate AM/PM to Arabic if using 12-hour format
 	formattedTime = strings.ReplaceAll(formattedTime, "AM", "ص")
 	formattedTime = strings.ReplaceAll(formattedTime, "PM", "م")

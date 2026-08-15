@@ -67,7 +67,7 @@ func GetVideoDetails(videoID string) (*VideoInfo, error) {
 
 	var thumb string
 	if len(video.Thumbnails) > 0 {
-		thumb = video.Thumbnails[0].URL
+		thumb = fmt.Sprintf("https://i.ytimg.com/vi/%s/maxresdefault.jpg", videoID)
 	}
 
 	info := &VideoInfo{
@@ -94,7 +94,7 @@ func removeEmojis(s string) string {
 func FormatCaption(info *VideoInfo) string {
 	cleanTitle := removeEmojis(info.Title)
 	cleanAuthor := removeEmojis(info.Author)
-	return fmt.Sprintf("*العنوان:* %s\n*القناة:* %s\n*المدة:* %v\n*تاريخ النشر:* %s\n\nجاري التحميل",
+	return fmt.Sprintf("=== تفاصيل المقطع ===\n\nالعنوان: %s\nالقناة: %s\nالمدة: %v\nتاريخ النشر: %s",
 		cleanTitle, cleanAuthor, info.Duration, info.PublishDate.Format("2006-01-02"))
 }
 
@@ -107,7 +107,7 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	}
 
 	var targetFormat *youtube.Format
-	
+
 	if isAudio {
 		formats := video.Formats.Type("audio/mp4")
 		if len(formats) > 0 {
@@ -129,7 +129,7 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 		if len(formats) == 0 {
 			return nil, fmt.Errorf("no formats found")
 		}
-		
+
 		for i := range formats {
 			if formats[i].ItagNo == 18 { // 360p mp4
 				targetFormat = &formats[i]
@@ -160,4 +160,45 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	defer stream.Close()
 
 	return io.ReadAll(stream)
+}
+
+func SearchVideos(query string, maxResults int, pageToken string) ([]string, string, error) {
+	if APIKey == "" {
+		return nil, "", fmt.Errorf("API key is missing")
+	}
+
+	searchURL := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&q=%s&type=video&maxResults=%d&key=%s", url.QueryEscape(query), maxResults, APIKey)
+	if pageToken != "" {
+		searchURL += "&pageToken=" + pageToken
+	}
+
+	resp, err := http.Get(searchURL)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		NextPageToken string `json:"nextPageToken"`
+		Items         []struct {
+			ID struct {
+				VideoId string `json:"videoId"`
+			} `json:"id"`
+		} `json:"items"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, "", err
+	}
+
+	var videoIDs []string
+	for _, item := range result.Items {
+		videoIDs = append(videoIDs, item.ID.VideoId)
+	}
+
+	if len(videoIDs) == 0 {
+		return nil, "", fmt.Errorf("no videos found")
+	}
+
+	return videoIDs, result.NextPageToken, nil
 }

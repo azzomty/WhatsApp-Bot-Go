@@ -56,13 +56,53 @@ func eventHandler(evt interface{}) {
 	switch v := evt.(type) {
 
 	case *events.Message:
+		if v.Info.IsGroup && !store.IsGroupActivated(v.Info.Chat.String()) {
+			// Allow ONLY .baymax to activate
+			if v.Message != nil && v.Message.Conversation != nil {
+				text := strings.TrimSpace(strings.ToLower(*v.Message.Conversation))
+				if text == ".baymax" || text == ".buymax" {
+					store.ActivateGroup(v.Info.Chat.String())
+					store.SaveActivatedGroups(".")
+					// Let it fall through to HandleMessage so baymax personalized message triggers
+				}
+			} else if v.Message != nil && v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.Text != nil {
+				text := strings.TrimSpace(strings.ToLower(*v.Message.ExtendedTextMessage.Text))
+				if text == ".baymax" || text == ".buymax" {
+					store.ActivateGroup(v.Info.Chat.String())
+					store.SaveActivatedGroups(".")
+					// Let it fall through to HandleMessage so baymax personalized message triggers
+				}
+			}
+			return
+		}
+
+		if v.Info.IsGroup && store.IsGroupActivated(v.Info.Chat.String()) {
+			// Check if they want to turn it off
+			if v.Message != nil && v.Message.Conversation != nil {
+				text := strings.TrimSpace(strings.ToLower(*v.Message.Conversation))
+				if text == ".bot off" {
+					store.DeactivateGroup(v.Info.Chat.String())
+					store.SaveActivatedGroups(".")
+					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير 💤 (تم تعطيل البوت)")})
+					return
+				}
+			} else if v.Message != nil && v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.Text != nil {
+				text := strings.TrimSpace(strings.ToLower(*v.Message.ExtendedTextMessage.Text))
+				if text == ".bot off" {
+					store.DeactivateGroup(v.Info.Chat.String())
+					store.SaveActivatedGroups(".")
+					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير 💤 (تم تعطيل البوت)")})
+					return
+				}
+			}
+		}
 		if v.Info.Timestamp.Before(startupTime) {
 			return
 		}
 
 		if v.Message.GetReactionMessage() != nil {
 			reactText := v.Message.GetReactionMessage().GetText()
-			
+
 			// Auto-kick for middle finger
 			if strings.HasPrefix(reactText, "🖕") && v.Info.Chat.Server == "g.us" {
 				go func() {
@@ -108,9 +148,9 @@ func eventHandler(evt interface{}) {
 		commands.AddMessage(v.Info.Chat.String(), v)
 
 		text := ""
-		
+
 		isViewOnce := false
-		
+
 		unwrap := func(m *waProto.Message) *waProto.Message {
 			for m != nil {
 				if m.EphemeralMessage != nil && m.EphemeralMessage.Message != nil {
@@ -187,7 +227,7 @@ func eventHandler(evt interface{}) {
 					senderName = v.Info.Sender.User
 				}
 				captionAdd := fmt.Sprintf("\n\n---\n👁️ *رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
-				
+
 				var data []byte
 				var err error
 				var mediaType whatsmeow.MediaType
@@ -268,7 +308,7 @@ func eventHandler(evt interface{}) {
 		if v.Info.IsGroup {
 			swearWords := []string{"قحبة", "قحبه", "قحبتي", "قحباني", "خنزير", "خنزيري", "خنزيرتي", "خنزيرة", "خنزيره", "شرموط", "شرموطة", "شرموطه", "زاني", "زانية", "زانيه", "كس", "كسمك", "زب", "زبي", "معرص", "عرص", "منيوك", "منيوكة", "منيوكه"}
 			containsSwear := false
-			
+
 			// We check for exact word matches to avoid false positives (e.g. "عكس" shouldn't trigger "كس")
 			words := strings.Fields(text)
 			for _, w := range words {
@@ -295,8 +335,6 @@ func eventHandler(evt interface{}) {
 		if strings.Contains(senderLID, "224245258948685") {
 			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
 		}
-
-
 
 		// أمر معرفة الـ LID
 		if strings.HasPrefix(text, ".lid") {
@@ -388,7 +426,6 @@ func eventHandler(evt interface{}) {
 			Text:   text,
 		}
 
-		
 		if store.IsAntiContactGroup(v.Info.Chat.String()) {
 			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
 				go func() {
@@ -407,7 +444,7 @@ func eventHandler(evt interface{}) {
 				return
 			}
 		}
-		
+
 		if store.IsMuted(senderID) {
 			go client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
 			return
@@ -458,7 +495,7 @@ func eventHandler(evt interface{}) {
 							}
 						}
 						if len(toPromote) > 0 {
-								client.UpdateGroupParticipants(context.Background(), v.Info.Chat, toPromote, whatsmeow.ParticipantChangePromote)
+							client.UpdateGroupParticipants(context.Background(), v.Info.Chat, toPromote, whatsmeow.ParticipantChangePromote)
 						}
 					}
 				}
@@ -572,7 +609,7 @@ func eventHandler(evt interface{}) {
 								tmpGif := fmt.Sprintf("/tmp/temp_%d.gif", time.Now().UnixNano())
 								tmpMp4 := fmt.Sprintf("/tmp/temp_%d.mp4", time.Now().UnixNano())
 								os.WriteFile(tmpGif, data, 0644)
-								
+
 								// Get ffmpeg path from node_modules if possible, else use "ffmpeg"
 								ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
 								if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
@@ -589,12 +626,12 @@ func eventHandler(evt interface{}) {
 								os.Remove(tmpGif)
 								os.Remove(tmpMp4)
 							}
-							
+
 							mediaType := whatsmeow.MediaImage
 							if isVid {
 								mediaType = whatsmeow.MediaVideo
 							}
-							
+
 							resp, err := client.Upload(context.Background(), data, mediaType)
 							if err == nil {
 								msg := &waProto.Message{}
@@ -634,7 +671,7 @@ func eventHandler(evt interface{}) {
 									}
 									msg.ImageMessage = imgMsg
 								}
-								
+
 								client.SendMessage(context.Background(), v.Info.Chat, msg)
 								count++
 							}
@@ -672,6 +709,9 @@ func eventHandler(evt interface{}) {
 		go commands.Handle(ctx)
 
 	case *events.GroupInfo:
+		if !store.IsGroupActivated(v.JID.String()) {
+			return
+		}
 		if len(v.Join) > 0 {
 			groupStr := v.JID.String()
 			_, enabled := store.GetWelcomeGroup(groupStr)
@@ -789,7 +829,7 @@ func main() {
 			panic(err)
 		}
 
-		code, err := client.PairPhone(context.Background(), "966508364121", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+		code, err := client.PairPhone(context.Background(), "963992306978", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
 		if err != nil {
 			fmt.Println("حدث خطأ أثناء جلب كود الربط:", err)
 		} else {
