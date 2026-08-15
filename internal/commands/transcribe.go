@@ -28,8 +28,6 @@ func transcribeAudio(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, "جاري الاستماع للرسالة الصوتية... 🎧⏳")
-
 	audioMsg := quoted.GetAudioMessage()
 	audioData, err := ctx.Client.Download(context.Background(), audioMsg)
 	if err != nil {
@@ -49,6 +47,8 @@ func transcribeAudio(ctx *BotContext) {
 	part.Write(audioData)
 	
 	writer.WriteField("model", "whisper-large-v3")
+	// Add an Arabic prompt to force better accuracy and native dialect understanding
+	writer.WriteField("prompt", "هذا تسجيل صوتي، يرجى كتابته بدقة عالية جداً وبشكل واضح وصحيح إملائياً، مع مراعاة اللهجة.")
 	err = writer.Close()
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ داخلي ❌")
@@ -87,24 +87,24 @@ func transcribeAudio(ctx *BotContext) {
 		return
 	}
 	
-	finalText := result.Text
+	finalText := strings.TrimSpace(result.Text)
 
 	if strings.HasPrefix(ctx.Text, ".دبلج") {
-		sendMessage(ctx, "جاري ترجمة المقطع للعربية... 🌍⏳")
 		translated, err := gtranslate.TranslateWithParams(
-			result.Text,
+			finalText,
 			gtranslate.TranslationParams{
 				From: "auto",
 				To:   "ar",
 			},
 		)
 		if err == nil {
-			finalText = "عفواً الصوت يقول:\n\n" + translated
-		} else {
-			finalText = "فشلت الترجمة، هذا النص الأصلي:\n\n" + result.Text
+			finalText = translated
 		}
-	} else {
-		finalText = "🎙️ *التفريغ الصوتي:*\n\n" + result.Text
+	}
+
+	if finalText == "" {
+		sendMessage(ctx, "لم يتمكن الذكاء الاصطناعي من فهم أي كلمات في المقطع 🤫")
+		return
 	}
 
 	sendMessage(ctx, finalText)

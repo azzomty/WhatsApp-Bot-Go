@@ -43,5 +43,5 @@ func translateMessage(ctx *BotContext, targetLang string) {
 		return
 	}
 
-	sendMessage(ctx, "🌍 *الترجمة:*\n\n"+translated)
+	sendMessage(ctx, translated)
 }
