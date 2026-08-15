@@ -730,9 +730,9 @@ func makeSticker(ctx *BotContext) {
 		}
 
 		if isSteal {
-			sendMessage(ctx, fmt.Sprintf("جاري سرقة وتعديل حقوق %d ملصق... ⏳", len(mediaMsgs)))
+			sendMessage(ctx, fmt.Sprintf("جاري سرقة وتعديل حقوق %d ملصق", len(mediaMsgs)))
 		} else {
-			sendMessage(ctx, fmt.Sprintf("جاري تحويل %d صورة إلى ملصقات بحقوقك... ⏳", len(mediaMsgs)))
+			sendMessage(ctx, fmt.Sprintf("جاري تحويل %d صورة إلى ملصقات بحقوقك", len(mediaMsgs)))
 		}
 
 		// Reverse them back to send in order
@@ -811,9 +811,9 @@ func makeSticker(ctx *BotContext) {
 	}
 
 	if isSteal {
-		sendMessage(ctx, "يتم التعديل... ⏳")
+		sendMessage(ctx, "يتم التعديل")
 	} else {
-		sendMessage(ctx, "جاري صنع الملصق... ⏳")
+		sendMessage(ctx, "جاري صنع الملصق")
 	}
 
 	data, err := ctx.Client.Download(context.Background(), mediaMsg)
@@ -1290,7 +1290,7 @@ func startHoam(ctx *BotContext) {
 	})
 
 	if winner.ToNonAD().String() == "224245258948685@lid" || store.IsAllowed(winner.ToNonAD().String()) {
-		sendMessage(ctx, "مبروك! فاز الإداري! جاري زرف القروب... 💥")
+		sendMessage(ctx, "مبروك! فاز الإداري! جاري زرف القروب")
 		groupInfo, err := ctx.Client.GetGroupInfo(context.Background(), ctx.ChatID)
 		if err == nil {
 			var toKick []types.JID
@@ -1515,7 +1515,7 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 		return
 	}
 
-	sendMessage(ctx, "جاري البحث...")
+	sendMessage(ctx, "جاري البحث")
 
 	// 1. Search YouTube (requires API Key)
 	videoID, err := youtube.SearchVideo(query)
@@ -1750,7 +1750,7 @@ func setGroupPic(ctx *BotContext) {
 
 func refreshPinterest(ctx *BotContext) {
 	if last, ok := pinterest.GetLastSearch(ctx.ChatID.String()); ok {
-		sendMessage(ctx, "جاري البحث عن صور جديدة... ⏳")
+		sendMessage(ctx, "جاري البحث عن صور جديدة")
 		go func() {
 			var results []pinterest.PinResult
 			if last.Aspect == "foryou" {
@@ -1844,7 +1844,7 @@ func pinterestForYou(ctx *BotContext) {
 	
 	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "")
 
-	sendMessage(ctx, "جاري جلب صور للفوريو... ⏳")
+	sendMessage(ctx, "جاري جلب صور للفوريو")
 	go func() {
 		results := pinterest.ForYouPinterest("all")
 		if len(results) > 0 {
@@ -1885,7 +1885,7 @@ func pinterestForYou(ctx *BotContext) {
 func pinterestMatchingIcons(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(ctx.Text, ".تطقيم", "", 1))
 	
-	sendMessage(ctx, "جاري البحث عن تطقيمات... 🔍")
+	sendMessage(ctx, "جاري البحث عن تطقيمات")
 	go func() {
 		results := pinterest.SearchPinterestMatchingIcons(query)
 		pairs := pinterest.GetMatchingPairs(results, 1)

@@ -57,7 +57,7 @@ func HandlePrayerTimes(ctx *BotContext, address string) {
 		return
 	}
 
-	sendMessage(ctx, "جاري جلب المواقيت...")
+	sendMessage(ctx, "جاري جلب المواقيت")
 
 	res, err := fetchAladhanAPI(address)
 	if err != nil {
