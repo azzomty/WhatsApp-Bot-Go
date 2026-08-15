@@ -9,29 +9,44 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sync"
 	"time"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
-func init() {
-	// تحميل أداة yt-dlp الخارقة في الخلفية إذا لم تكن موجودة
-	go func() {
-		if _, err := os.Stat("yt-dlp"); os.IsNotExist(err) {
-			resp, err := http.Get("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp")
-			if err == nil {
-				defer resp.Body.Close()
-				out, err := os.Create("yt-dlp")
-				if err == nil {
-					io.Copy(out, resp.Body)
-					out.Close()
-					os.Chmod("yt-dlp", 0755)
-				}
-			}
-		}
-	}()
+var ytDlpMutex sync.Mutex
+
+func EnsureYtDlp() error {
+	ytDlpMutex.Lock()
+	defer ytDlpMutex.Unlock()
+
+	if info, err := os.Stat("yt-dlp"); err == nil && info.Size() > 1000000 {
+		// yt-dlp already exists and looks valid (size > 1MB)
+		return nil
+	}
+
+	resp, err := http.Get("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create("yt-dlp")
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod("yt-dlp", 0755)
 }
+
 
 var APIKey = "AIzaSyD1Rnl8ANpNH2DBN1GibmpcU_VYXVGbiu4"
 
@@ -80,6 +95,10 @@ func SearchVideo(query string) (string, error) {
 
 // GetVideoDetails gets all the details needed for the thumbnail message using yt-dlp
 func GetVideoDetails(videoID string) (*VideoInfo, error) {
+	if err := EnsureYtDlp(); err != nil {
+		return nil, fmt.Errorf("فشل تجهيز yt-dlp: %v", err)
+	}
+
 	cmd := exec.Command("./yt-dlp", "--dump-json", videoID)
 	out, err := cmd.Output()
 	if err != nil {
@@ -128,6 +147,10 @@ func FormatCaption(info *VideoInfo) string {
 
 // DownloadMedia downloads the audio or video using yt-dlp
 func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
+	if err := EnsureYtDlp(); err != nil {
+		return nil, fmt.Errorf("فشل تجهيز yt-dlp: %v", err)
+	}
+
 	filename := fmt.Sprintf("%s.mp4", videoID)
 	if isAudio {
 		filename = fmt.Sprintf("%s.mp3", videoID)
