@@ -81,7 +81,7 @@ func Handle(ctx *BotContext) {
 
 	if len(parts) > 1 {
 		twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
-		if twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" {
+		if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" {
 			cmdName = twoWordCmd
 		}
 	}
@@ -247,6 +247,18 @@ func Handle(ctx *BotContext) {
 		setName(ctx)
 	case ".new", ".refresh":
 		refreshPinterest(ctx)
+	case ".مواعيد صلاة", ".مواعيد الصلاة":
+		address := ""
+		if len(parts) > 2 {
+			address = strings.Join(parts[2:], " ")
+		}
+		HandlePrayerTimes(ctx, address)
+	case ".توقيت":
+		address := ""
+		if len(parts) > 1 {
+			address = strings.Join(parts[1:], " ")
+		}
+		HandleCurrentTime(ctx, address)
 	case ".حماية":
 		protectUser(ctx)
 	case ".كومنت":
