@@ -829,7 +829,7 @@ func main() {
 			panic(err)
 		}
 
-		code, err := client.PairPhone(context.Background(), "963992306978", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
+		code, err := client.PairPhone(context.Background(), "966508364121", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
 		if err != nil {
 			fmt.Println("حدث خطأ أثناء جلب كود الربط:", err)
 		} else {
