@@ -160,7 +160,26 @@ func Handle(ctx *BotContext) {
 			getGroupLink(ctx)
 		}
 	case ".نص", ".لخص", ".دبلج":
-		transcribeAudio(ctx)
+		targetLang := "ar"
+		if len(parts) > 1 {
+			langMap := map[string]string{
+				"عربي":    "ar",
+				"انجليزي": "en",
+				"فرنسي":   "fr",
+				"اسباني":  "es",
+				"ياباني":  "ja",
+				"كوري":    "ko",
+				"روسي":    "ru",
+				"صيني":    "zh",
+				"تركي":    "tr",
+				"الماني":  "de",
+				"هندي":    "hi",
+			}
+			if val, ok := langMap[parts[1]]; ok {
+				targetLang = val
+			}
+		}
+		transcribeAudio(ctx, targetLang)
 	case ".ترجم", ".عربي":
 		translateMessage(ctx, "ar")
 	case ".انجليزي":

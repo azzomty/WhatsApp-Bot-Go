@@ -15,7 +15,7 @@ import (
 
 var GroqAPIKey = "gsk_" + "8ajx4QBmJbK9LfSJWTf0WGdyb3FYZBPpZArcJuqxLYtHMIqg7ImZ"
 
-func transcribeAudio(ctx *BotContext) {
+func transcribeAudio(ctx *BotContext, targetLang string) {
 	if ctx.Event.Message.GetExtendedTextMessage() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo() == nil || ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage() == nil {
 		sendMessage(ctx, "يرجى الرد (Reply) على بصمة صوتية واستخدام الأمر .نص")
 		return
@@ -47,9 +47,13 @@ func transcribeAudio(ctx *BotContext) {
 	part.Write(audioData)
 	
 	writer.WriteField("model", "whisper-large-v3")
-	// Add an Arabic prompt to force better accuracy and native dialect understanding
-	writer.WriteField("prompt", "هذا تسجيل صوتي، يرجى كتابته بدقة عالية جداً وبشكل واضح وصحيح إملائياً، مع مراعاة اللهجة.")
-	writer.WriteField("language", "ar") // Force Arabic language
+	// Add an Arabic prompt to force better accuracy and native dialect understanding if Arabic is selected
+	if targetLang == "ar" {
+		writer.WriteField("prompt", "هذا تسجيل صوتي، يرجى كتابته بدقة عالية جداً وبشكل واضح وصحيح إملائياً، مع مراعاة اللهجة.")
+	}
+	if targetLang != "" {
+		writer.WriteField("language", targetLang)
+	}
 	err = writer.Close()
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ داخلي ❌")
