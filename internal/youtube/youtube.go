@@ -2,11 +2,13 @@ package youtube
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/kkdai/youtube/v2"
@@ -86,10 +88,18 @@ func GetVideoDetails(videoID string) (*VideoInfo, error) {
 	return info, nil
 }
 
+func removeEmojis(s string) string {
+	// A simple regex to remove common emojis
+	re := regexp.MustCompile(`[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F1E0}-\x{1F1FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}]`)
+	return re.ReplaceAllString(s, "")
+}
+
 func FormatCaption(info *VideoInfo) string {
 	p := message.NewPrinter(language.Arabic)
-	return p.Sprintf("🎬 *العنوان:* %s\n👤 *القناة:* %s\n⏱️ *المدة:* %v\n📅 *تاريخ النشر:* %s\n\nجاري التحميل... ⏳",
-		info.Title, info.Author, info.Duration, info.PublishDate.Format("2006-01-02"))
+	cleanTitle := removeEmojis(info.Title)
+	cleanAuthor := removeEmojis(info.Author)
+	return p.Sprintf("*العنوان:* %s\n*القناة:* %s\n*المدة:* %v\n*تاريخ النشر:* %s\n\nجاري التحميل...",
+		cleanTitle, cleanAuthor, info.Duration, info.PublishDate.Format("2006-01-02"))
 }
 
 // DownloadMedia downloads the audio or video
