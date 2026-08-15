@@ -1,19 +1,37 @@
 package youtube
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
 	"regexp"
 	"time"
 
-	"github.com/kkdai/youtube/v2"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
+
+func init() {
+	// تحميل أداة yt-dlp الخارقة في الخلفية إذا لم تكن موجودة
+	go func() {
+		if _, err := os.Stat("yt-dlp"); os.IsNotExist(err) {
+			resp, err := http.Get("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp")
+			if err == nil {
+				defer resp.Body.Close()
+				out, err := os.Create("yt-dlp")
+				if err == nil {
+					io.Copy(out, resp.Body)
+					out.Close()
+					os.Chmod("yt-dlp", 0755)
+				}
+			}
+		}
+	}()
+}
 
 var APIKey = "AIzaSyD1Rnl8ANpNH2DBN1GibmpcU_VYXVGbiu4"
 
@@ -60,28 +78,35 @@ func SearchVideo(query string) (string, error) {
 	return result.Items[0].ID.VideoId, nil
 }
 
-// GetVideoDetails gets all the details needed for the thumbnail message
+// GetVideoDetails gets all the details needed for the thumbnail message using yt-dlp
 func GetVideoDetails(videoID string) (*VideoInfo, error) {
-	client := youtube.Client{}
-	vid, err := client.GetVideo(videoID)
+	cmd := exec.Command("./yt-dlp", "--dump-json", videoID)
+	out, err := cmd.Output()
 	if err != nil {
+		return nil, fmt.Errorf("فشل استخراج التفاصيل من yt-dlp: %v", err)
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(out, &data); err != nil {
 		return nil, err
 	}
 
-	// We can use the YouTube Data API to get likes if needed, but youtube/v2 doesn't provide likes directly.
-	// We'll leave likes as 0 or we can fetch it via API.
+	durationFloat, _ := data["duration"].(float64)
+	uploadDateStr, _ := data["upload_date"].(string)
 	
-	info := &VideoInfo{
-		ID:          vid.ID,
-		Title:       vid.Title,
-		Author:      vid.Author,
-		Duration:    vid.Duration,
-		PublishDate: vid.PublishDate,
-	}
+	publishDate, _ := time.Parse("20060102", uploadDateStr)
 
-	if len(vid.Thumbnails) > 0 {
-		// Get highest quality thumbnail
-		info.Thumbnail = vid.Thumbnails[len(vid.Thumbnails)-1].URL
+	title, _ := data["title"].(string)
+	uploader, _ := data["uploader"].(string)
+	thumbnail, _ := data["thumbnail"].(string)
+
+	info := &VideoInfo{
+		ID:          videoID,
+		Title:       title,
+		Author:      uploader,
+		Duration:    time.Duration(durationFloat) * time.Second,
+		PublishDate: publishDate,
+		Thumbnail:   thumbnail,
 	}
 
 	return info, nil
@@ -101,53 +126,25 @@ func FormatCaption(info *VideoInfo) string {
 		cleanTitle, cleanAuthor, info.Duration, info.PublishDate.Format("2006-01-02"))
 }
 
-// DownloadMedia downloads the audio or video
+// DownloadMedia downloads the audio or video using yt-dlp
 func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
-	client := youtube.Client{}
-	vid, err := client.GetVideo(videoID)
-	if err != nil {
-		return nil, err
+	filename := fmt.Sprintf("%s.mp4", videoID)
+	if isAudio {
+		filename = fmt.Sprintf("%s.mp3", videoID)
 	}
+	defer os.Remove(filename)
 
-	formats := vid.Formats.WithAudioChannels()
-	if !isAudio {
-		formats = vid.Formats
+	var cmd *exec.Cmd
+	if isAudio {
+		cmd = exec.Command("./yt-dlp", "-f", "bestaudio", "--extract-audio", "--audio-format", "mp3", "-o", filename, videoID)
+	} else {
+		cmd = exec.Command("./yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", filename, videoID)
 	}
 	
-	if len(formats) == 0 {
-		return nil, fmt.Errorf("no format found")
-	}
-	formats.Sort()
-
-	var bestFormat youtube.Format
-	if isAudio {
-		bestFormat = formats[0]
-	} else {
-		// Try to find a good quality video with audio (like 720p mp4)
-		found := false
-		for _, f := range formats {
-			if f.AudioChannels > 0 && (f.QualityLabel == "720p" || f.QualityLabel == "480p" || f.QualityLabel == "360p") {
-				bestFormat = f
-				found = true
-				break
-			}
-		}
-		if !found {
-			bestFormat = formats[0] // fallback
-		}
-	}
-
-	stream, _, err := client.GetStream(vid, &bestFormat)
+	err := cmd.Run()
 	if err != nil {
-		return nil, err
-	}
-	defer stream.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, stream)
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("فشل التحميل من yt-dlp: %v", err)
 	}
 
-	return buf.Bytes(), nil
+	return os.ReadFile(filename)
 }
