@@ -1515,7 +1515,7 @@ func processYoutubeMedia(ctx *BotContext, isAudio bool) {
 		return
 	}
 
-	sendMessage(ctx, "جاري البحث... 🔍")
+	sendMessage(ctx, "جاري البحث...")
 
 	// 1. Search YouTube (requires API Key)
 	videoID, err := youtube.SearchVideo(query)

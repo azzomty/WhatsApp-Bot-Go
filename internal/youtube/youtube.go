@@ -11,9 +11,6 @@ import (
 	"regexp"
 	"sync"
 	"time"
-
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 )
 
 var ytDlpMutex sync.Mutex
@@ -138,10 +135,9 @@ func removeEmojis(s string) string {
 }
 
 func FormatCaption(info *VideoInfo) string {
-	p := message.NewPrinter(language.Arabic)
 	cleanTitle := removeEmojis(info.Title)
 	cleanAuthor := removeEmojis(info.Author)
-	return p.Sprintf("*العنوان:* %s\n*القناة:* %s\n*المدة:* %v\n*تاريخ النشر:* %s\n\nجاري التحميل...",
+	return fmt.Sprintf("*العنوان:* %s\n*القناة:* %s\n*المدة:* %v\n*تاريخ النشر:* %s\n\nجاري التحميل...",
 		cleanTitle, cleanAuthor, info.Duration, info.PublishDate.Format("2006-01-02"))
 }
 
@@ -153,15 +149,15 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 
 	filename := fmt.Sprintf("%s.mp4", videoID)
 	if isAudio {
-		filename = fmt.Sprintf("%s.mp3", videoID)
+		filename = fmt.Sprintf("%s.m4a", videoID)
 	}
 	defer os.Remove(filename)
 
 	var cmd *exec.Cmd
 	if isAudio {
-		cmd = exec.Command("./yt-dlp", "-f", "bestaudio", "--extract-audio", "--audio-format", "mp3", "-o", filename, videoID)
+		cmd = exec.Command("./yt-dlp", "--js-runtimes", "node", "-f", "140/bestaudio[ext=m4a]/bestaudio", "-o", filename, videoID)
 	} else {
-		cmd = exec.Command("./yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", filename, videoID)
+		cmd = exec.Command("./yt-dlp", "--js-runtimes", "node", "-f", "best[ext=mp4]/best", "-o", filename, videoID)
 	}
 	
 	err := cmd.Run()
