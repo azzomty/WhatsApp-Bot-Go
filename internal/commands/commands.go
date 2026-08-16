@@ -669,8 +669,8 @@ func pinterestSearch(ctx *BotContext) {
 			query = strings.Join(parts[:len(parts)-1], " ")
 		}
 	}
-	if count > 20 {
-		count = 20
+	if count > 60 {
+		count = 60
 	}
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
@@ -688,7 +688,21 @@ func makeSticker(ctx *BotContext) {
 	isBulk := false
 	if len(parts) > 1 {
 		lastPart := parts[len(parts)-1]
-		if parsedCount, err := strconv.Atoi(lastPart); err == nil {
+		parsedCount := 0
+		isValid := false
+		for _, char := range lastPart {
+			if char >= '0' && char <= '9' {
+				parsedCount = parsedCount*10 + int(char-'0')
+				isValid = true
+			} else if char >= '٠' && char <= '٩' {
+				parsedCount = parsedCount*10 + int(char-'٠')
+				isValid = true
+			} else {
+				isValid = false
+				break
+			}
+		}
+		if isValid && parsedCount > 0 {
 			count = parsedCount
 			isBulk = true
 		}

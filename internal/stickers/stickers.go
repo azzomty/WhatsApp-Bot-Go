@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 // GenerateSticker converts an input file (image or video) to a WebP sticker with EXIF
@@ -13,8 +14,8 @@ func GenerateSticker(inputData []byte, isVideo bool, pack string, author string)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("x-pack", pack)
-	req.Header.Set("x-author", author)
+	req.Header.Set("x-pack", url.QueryEscape(pack))
+	req.Header.Set("x-author", url.QueryEscape(author))
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

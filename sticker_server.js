@@ -8,8 +8,8 @@ const path = require('path');
 
 const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/sticker') {
-        let pack = req.headers['x-pack'] || 'B O T';
-        let author = req.headers['x-author'] || 'Z E R O';
+        let pack = decodeURIComponent(req.headers['x-pack'] || 'B O T');
+        let author = decodeURIComponent(req.headers['x-author'] || 'Z E R O');
         
         let body = [];
         req.on('data', chunk => body.push(chunk));
