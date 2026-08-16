@@ -4,15 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/kkdai/youtube/v2"
 )
 
 var APIKey = "AIzaSyD1Rnl8ANpNH2DBN1GibmpcU_VYXVGbiu4"
@@ -109,17 +108,17 @@ func GetVideoDetails(videoID string) (*VideoInfo, error) {
 
 	item := result.Items[0]
 	pubDate, _ := time.Parse(time.RFC3339, item.Snippet.PublishedAt)
-	
+
 	thumb := item.Snippet.Thumbnails.Maxres.Url
 	if thumb == "" {
 		thumb = item.Snippet.Thumbnails.High.Url
 	}
-	
+
 	dStr := item.ContentDetails.Duration
 	dStr = strings.TrimPrefix(dStr, "PT")
 	dStr = strings.ToLower(dStr)
 	duration, _ := time.ParseDuration(dStr)
-	
+
 	info := &VideoInfo{
 		ID:          videoID,
 		Title:       item.Snippet.Title,
@@ -178,71 +177,26 @@ func ParseCookies(filename string) http.CookieJar {
 	return jar
 }
 
-// DownloadMedia downloads the audio or video using kkdai/youtube/v2 with cookies
 func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
-	jar := ParseCookies("cookies.txt")
-	client := youtube.Client{
-		HTTPClient: &http.Client{Jar: jar},
-	}
-	video, err := client.GetVideo(videoID)
-	if err != nil {
-		return nil, err
-	}
+	link := "https://www.youtube.com/watch?v=" + videoID
 
-	var targetFormat *youtube.Format
-
+	ext := "mp4"
+	format := "best[height<=720]/best"
 	if isAudio {
-		formats := video.Formats.Type("audio/mp4")
-		if len(formats) > 0 {
-			targetFormat = &formats[0]
-			for i := range formats {
-				if formats[i].ItagNo == 140 { // m4a audio
-					targetFormat = &formats[i]
-					break
-				}
-			}
-		} else {
-			formats := video.Formats.WithAudioChannels()
-			if len(formats) > 0 {
-				targetFormat = &formats[0]
-			}
-		}
-	} else {
-		formats := video.Formats.WithAudioChannels()
-		if len(formats) == 0 {
-			return nil, fmt.Errorf("no formats found")
-		}
-
-		for i := range formats {
-			if formats[i].ItagNo == 18 { // 360p mp4
-				targetFormat = &formats[i]
-				break
-			}
-		}
-		if targetFormat == nil {
-			for i := range formats {
-				if formats[i].ItagNo == 22 { // 720p mp4
-					targetFormat = &formats[i]
-					break
-				}
-			}
-		}
-		if targetFormat == nil {
-			targetFormat = &formats[0]
-		}
+		ext = "m4a"
+		format = "bestaudio[ext=m4a]/bestaudio"
 	}
 
-	if targetFormat == nil {
-		return nil, fmt.Errorf("could not find suitable format")
-	}
+	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("yt_%d.%s", time.Now().UnixNano(), ext))
+	defer os.Remove(tmpFile)
 
-	stream, _, err := client.GetStream(video, targetFormat)
+	cmd := exec.Command("./yt-dlp", "--cookies", "cookies.txt", "-f", format, "-o", tmpFile, link)
+	err := cmd.Run()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("yt-dlp failed: %v", err)
 	}
-	defer stream.Close()
 
-	return io.ReadAll(stream)
+	return os.ReadFile(tmpFile)
 }
 
 func SearchVideos(query string, maxResults int, pageToken string) ([]string, string, error) {
