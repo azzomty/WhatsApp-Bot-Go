@@ -130,10 +130,10 @@ func Handle(ctx *BotContext) {
 		GetWeather(ctx)
 	case ".mp3":
 		convertToMp3(ctx)
-	case ".يوتيوب":
-		interactiveYoutube(ctx)
-	case ".تحميل":
-		universalDownload(ctx)
+	// case ".يوتيوب":
+	// 	interactiveYoutube(ctx)
+	// case ".تحميل":
+	// 	universalDownload(ctx)
 	case ".بينتريست", ".بحث":
 		pinterestSearch(ctx)
 	case ".فوريو":
@@ -248,10 +248,10 @@ func Handle(ctx *BotContext) {
 		getProfilePic(ctx)
 	case ".تكرار":
 		repeatMessage(ctx)
-	case ".اغنية":
-		processYoutubeMedia(ctx, true)
-	case ".فيديو":
-		multiVideoSearch(ctx)
+	// case ".اغنية":
+	// 	processYoutubeMedia(ctx, true)
+	// case ".فيديو":
+	// 	multiVideoSearch(ctx)
 	case ".react":
 		reactMessage(ctx)
 	case ".اسمي":
