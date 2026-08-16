@@ -126,6 +126,8 @@ func Handle(ctx *BotContext) {
 		promote(ctx)
 	case ".زرف":
 		zarf(ctx)
+	case ".طقس":
+		GetWeather(ctx)
 	case ".mp3":
 		convertToMp3(ctx)
 	case ".يوتيوب":
