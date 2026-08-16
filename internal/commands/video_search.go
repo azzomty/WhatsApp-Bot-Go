@@ -3,16 +3,14 @@ package commands
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
+	"whatsapp-bot/internal/youtube"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
@@ -42,60 +40,32 @@ func getMultiVideoSession(key string) *MultiVideoSession {
 	return multiVideoSessions[key]
 }
 
-func fetchTikTokLinksAPI(query string) ([]string, error) {
-	// Try multiple APIs recursively via regex to find any tiktok url
-	apis := []string{
-		"https://aemt.me/tiktoksearch?text=" + url.QueryEscape(query),
-		"https://api.vreden.web.id/api/tiktoksearch?query=" + url.QueryEscape(query),
+func fetchShortVideoLinks(query string, count int) ([]string, error) {
+	// TikTok search APIs are heavily blocked by Cloudflare now.
+	// As a robust alternative, we use YouTube Shorts which provides the exact same short video format.
+	videoIDs, _, err := youtube.SearchVideos(query+" shorts", count+2, "")
+	if err != nil {
+		return nil, err
 	}
-
-	client := &http.Client{Timeout: 15 * time.Second}
-	var allBody string
-
-	for _, apiURL := range apis {
-		resp, err := client.Get(apiURL)
-		if err == nil && resp.StatusCode == 200 {
-			body, _ := io.ReadAll(resp.Body)
-			allBody += string(body) + " "
-			resp.Body.Close()
-		}
-	}
-
-	if allBody == "" {
-		return nil, fmt.Errorf("all apis failed")
-	}
-
-	// Some APIs return "https://www.tiktok.com/@user/video/123", others return direct mp4 links
-	reTikTok := regexp.MustCompile(`(?i)tiktok\.com/@[^/]+/video/\d+`)
-	matches := reTikTok.FindAllString(allBody, -1)
 	
 	uniqueLinks := make([]string, 0)
-	seen := make(map[string]bool)
-	
-	for _, match := range matches {
-		link := "https://www." + match
-		if !seen[link] {
-			seen[link] = true
-			uniqueLinks = append(uniqueLinks, link)
-		}
+	for _, id := range videoIDs {
+		uniqueLinks = append(uniqueLinks, "https://youtu.be/"+id)
 	}
-
-	// If no standard tiktok links found, let's look for any generic play urls (tikwm style) if the API directly returns MP4s
-	if len(uniqueLinks) == 0 {
-		reMP4 := regexp.MustCompile(`(?i)https?://[^\s"']+\.mp4[^\s"']*`)
-		mp4Matches := reMP4.FindAllString(allBody, -1)
-		for _, match := range mp4Matches {
-			if !seen[match] {
-				seen[match] = true
-				uniqueLinks = append(uniqueLinks, match)
-			}
-		}
-	}
-
 	return uniqueLinks, nil
 }
 
-func downloadTikTokDirect(ctx *BotContext, link string) {
+func downloadShortVideoDirect(ctx *BotContext, link string) {
+	// If it's a youtube link, download natively
+	if strings.Contains(link, "youtu.be") {
+		videoID := strings.TrimPrefix(link, "https://youtu.be/")
+		mediaData, err := youtube.DownloadMedia(videoID, false)
+		if err == nil {
+			sendDirectVideo(ctx, mediaData)
+		}
+		return
+	}
+
 	// If it's already a direct mp4
 	if strings.Contains(link, ".mp4") {
 		mediaResp, err := http.Get(link)
@@ -201,9 +171,9 @@ func multiVideoSearch(ctx *BotContext) {
 		return
 	}
 
-	links, err := fetchTikTokLinksAPI(query)
+	links, err := fetchShortVideoLinks(query, count)
 	if err != nil || len(links) == 0 {
-		sendMessage(ctx, "ما قدرت ألقى نتائج! (تأكد من سيرفرك أو جرب كلمة ثانية)")
+		sendMessage(ctx, "ما قدرت ألقى نتائج! (جرب كلمة ثانية)")
 		return
 	}
 
@@ -224,7 +194,7 @@ func multiVideoSearch(ctx *BotContext) {
 		wg.Add(1)
 		go func(link string) {
 			defer wg.Done()
-			downloadTikTokDirect(ctx, link)
+			downloadShortVideoDirect(ctx, link)
 		}(links[i])
 	}
 	wg.Wait()
@@ -255,7 +225,7 @@ func multiVideoSearchNew(ctx *BotContext) {
 		wg.Add(1)
 		go func(l string) {
 			defer wg.Done()
-			downloadTikTokDirect(ctx, l)
+			downloadShortVideoDirect(ctx, l)
 		}(link)
 	}
 

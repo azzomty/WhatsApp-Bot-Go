@@ -1,11 +1,14 @@
 package youtube
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -57,25 +60,72 @@ func SearchVideo(query string) (string, error) {
 	return result.Items[0].ID.VideoId, nil
 }
 
-// GetVideoDetails gets all the details using kkdai/youtube/v2
+// GetVideoDetails gets all the details using official Google API
 func GetVideoDetails(videoID string) (*VideoInfo, error) {
-	client := youtube.Client{}
-	video, err := client.GetVideo(videoID)
+	if APIKey == "" {
+		return nil, fmt.Errorf("API key is missing")
+	}
+
+	searchURL := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=%s&key=%s", url.QueryEscape(videoID), APIKey)
+	resp, err := http.Get(searchURL)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
-	var thumb string
-	if len(video.Thumbnails) > 0 {
-		thumb = fmt.Sprintf("https://i.ytimg.com/vi/%s/maxresdefault.jpg", videoID)
+	var result struct {
+		Items []struct {
+			ID      string `json:"id"`
+			Snippet struct {
+				Title        string `json:"title"`
+				ChannelTitle string `json:"channelTitle"`
+				PublishedAt  string `json:"publishedAt"`
+				Thumbnails   struct {
+					Maxres struct {
+						Url string `json:"url"`
+					} `json:"maxres"`
+					High struct {
+						Url string `json:"url"`
+					} `json:"high"`
+				} `json:"thumbnails"`
+			} `json:"snippet"`
+			ContentDetails struct {
+				Duration string `json:"duration"`
+			} `json:"contentDetails"`
+			Statistics struct {
+				ViewCount string `json:"viewCount"`
+				LikeCount string `json:"likeCount"`
+			} `json:"statistics"`
+		} `json:"items"`
 	}
 
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, fmt.Errorf("no results found")
+	}
+
+	item := result.Items[0]
+	pubDate, _ := time.Parse(time.RFC3339, item.Snippet.PublishedAt)
+	
+	thumb := item.Snippet.Thumbnails.Maxres.Url
+	if thumb == "" {
+		thumb = item.Snippet.Thumbnails.High.Url
+	}
+	
+	dStr := item.ContentDetails.Duration
+	dStr = strings.TrimPrefix(dStr, "PT")
+	dStr = strings.ToLower(dStr)
+	duration, _ := time.ParseDuration(dStr)
+	
 	info := &VideoInfo{
 		ID:          videoID,
-		Title:       video.Title,
-		Author:      video.Author,
-		Duration:    video.Duration,
-		PublishDate: video.PublishDate,
+		Title:       item.Snippet.Title,
+		Author:      item.Snippet.ChannelTitle,
+		Duration:    duration,
+		PublishDate: pubDate,
 		Thumbnail:   thumb,
 	}
 
@@ -83,9 +133,6 @@ func GetVideoDetails(videoID string) (*VideoInfo, error) {
 }
 
 func removeEmojis(s string) string {
-	// Simple emoji removal (from original logic)
-	// For simplicity, we just return the string as is, or we can use strings.Map to remove non-printable characters.
-	// We'll strip basic dots if needed since user wants no ...
 	s = strings.ReplaceAll(s, "...", "")
 	s = strings.ReplaceAll(s, "..", "")
 	return s
@@ -98,9 +145,45 @@ func FormatCaption(info *VideoInfo) string {
 		cleanTitle, cleanAuthor, info.Duration, info.PublishDate.Format("2006-01-02"))
 }
 
-// DownloadMedia downloads the audio or video using kkdai/youtube/v2
+func ParseCookies(filename string) http.CookieJar {
+	jar, _ := cookiejar.New(nil)
+	file, err := os.Open(filename)
+	if err != nil {
+		return jar
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var cookies []*http.Cookie
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) >= 7 {
+			cookie := &http.Cookie{
+				Name:   parts[5],
+				Value:  parts[6],
+				Domain: parts[0],
+				Path:   parts[2],
+			}
+			cookies = append(cookies, cookie)
+		}
+	}
+	u, _ := url.Parse("https://youtube.com")
+	jar.SetCookies(u, cookies)
+	u2, _ := url.Parse("https://www.youtube.com")
+	jar.SetCookies(u2, cookies)
+	return jar
+}
+
+// DownloadMedia downloads the audio or video using kkdai/youtube/v2 with cookies
 func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
-	client := youtube.Client{}
+	jar := ParseCookies("cookies.txt")
+	client := youtube.Client{
+		HTTPClient: &http.Client{Jar: jar},
+	}
 	video, err := client.GetVideo(videoID)
 	if err != nil {
 		return nil, err

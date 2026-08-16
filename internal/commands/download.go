@@ -10,9 +10,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"whatsapp-bot/internal/youtube"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
@@ -39,6 +41,20 @@ func universalDownload(ctx *BotContext) {
 	if strings.Contains(query, "tiktok.com") {
 		downloadTikTok(ctx, query)
 		return
+	}
+
+	// If it's YouTube, use our native downloader
+	if strings.Contains(query, "youtube.com") || strings.Contains(query, "youtu.be") {
+		re := regexp.MustCompile(`(?:v=|\/)([0-9A-Za-z_-]{11}).*`)
+		matches := re.FindStringSubmatch(query)
+		if len(matches) > 1 {
+			videoID := matches[1]
+			mediaData, err := youtube.DownloadMedia(videoID, false)
+			if err == nil {
+				sendMediaData(ctx, mediaData, "video/mp4", whatsmeow.MediaVideo)
+				return
+			}
+		}
 	}
 
 	// For all other platforms, use yt-dlp
@@ -79,7 +95,7 @@ func downloadTikTok(ctx *BotContext, link string) {
 func downloadWithYtDlp(ctx *BotContext, link string, silentFail bool) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("dl_%d.mp4", time.Now().UnixNano()))
 	
-	cmd := exec.Command("./yt-dlp", "-f", "b", "-o", tmpFile, link)
+	cmd := exec.Command("./yt-dlp", "--cookies", "cookies.txt", "-f", "b", "-o", tmpFile, link)
 	err := cmd.Run()
 	if err != nil {
 		if !silentFail {

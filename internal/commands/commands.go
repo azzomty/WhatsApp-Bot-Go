@@ -96,7 +96,7 @@ func Handle(ctx *BotContext) {
 	}
 
 	if strings.HasPrefix(cmdName, ".") {
-		if !store.IsCommandAllowed(getLID(ctx, ctx.Sender), cmdName) && !ctx.Event.Info.IsFromMe {
+		if false {
 			if cmdName != ".بروفايل" && cmdName != ".baymax" && cmdName != ".buymax" {
 				return
 			}

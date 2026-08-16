@@ -150,6 +150,10 @@ func handleInteractiveReply(ctx *BotContext) bool {
 
 func downloadInteractiveMedia(ctx *BotContext, videoID string) {
 	sendMessage(ctx, "جاري تحميل المقطع...")
-	link := "https://youtu.be/" + videoID
-	downloadWithYtDlp(ctx, link, true)
+	mediaData, err := youtube.DownloadMedia(videoID, false)
+	if err != nil {
+		sendMessage(ctx, "فشل التحميل! ممكن الموقع غير مدعوم أو الرابط غلط.")
+		return
+	}
+	sendMediaData(ctx, mediaData, "video/mp4", whatsmeow.MediaVideo)
 }
