@@ -1,4 +1,3 @@
-const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const http = require('http');
 const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(require('ffmpeg-static'));
@@ -7,7 +6,7 @@ const os = require('os');
 const path = require('path');
 
 const server = http.createServer(async (req, res) => {
-    if (req.method === 'POST' && req.url === '/sticker') {
+    if (req.method === 'POST' && (req.url === '/sticker' || req.url === '/tray')) {
         let pack = decodeURIComponent(req.headers['x-pack'] || 'B O T');
         let author = decodeURIComponent(req.headers['x-author'] || 'Z E R O');
         
@@ -16,14 +15,27 @@ const server = http.createServer(async (req, res) => {
         req.on('end', async () => {
             const buffer = Buffer.concat(body);
             try {
+                if (req.url === '/tray') {
+                    const sharp = require('sharp');
+                    const trayBuffer = await sharp(buffer)
+                        .resize(96, 96, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                        .png()
+                        .toBuffer();
+                    res.writeHead(200, { 'Content-Type': 'image/png' });
+                    res.end(trayBuffer);
+                    return;
+                }
+
                 // Determine if it's a video by checking magic bytes (mp4 usually starts with ftyp, m3u8, etc)
                 // For simplicity, we can just try Sticker first, and if it throws pixel limit, we fallback to ffmpeg
                 let isMp4 = buffer.length > 8 && buffer.slice(4, 8).toString('ascii') === 'ftyp';
                 let isGif = buffer.length > 3 && buffer.slice(0, 3).toString('ascii') === 'GIF';
+                let isVideoHeader = req.headers['x-is-video'] === 'true';
                 
                 let stickerBuffer = buffer;
-                if (isMp4 || isGif) {
-                    const inputPath = path.join(os.tmpdir(), `input_${Date.now()}${isMp4 ? '.mp4' : '.gif'}`);
+                if (isVideoHeader || isMp4 || isGif) {
+                    const ext = isGif ? '.gif' : '.mp4';
+                    const inputPath = path.join(os.tmpdir(), `input_${Date.now()}${ext}`);
                     const outputPath = path.join(os.tmpdir(), `output_${Date.now()}.webp`);
                     fs.writeFileSync(inputPath, buffer);
                     
@@ -31,16 +43,16 @@ const server = http.createServer(async (req, res) => {
                         ffmpeg(inputPath)
                             .outputOptions([
                                 '-vcodec', 'libwebp',
-                                '-vf', "scale='min(512,iw)':'min(512,ih)':force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=black@0",
-                                '-r', '10', // 10 fps is fast and enough for stickers
+                                '-vf', "scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:-1:-1:color=#00000000",
+                                '-r', '10', // Stable fps
                                 '-lossless', '0',
-                                '-compression_level', '0', // Fastest encoding speed
-                                '-qscale', '30', // Lower quality for faster encoding
+                                '-compression_level', '6', // Max compression
+                                '-qscale', '10', // Low quality for safety
                                 '-loop', '0',
-                                '-preset', 'default',
-                                '-threads', '4', // Use multiple threads
-                                '-an', '-vsync', '0',
-                                '-t', '00:00:07' // max 7 seconds to save time
+                                '-preset', 'picture',
+                                '-threads', '4',
+                                '-an',
+                                '-t', '00:00:05.000' // max 5.0 seconds
                             ])
                             .save(outputPath)
                             .on('end', resolve)
@@ -51,24 +63,15 @@ const server = http.createServer(async (req, res) => {
                     fs.unlinkSync(inputPath);
                     fs.unlinkSync(outputPath);
                     
-                    // We already encoded to webp, so tell wa-sticker-formatter it's already a webp!
-                    // If we pass quality it will re-encode. We just pass the buffer and let it add EXIF.
-                    const sticker = new Sticker(stickerBuffer, {
-                        pack: pack,
-                        author: author,
-                        type: StickerTypes.DEFAULT
-                    });
-                    const webpBuffer = await sticker.toBuffer();
+                    // Return pure FFMPEG WebP without EXIF
                     res.writeHead(200, { 'Content-Type': 'image/webp' });
-                    res.end(webpBuffer);
+                    res.end(stickerBuffer);
                 } else {
-                    const sticker = new Sticker(stickerBuffer, {
-                        pack: pack,
-                        author: author,
-                        type: StickerTypes.DEFAULT,
-                        quality: 50
-                    });
-                    const webpBuffer = await sticker.toBuffer();
+                    const sharp = require('sharp');
+                    const webpBuffer = await sharp(stickerBuffer)
+                        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+                        .webp({ quality: 50 })
+                        .toBuffer();
                     res.writeHead(200, { 'Content-Type': 'image/webp' });
                     res.end(webpBuffer);
                 }

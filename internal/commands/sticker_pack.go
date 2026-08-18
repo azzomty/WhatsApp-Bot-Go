@@ -5,6 +5,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
+	"image/png"
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -49,8 +53,8 @@ func CreateStickerPackCommand(ctx *BotContext) {
 	parts := strings.Split(ctx.Text, " ")
 	if len(parts) > 2 {
 		if parsedLimit, err := strconv.Atoi(parts[2]); err == nil && parsedLimit > 0 {
-			if parsedLimit > 100 {
-				parsedLimit = 100
+			if parsedLimit > 30 {
+				parsedLimit = 30
 			}
 			limit = parsedLimit
 		}
@@ -98,6 +102,21 @@ func FinishStickerPackCommand(ctx *BotContext) {
 
 	w, _ = zipWriter.Create("author.txt")
 	w.Write([]byte(session.Author))
+
+	// Create a transparent 96x96 tray image with a visible icon so WhatsApp doesn't reject it
+	// Generate a real 96x96 tray image from the first sticker
+	wTray, _ := zipWriter.Create("tray.png")
+	if len(images) > 0 {
+		trayResp, err := http.Post("http://127.0.0.1:4321/tray", "application/octet-stream", bytes.NewReader(images[0]))
+		if err == nil && trayResp.StatusCode == 200 {
+			trayImg, _ := ioutil.ReadAll(trayResp.Body)
+			wTray.Write(trayImg)
+		} else {
+			// Fallback to empty if it fails
+			imgTray := image.NewRGBA(image.Rect(0, 0, 96, 96))
+			png.Encode(wTray, imgTray)
+		}
+	}
 
 	for i, img := range images {
 		w, _ = zipWriter.Create(fmt.Sprintf("%d.webp", i+1))
@@ -154,33 +173,53 @@ func HandleStickerPackSession(ctx *BotContext) bool {
 		return false
 	}
 
+	session.Mu.Lock()
+	defer session.Mu.Unlock()
+
 	var imgData []byte
 	var err error
-	if ctx.Event.Message.GetImageMessage() != nil {
-		data, err := ctx.Client.Download(context.Background(), ctx.Event.Message.GetImageMessage())
+	
+	uMsg := UnwrapMessage(ctx.Event.Message)
+	if uMsg == nil {
+		return false
+	}
+
+	if uMsg.GetImageMessage() != nil {
+		data, err := ctx.Client.Download(context.Background(), uMsg.GetImageMessage())
 		if err == nil {
 			webpData, err := stickers.GenerateSticker(data, false, session.Title, session.Author)
 			if err == nil {
 				imgData = webpData
 			}
 		}
-	} else if ctx.Event.Message.GetStickerMessage() != nil {
-		data, err := ctx.Client.Download(context.Background(), ctx.Event.Message.GetStickerMessage())
+	} else if uMsg.GetStickerMessage() != nil {
+		data, err := ctx.Client.Download(context.Background(), uMsg.GetStickerMessage())
 		if err == nil {
 			imgData = data
 		}
-	} else if ctx.Event.Message.GetVideoMessage() != nil {
-		data, err := ctx.Client.Download(context.Background(), ctx.Event.Message.GetVideoMessage())
+	} else if uMsg.GetVideoMessage() != nil {
+		data, err := ctx.Client.Download(context.Background(), uMsg.GetVideoMessage())
 		if err == nil {
 			webpData, err := stickers.GenerateSticker(data, true, session.Title, session.Author)
 			if err == nil {
 				imgData = webpData
 			}
 		}
+	} else if uMsg.GetDocumentMessage() != nil {
+		doc := uMsg.GetDocumentMessage()
+		if strings.HasPrefix(doc.GetMimetype(), "image/") || strings.HasPrefix(doc.GetMimetype(), "video/") {
+			data, err := ctx.Client.Download(context.Background(), doc)
+			if err == nil {
+				isVideo := strings.HasPrefix(doc.GetMimetype(), "video/")
+				webpData, err := stickers.GenerateSticker(data, isVideo, session.Title, session.Author)
+				if err == nil {
+					imgData = webpData
+				}
+			}
+		}
 	}
 
 	if len(imgData) > 0 {
-		session.Mu.Lock()
 		limit := session.MaxLimit
 		if limit == 0 {
 			limit = 30
@@ -191,12 +230,12 @@ func HandleStickerPackSession(ctx *BotContext) bool {
 		} else {
 			sendMessage(ctx, fmt.Sprintf("وصلت للحد الأقصى (%d ملصق)! أرسل `.انهاء الحزمة` لإنشائها.", limit))
 		}
-		session.Mu.Unlock()
 		return true
 	}
 
 	if err != nil {
-		return false
+		sendMessage(ctx, "عذراً، فشل تحويل أحد الملفات (تأكد إنه مدعوم وغير تالف).")
+		return true // Return true so it doesn't fall through to other commands
 	}
 
 	// We're in a session, but they sent text. Just ignore it and don't process commands unless it starts with a dot?

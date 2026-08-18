@@ -67,6 +67,8 @@ func AddMessage(chatID string, msg *events.Message) {
 	MessageStore[chatID] = msgs
 }
 
+var lastValidCommand = make(map[string]string)
+
 func Handle(ctx *BotContext) {
 	if handleInteractiveReply(ctx) {
 		return
@@ -87,9 +89,27 @@ func Handle(ctx *BotContext) {
 
 	if len(parts) > 1 {
 		twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
-		if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" {
+		if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" {
 			cmdName = twoWordCmd
 		}
+	}
+
+	if cmdName == ".new" {
+		if lastCmd, ok := lastValidCommand[ctx.Sender.User]; ok {
+			ctx.Text = lastCmd
+			parts = strings.Split(ctx.Text, " ")
+			cmdName = strings.ToLower(parts[0])
+			if len(parts) > 1 {
+				twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
+				if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" {
+					cmdName = twoWordCmd
+				}
+			}
+		} else {
+			return
+		}
+	} else if strings.HasPrefix(cmdName, ".") {
+		lastValidCommand[ctx.Sender.User] = ctx.Text
 	}
 
 	if store.IsCommandDisabled(cmdName) {
@@ -174,6 +194,24 @@ func Handle(ctx *BotContext) {
 		FinishStickerPackCommand(ctx)
 	case ".إلغاء الحزمة", ".الغاء الحزمة":
 		CancelStickerPackCommand(ctx)
+	case ".ذكرني اتصال", ".ذكرني رسالة", ".تذكير":
+		HandleReminder(ctx, cmdName)
+	case ".حديث":
+		HandleHadith(ctx)
+	case ".قائمة الاحاديث", ".قائمة الأحاديث":
+		HandleHadithMenu(ctx)
+	case ".بحث قسم":
+		HandleCategorySearch(ctx)
+	case ".كل الاقسام", ".كل الأقسام":
+		HandleAllCategories(ctx)
+	case ".ايميل", ".إيميل":
+		HandleTempMail(ctx)
+	case ".pdf":
+		HandlePDF(ctx)
+	case ".اسم pdf":
+		HandleRenamePDF(ctx)
+	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا":
+		HandleMediaCommand(ctx, cmdName)
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":
@@ -771,6 +809,14 @@ func makeSticker(ctx *BotContext) {
 				} else if vid := hMsg.GetVideoMessage(); vid != nil {
 					mediaMsgs = append(mediaMsgs, vid)
 					isVideoList = append(isVideoList, true)
+				} else if doc := hMsg.GetDocumentMessage(); doc != nil {
+					if strings.HasPrefix(doc.GetMimetype(), "image/") {
+						mediaMsgs = append(mediaMsgs, doc)
+						isVideoList = append(isVideoList, false)
+					} else if strings.HasPrefix(doc.GetMimetype(), "video/") {
+						mediaMsgs = append(mediaMsgs, doc)
+						isVideoList = append(isVideoList, true)
+					}
 				}
 			}
 			if len(mediaMsgs) == count {
@@ -794,12 +840,16 @@ func makeSticker(ctx *BotContext) {
 		}
 
 		// Reverse them back to send in order
-		// Process and send concurrently for maximum speed
+		// Limit concurrency to 2 to avoid overloading the CPU with ffmpeg
 		var wg sync.WaitGroup
+		sem := make(chan struct{}, 2)
 		for i := len(mediaMsgs) - 1; i >= 0; i-- {
 			wg.Add(1)
 			go func(idx int) {
 				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+				
 				data, err := ctx.Client.Download(context.Background(), mediaMsgs[idx])
 				if err != nil {
 					return
@@ -853,6 +903,9 @@ func makeSticker(ctx *BotContext) {
 		} else if vid := unwrappedMsg.GetVideoMessage(); vid != nil {
 			mediaMsg = vid
 			isVideo = true
+		} else if doc := unwrappedMsg.GetDocumentMessage(); doc != nil && (strings.HasPrefix(doc.GetMimetype(), "image/") || strings.HasPrefix(doc.GetMimetype(), "video/")) {
+			mediaMsg = doc
+			isVideo = strings.HasPrefix(doc.GetMimetype(), "video/")
 		} else if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
 			quoted := UnwrapMessage(ext.GetContextInfo().GetQuotedMessage())
 			if qImg := quoted.GetImageMessage(); qImg != nil {
@@ -860,6 +913,9 @@ func makeSticker(ctx *BotContext) {
 			} else if qVid := quoted.GetVideoMessage(); qVid != nil {
 				mediaMsg = qVid
 				isVideo = true
+			} else if qDoc := quoted.GetDocumentMessage(); qDoc != nil && (strings.HasPrefix(qDoc.GetMimetype(), "image/") || strings.HasPrefix(qDoc.GetMimetype(), "video/")) {
+				mediaMsg = qDoc
+				isVideo = strings.HasPrefix(qDoc.GetMimetype(), "video/")
 			}
 		}
 		if mediaMsg == nil {

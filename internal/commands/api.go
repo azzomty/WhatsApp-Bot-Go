@@ -6,12 +6,51 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
 )
+
+type NominatimResponse struct {
+	Lat string `json:"lat"`
+	Lon string `json:"lon"`
+}
+
+func getCoordinates(city string) (float64, float64, error) {
+	apiURL := fmt.Sprintf("https://nominatim.openstreetmap.org/search?q=%s&format=json&limit=1", url.QueryEscape(city))
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		return 0, 0, err
+	}
+	req.Header.Set("User-Agent", "WhatsAppBot/1.0 (https://github.com/azzomty/WhatsApp-Bot-Go)")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return 0, 0, fmt.Errorf("Nominatim error: %d", resp.StatusCode)
+	}
+
+	var res []NominatimResponse
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return 0, 0, err
+	}
+
+	if len(res) == 0 {
+		return 0, 0, fmt.Errorf("city not found")
+	}
+
+	lat, _ := strconv.ParseFloat(res[0].Lat, 64)
+	lon, _ := strconv.ParseFloat(res[0].Lon, 64)
+	return lat, lon, nil
+}
 
 type AladhanResponse struct {
 	Code   int    `json:"code"`
@@ -31,8 +70,9 @@ type AladhanResponse struct {
 	} `json:"data"`
 }
 
-func fetchAladhanAPI(address string) (*AladhanResponse, error) {
-	apiURL := fmt.Sprintf("http://api.aladhan.com/v1/timingsByAddress?address=%s", url.QueryEscape(address))
+func fetchAladhanAPI(lat float64, lon float64) (*AladhanResponse, error) {
+	// method=4 is Umm Al-Qura University, Makkah, highly accurate for Saudi/Gulf
+	apiURL := fmt.Sprintf("https://api.aladhan.com/v1/timings?latitude=%f&longitude=%f&method=4", lat, lon)
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		return nil, err
@@ -59,7 +99,13 @@ func HandlePrayerTimes(ctx *BotContext, address string) {
 
 	sendMessage(ctx, "جاري جلب المواقيت")
 
-	res, err := fetchAladhanAPI(address)
+	lat, lon, err := getCoordinates(address)
+	if err != nil {
+		sendMessage(ctx, "لم أتمكن من العثور على هذه المدينة. تأكد من الاسم!")
+		return
+	}
+
+	res, err := fetchAladhanAPI(lat, lon)
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ أثناء جلب المواقيت")
 		return
@@ -85,7 +131,13 @@ func HandleCurrentTime(ctx *BotContext, address string) {
 		return
 	}
 
-	res, err := fetchAladhanAPI(address)
+	lat, lon, err := getCoordinates(address)
+	if err != nil {
+		sendMessage(ctx, "لم أتمكن من العثور على هذه المدينة. تأكد من الاسم!")
+		return
+	}
+
+	res, err := fetchAladhanAPI(lat, lon)
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ أثناء جلب التوقيت")
 		return

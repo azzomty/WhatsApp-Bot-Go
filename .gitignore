@@ -2,3 +2,24 @@ whatsapp.db
 node_modules/
 test_pin.py
 AutoPinterestUpdate.py
+
+# Databases
+whatsapp_v3.db
+*.db
+
+# Data files
+allowed_users.json
+games_save.json
+sticker_authors.json
+users_store.json
+*.json
+
+# Binaries
+test_bot
+bot
+tmp_bot
+bot_go
+
+# Test files
+test_*.go
+patch_*.go

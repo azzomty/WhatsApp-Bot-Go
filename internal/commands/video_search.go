@@ -242,6 +242,10 @@ func handleNewCommand(ctx *BotContext) {
 		multiVideoSearchNew(ctx)
 		return
 	}
+
+	if HandleMediaNew(ctx) {
+		return
+	}
 	
 	refreshPinterest(ctx)
 }
