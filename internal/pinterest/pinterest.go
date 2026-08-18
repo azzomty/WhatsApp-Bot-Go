@@ -200,6 +200,16 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 						h = height
 					}
 				}
+				if w == 0 {
+					if sizeData, ok := pin["image_large_size_points"].(map[string]interface{}); ok {
+						if width, ok := sizeData["width"].(float64); ok {
+							w = width
+						}
+						if height, ok := sizeData["height"].(float64); ok {
+							h = height
+						}
+					}
+				}
 			} else if u, ok := pin["image_medium_url"].(string); ok {
 				imgUrl = strings.Replace(u, "474x", "736x", 1) // Try to get higher res
 				if sizeData, ok := pin["image_medium_size_pixels"].(map[string]interface{}); ok {
@@ -208,6 +218,16 @@ func parsePinterestData(data []interface{}, aspect string) []PinResult {
 					}
 					if height, ok := sizeData["height"].(float64); ok {
 						h = height
+					}
+				}
+				if w == 0 {
+					if sizeData, ok := pin["image_medium_size_points"].(map[string]interface{}); ok {
+						if width, ok := sizeData["width"].(float64); ok {
+							w = width
+						}
+						if height, ok := sizeData["height"].(float64); ok {
+							h = height
+						}
 					}
 				}
 			}
