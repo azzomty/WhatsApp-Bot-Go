@@ -115,6 +115,7 @@ func eventHandler(evt interface{}) {
 			}
 
 			if reactText != "" {
+				fmt.Println("REACTION DETECTED:", reactText)
 				msgList := commands.MessageStore[v.Info.Chat.String()]
 				var origMsg *events.Message
 				for _, m := range msgList {
@@ -124,6 +125,7 @@ func eventHandler(evt interface{}) {
 					}
 				}
 
+				fmt.Printf("origMsg found: %v, msgList len: %d\n", origMsg != nil, len(msgList))
 				if origMsg != nil {
 					uMsg := commands.UnwrapMessage(origMsg.Message)
 					if uMsg != nil && uMsg.GetImageMessage() != nil {
@@ -133,6 +135,11 @@ func eventHandler(evt interface{}) {
 								commands.HandleReaction(client, v, imgData)
 							}
 						}()
+					}
+				} else {
+					// Check if we know this message's Pin ID
+					if _, ok := pinterest.GetMessagePin(v.Message.GetReactionMessage().GetKey().GetID()); ok {
+						go commands.HandleReaction(client, v, nil)
 					}
 				}
 			}

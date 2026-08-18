@@ -1989,6 +1989,7 @@ func pinterestMatchingIcons(ctx *BotContext) {
 }
 
 func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte) {
+	fmt.Println("HandleReaction TRIGGERED!")
 	origMsgID := v.Message.GetReactionMessage().GetKey().GetID()
 	
 	var results []pinterest.PinResult
