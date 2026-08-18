@@ -32,12 +32,18 @@ type PendingRequest struct {
 
 var (
 	PendingRequests = make(map[string]PendingRequest)
-	LastSearches    = make(map[string]LastSearch)
 	pendingMutex    sync.RWMutex
-	lastSearchMutex sync.RWMutex
+
+	LastSearches = make(map[string]SearchState)
+	searchMutex  sync.RWMutex
+
+	// Store WhatsApp Message ID -> Pinterest Pin ID mapping for reactions
+	MessagePinMap = make(map[string]string)
+	mapMutex      sync.Mutex
 )
 
-type LastSearch struct {
+// SearchState holds the state for continuing a search
+type SearchState struct {
 	Query       string
 	Aspect      string
 	Count       int
@@ -46,14 +52,14 @@ type LastSearch struct {
 }
 
 func SetLastSearch(chatID, query, aspect string, count int, isVisual bool, base64Image string) {
-	lastSearchMutex.Lock()
-	defer lastSearchMutex.Unlock()
-	LastSearches[chatID] = LastSearch{Query: query, Aspect: aspect, Count: count, IsVisual: isVisual, Base64Image: base64Image}
+	searchMutex.Lock()
+	defer searchMutex.Unlock()
+	LastSearches[chatID] = SearchState{Query: query, Aspect: aspect, Count: count, IsVisual: isVisual, Base64Image: base64Image}
 }
 
-func GetLastSearch(chatID string) (LastSearch, bool) {
-	lastSearchMutex.RLock()
-	defer lastSearchMutex.RUnlock()
+func GetLastSearch(chatID string) (SearchState, bool) {
+	searchMutex.RLock()
+	defer searchMutex.RUnlock()
 	req, ok := LastSearches[chatID]
 	return req, ok
 }
@@ -75,6 +81,19 @@ func GetPending(chatID string) (PendingRequest, bool) {
 	defer pendingMutex.RUnlock()
 	req, ok := PendingRequests[chatID]
 	return req, ok
+}
+
+func SaveMessagePin(msgID string, pinID string) {
+	mapMutex.Lock()
+	defer mapMutex.Unlock()
+	MessagePinMap[msgID] = pinID
+}
+
+func GetMessagePin(msgID string) (string, bool) {
+	mapMutex.Lock()
+	defer mapMutex.Unlock()
+	val, ok := MessagePinMap[msgID]
+	return val, ok
 }
 
 func setPinterestHeaders(req *http.Request) {
@@ -259,6 +278,24 @@ func SearchPinterest(query string, aspect string) []PinResult {
 	data := extractDataFromJSON(bodyBytes)
 
 	return parsePinterestData(data, aspect)
+}
+
+func GetRelatedPins(pinID string) []PinResult {
+	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/pins/%s/related/pins/?pinrep_img_width=474x", pinID)
+	req, _ := http.NewRequest("GET", searchUrl, nil)
+	setPinterestHeaders(req)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, _ := ioutil.ReadAll(resp.Body)
+
+	// The API returns the pins inside data
+	return parsePinterestData(extractDataFromJSON(bodyBytes), "all")
 }
 
 func ForYouPinterest(aspect string) []PinResult {

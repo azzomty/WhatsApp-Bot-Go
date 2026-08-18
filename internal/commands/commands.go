@@ -1823,17 +1823,17 @@ func refreshPinterest(ctx *BotContext) {
 				})
 			}
 
-			var urlsToSend []string
+			var pinsToSend []pinterest.PinResult
 			for i, res := range results {
 				if i >= last.Count {
 					break
 				}
-				urlsToSend = append(urlsToSend, res.URL)
+				pinsToSend = append(pinsToSend, res)
 			}
 
 			count := 0
-			for _, u := range urlsToSend {
-				data, err := pinterest.DownloadImage(u)
+			for _, res := range pinsToSend {
+				data, err := pinterest.DownloadImage(res.URL)
 				if err == nil && len(data) > 5000 {
 					resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaImage)
 					if err == nil {
@@ -1851,9 +1851,12 @@ func refreshPinterest(ctx *BotContext) {
 								QuotedMessage: ctx.Event.Message,
 							},
 						}
-						ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+						sendResp, err := ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 							ImageMessage: imgMsg,
 						})
+						if err == nil && res.ID != "" {
+							pinterest.SaveMessagePin(sendResp.ID, res.ID)
+						}
 						count++
 					}
 				}
@@ -1925,7 +1928,10 @@ func pinterestForYou(ctx *BotContext) {
 						FileSHA256:    resp.FileSHA256,
 						FileLength:    proto.Uint64(uint64(len(data))),
 					}
-					ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+					sendResp, err := ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+					if err == nil && res.ID != "" {
+						pinterest.SaveMessagePin(sendResp.ID, res.ID)
+					}
 					sentCount++
 				}
 			}
@@ -1963,7 +1969,12 @@ func pinterestMatchingIcons(ctx *BotContext) {
 							FileSHA256:    resp.FileSHA256,
 							FileLength:    proto.Uint64(uint64(len(data))),
 						}
-						ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+						sendResp, err := ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{ImageMessage: imgMsg})
+						if err == nil {
+							// We can't save PinID for matching icons pairs trivially since they are just strings, so skip it.
+							// The reaction will fallback to visual search lens.
+							_ = sendResp
+						}
 						count++
 					}
 				}
@@ -1978,8 +1989,16 @@ func pinterestMatchingIcons(ctx *BotContext) {
 }
 
 func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte) {
-	base64Image := base64.StdEncoding.EncodeToString(imgData)
-	results := pinterest.SearchPinterestLens(base64Image, "all")
+	origMsgID := v.Message.GetReactionMessage().GetKey().GetID()
+	
+	var results []pinterest.PinResult
+	if pinID, ok := pinterest.GetMessagePin(origMsgID); ok && pinID != "" {
+		results = pinterest.GetRelatedPins(pinID)
+	} else {
+		base64Image := base64.StdEncoding.EncodeToString(imgData)
+		results = pinterest.SearchPinterestLens(base64Image, "all")
+	}
+
 	if len(results) > 0 {
 		count := 0
 		chatID := v.Info.Chat
@@ -2005,7 +2024,10 @@ func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte)
 							QuotedMessage: &waProto.Message{ImageMessage: &waProto.ImageMessage{}}, // Dummy just to make it a reply
 						},
 					}
-					client.SendMessage(context.Background(), chatID, &waProto.Message{ImageMessage: imgMsg})
+					sendResp, err := client.SendMessage(context.Background(), chatID, &waProto.Message{ImageMessage: imgMsg})
+					if err == nil && res.ID != "" {
+						pinterest.SaveMessagePin(sendResp.ID, res.ID)
+					}
 					count++
 				}
 			}
