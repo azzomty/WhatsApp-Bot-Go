@@ -71,6 +71,9 @@ func Handle(ctx *BotContext) {
 	if handleInteractiveReply(ctx) {
 		return
 	}
+	if HandleStickerPackSession(ctx) {
+		return
+	}
 	if ctx.Text == "" {
 		return
 	}
@@ -161,7 +164,16 @@ func Handle(ctx *BotContext) {
 			store.SetTargetGroup("primary", ctx.ChatID.String())
 			sendMessage(ctx, "تم تعيين هذا القروب كأساسي لنظام التنبيهات! 🚨")
 		}
-
+	case ".تفعيل":
+		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
+			enableCommand(ctx, parts)
+		}
+	case ".عمل حزمة", ".صنع حزمة":
+		CreateStickerPackCommand(ctx)
+	case ".انهاء الحزمة":
+		FinishStickerPackCommand(ctx)
+	case ".إلغاء الحزمة", ".الغاء الحزمة":
+		CancelStickerPackCommand(ctx)
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":
