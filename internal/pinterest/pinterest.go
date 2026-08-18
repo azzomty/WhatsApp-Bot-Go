@@ -102,7 +102,9 @@ func setPinterestHeaders(req *http.Request) {
 	cleanToken := ""
 	if strings.Contains(rawToken, "pina_") {
 		parts := strings.Split(rawToken, "pina_")
-		cleanToken = "Bearer pina_" + strings.TrimSpace(parts[1])
+		cleaned := strings.ReplaceAll(strings.ReplaceAll(parts[1], "\n", ""), "\r", "")
+		cleaned = strings.ReplaceAll(cleaned, " ", "")
+		cleanToken = "Bearer pina_" + cleaned
 	} else {
 		cleanToken = strings.TrimSpace(rawToken)
 	}
