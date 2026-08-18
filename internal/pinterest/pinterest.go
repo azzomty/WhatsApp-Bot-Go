@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"mime/multipart"
-	"math/rand"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -32,19 +31,6 @@ type PendingRequest struct {
 }
 
 var (
-	proxies = []string{
-		"http://nabykclq:em0wk04ko5js@31.59.20.176:6754",
-		"http://nabykclq:em0wk04ko5js@31.56.127.193:7684",
-		"http://nabykclq:em0wk04ko5js@45.38.107.97:6014",
-		"http://nabykclq:em0wk04ko5js@198.105.121.200:6462",
-		"http://nabykclq:em0wk04ko5js@64.137.96.74:6641",
-		"http://nabykclq:em0wk04ko5js@198.23.243.226:6361",
-		"http://nabykclq:em0wk04ko5js@38.154.185.97:6370",
-		"http://nabykclq:em0wk04ko5js@84.247.60.125:6095",
-		"http://nabykclq:em0wk04ko5js@142.111.67.146:5611",
-		"http://nabykclq:em0wk04ko5js@191.96.254.138:6185",
-	}
-
 	PendingRequests = make(map[string]PendingRequest)
 	pendingMutex    sync.RWMutex
 
@@ -311,13 +297,7 @@ func SearchPinterest(query string, aspect string, count int) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	var client *http.Client
-	if len(proxies) > 0 {
-		proxyUrl, _ := url.Parse(proxies[rand.Intn(len(proxies))])
-		client = &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		client = &http.Client{Timeout: 10 * time.Second}
-	}
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -335,13 +315,7 @@ func GetRelatedPins(pinID string) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	var client *http.Client
-	if len(proxies) > 0 {
-		proxyUrl, _ := url.Parse(proxies[rand.Intn(len(proxies))])
-		client = &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		client = &http.Client{Timeout: 10 * time.Second}
-	}
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -359,13 +333,7 @@ func ForYouPinterest(aspect string) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	var client *http.Client
-	if len(proxies) > 0 {
-		proxyUrl, _ := url.Parse(proxies[rand.Intn(len(proxies))])
-		client = &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		client = &http.Client{Timeout: 10 * time.Second}
-	}
+	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -385,13 +353,7 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 		return nil
 	}
 
-	var client *http.Client
-	if len(proxies) > 0 {
-		proxyUrl, _ := url.Parse(proxies[rand.Intn(len(proxies))])
-		client = &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		client = &http.Client{Timeout: 10 * time.Second}
-	}
+	client := &http.Client{Timeout: 10 * time.Second}
 	var results []PinResult
 	var wg sync.WaitGroup
 	var mu sync.Mutex

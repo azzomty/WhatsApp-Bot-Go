@@ -2,9 +2,7 @@ package pinterest
 
 import (
 	"io/ioutil"
-	"math/rand"
 	"net/http"
-	"net/url"
 	"regexp"
 	"sync"
 	"time"
@@ -24,13 +22,7 @@ func SearchPinterestMedia(query string, ext string, count int) []PinResult {
 		return nil
 	}
 
-	var client *http.Client
-	if len(proxies) > 0 {
-		proxyUrl, _ := url.Parse(proxies[rand.Intn(len(proxies))])
-		client = &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		client = &http.Client{Timeout: 10 * time.Second}
-	}
+	client := &http.Client{Timeout: 10 * time.Second}
 	var results []PinResult
 	var wg sync.WaitGroup
 	var mu sync.Mutex
