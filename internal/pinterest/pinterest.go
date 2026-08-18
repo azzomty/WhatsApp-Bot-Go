@@ -261,9 +261,13 @@ func extractDataFromJSON(bodyBytes []byte) []interface{} {
 	return data
 }
 
-func SearchPinterest(query string, aspect string) []PinResult {
+func SearchPinterest(query string, aspect string, count int) []PinResult {
 	query = url.QueryEscape(query)
-	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s", query)
+	pageSize := count + 10
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s&page_size=%d", query, pageSize)
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
@@ -318,7 +322,7 @@ func ForYouPinterest(aspect string) []PinResult {
 
 func SearchPinterestMatchingIcons(query string) []PinResult {
 	// First get search results normally
-	pins := SearchPinterest("matching icons "+query, "all")
+	pins := SearchPinterest("matching icons "+query, "all", 10)
 	if len(pins) == 0 {
 		return nil
 	}
@@ -455,7 +459,7 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 	return results
 }
 
-func SearchPinterestLens(base64Image string, aspect string) []PinResult {
+func SearchPinterestLens(base64Image string, aspect string, count int) []PinResult {
 	imageBytes, err := base64.StdEncoding.DecodeString(base64Image)
 	if err != nil {
 		fmt.Println("Base64 decode error:", err)
@@ -467,7 +471,13 @@ func SearchPinterestLens(base64Image string, aspect string) []PinResult {
 
 	writer.WriteField("camera_type", "0")
 	writer.WriteField("source_type", "1")
-	writer.WriteField("page_size", "24")
+	
+	// Request slightly more than count to have enough valid results after filtering
+	pageSize := count + 10
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	writer.WriteField("page_size", fmt.Sprintf("%d", pageSize))
 
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", `form-data; name="image"; filename="null"`)

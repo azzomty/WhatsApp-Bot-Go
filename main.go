@@ -582,13 +582,13 @@ func eventHandler(evt interface{}) {
 						results = pinterest.SearchPinterestMatchingIcons(req.Query)
 						overrideCount = 2 // Match pairs always return 2
 					} else if req.IsVisual && req.Base64Image != "" {
-						results = pinterest.SearchPinterestLens(req.Base64Image, aspect)
+						results = pinterest.SearchPinterestLens(req.Base64Image, aspect, overrideCount)
 					} else if aspect == "gif" {
-						results = pinterest.SearchPinterest(req.Query+" gif", "gif")
+						results = pinterest.SearchPinterest(req.Query+" gif", "gif", overrideCount)
 					} else if aspect == "video" {
-						results = pinterest.SearchPinterestMedia(req.Query, ".mp4")
+						results = pinterest.SearchPinterestMedia(req.Query, ".mp4", overrideCount)
 					} else {
-						results = pinterest.SearchPinterest(req.Query+suffix, aspect)
+						results = pinterest.SearchPinterest(req.Query+suffix, aspect, overrideCount)
 					}
 
 					if len(results) > 0 && aspect != "matching" {

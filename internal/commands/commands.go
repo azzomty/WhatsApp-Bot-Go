@@ -636,6 +636,30 @@ func sendAndCacheImage(ctx *BotContext, chatID types.JID, imgMsg *waProto.ImageM
 func pinterestSearch(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(strings.Replace(ctx.Text, ".بينتريست", "", 1), ".بحث", "", 1))
 	
+	count := 4
+	parts := strings.Split(query, " ")
+	if len(parts) > 1 {
+		// check if last part is a number
+		last := parts[len(parts)-1]
+		var parsedCount int
+		// manual parsing for simplicity to avoid importing strconv
+		for _, char := range last {
+			if char >= '0' && char <= '9' {
+				parsedCount = parsedCount*10 + int(char-'0')
+			} else {
+				parsedCount = -1
+				break
+			}
+		}
+		if parsedCount > 0 {
+			count = parsedCount
+			query = strings.Join(parts[:len(parts)-1], " ")
+		}
+	}
+	if count > 60 {
+		count = 60
+	}
+
 	isVisual := false
 	base64Image := ""
 
@@ -665,30 +689,6 @@ func pinterestSearch(ctx *BotContext) {
 
 	if ctx.Event.Info.IsFromMe && !strings.HasPrefix(ctx.Event.Message.GetConversation(), ".بينتريست") && ctx.Event.Message.GetExtendedTextMessage() == nil {
 		return
-	}
-
-	count := 4
-	parts := strings.Split(query, " ")
-	if len(parts) > 1 {
-		// check if last part is a number
-		last := parts[len(parts)-1]
-		var parsedCount int
-		// manual parsing for simplicity to avoid importing strconv
-		for _, char := range last {
-			if char >= '0' && char <= '9' {
-				parsedCount = parsedCount*10 + int(char-'0')
-			} else {
-				parsedCount = -1
-				break
-			}
-		}
-		if parsedCount > 0 {
-			count = parsedCount
-			query = strings.Join(parts[:len(parts)-1], " ")
-		}
-	}
-	if count > 60 {
-		count = 60
 	}
 
 	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
@@ -1829,10 +1829,10 @@ func refreshPinterest(ctx *BotContext) {
 				results = pinterest.ForYouPinterest("all")
 			} else if last.Aspect == "matching" {
 				results = pinterest.SearchPinterestMatchingIcons(last.Query)
-			} else if last.IsVisual {
-				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect)
+			} else if last.IsVisual && last.Base64Image != "" {
+				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect, last.Count)
 			} else {
-				results = pinterest.SearchPinterest(last.Query, last.Aspect)
+				results = pinterest.SearchPinterest(last.Query, last.Aspect, last.Count)
 			}
 
 			if len(results) > 0 && last.Aspect != "matching" {
@@ -2012,7 +2012,7 @@ func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte)
 		return
 	}
 	base64Image := base64.StdEncoding.EncodeToString(imgData)
-	results := pinterest.SearchPinterestLens(base64Image, "all")
+	results := pinterest.SearchPinterestLens(base64Image, "all", 10)
 
 	if len(results) > 0 {
 		count := 0

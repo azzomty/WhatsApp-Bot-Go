@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func SearchPinterestMedia(query string, ext string) []PinResult {
+func SearchPinterestMedia(query string, ext string, count int) []PinResult {
 	// Add "gif" or "video" to the search query to bias the results
 	searchQuery := query
 	if ext == ".gif" {
@@ -17,7 +17,7 @@ func SearchPinterestMedia(query string, ext string) []PinResult {
 		searchQuery += " video"
 	}
 
-	pins := SearchPinterest(searchQuery, "all")
+	pins := SearchPinterest(searchQuery, "all", count)
 	if len(pins) == 0 {
 		return nil
 	}
