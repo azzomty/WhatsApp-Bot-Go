@@ -97,14 +97,21 @@ func GetMessagePin(msgID string) (string, bool) {
 }
 
 func setPinterestHeaders(req *http.Request) {
-	token := strings.ReplaceAll(strings.ReplaceAll(os.Getenv("PINTEREST_TOKEN"), "\n", ""), "\r", "")
+	rawToken := os.Getenv("PINTEREST_TOKEN")
+	// Clean the token robustly
+	cleanToken := ""
+	if strings.Contains(rawToken, "pina_") {
+		parts := strings.Split(rawToken, "pina_")
+		cleanToken = "Bearer pina_" + strings.TrimSpace(parts[1])
+	} else {
+		cleanToken = strings.TrimSpace(rawToken)
+	}
+
 	cookie := strings.ReplaceAll(strings.ReplaceAll(os.Getenv("PINTEREST_COOKIE"), "\n", ""), "\r", "")
-	
-	// Sometimes spaces are accidentally copied into the base64 cookie
 	cookie = strings.ReplaceAll(cookie, "  ", "")
 
 	req.Header.Set("Accept-Language", "en-US")
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", cleanToken)
 	req.Header.Set("Cookie", cookie)
 	req.Header.Set("Host", "api.pinterest.com")
 	req.Header.Set("User-Agent", "Pinterest for Android Tablet/14.23.2 (Nexus 10; 11)")
