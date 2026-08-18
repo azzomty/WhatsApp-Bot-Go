@@ -1,6 +1,9 @@
 package pinterest
 
 import (
+	"math/rand"
+	"net/url"
+
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -271,7 +274,17 @@ func SearchPinterest(query string, aspect string, count int) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	client := &http.Client{Timeout: 10 * time.Second}
+		var client *http.Client
+	if len(proxies) > 0 {
+		proxyUrlStr := proxies[rand.Intn(len(proxies))]
+		proxyUrl, _ := url.Parse(proxyUrlStr)
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+		client = &http.Client{Timeout: 30 * time.Second, Transport: transport}
+	} else {
+		client = &http.Client{Timeout: 30 * time.Second}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -289,7 +302,17 @@ func GetRelatedPins(pinID string) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	client := &http.Client{Timeout: 10 * time.Second}
+		var client *http.Client
+	if len(proxies) > 0 {
+		proxyUrlStr := proxies[rand.Intn(len(proxies))]
+		proxyUrl, _ := url.Parse(proxyUrlStr)
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+		client = &http.Client{Timeout: 30 * time.Second, Transport: transport}
+	} else {
+		client = &http.Client{Timeout: 30 * time.Second}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -307,7 +330,17 @@ func ForYouPinterest(aspect string) []PinResult {
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
 
-	client := &http.Client{Timeout: 10 * time.Second}
+		var client *http.Client
+	if len(proxies) > 0 {
+		proxyUrlStr := proxies[rand.Intn(len(proxies))]
+		proxyUrl, _ := url.Parse(proxyUrlStr)
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+		client = &http.Client{Timeout: 30 * time.Second, Transport: transport}
+	} else {
+		client = &http.Client{Timeout: 30 * time.Second}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
@@ -327,7 +360,17 @@ func SearchPinterestMatchingIcons(query string) []PinResult {
 		return nil
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
+		var client *http.Client
+	if len(proxies) > 0 {
+		proxyUrlStr := proxies[rand.Intn(len(proxies))]
+		proxyUrl, _ := url.Parse(proxyUrlStr)
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyUrl),
+		}
+		client = &http.Client{Timeout: 30 * time.Second, Transport: transport}
+	} else {
+		client = &http.Client{Timeout: 30 * time.Second}
+	}
 	var results []PinResult
 	var wg sync.WaitGroup
 	var mu sync.Mutex
