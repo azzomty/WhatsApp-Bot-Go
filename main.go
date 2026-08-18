@@ -114,7 +114,7 @@ func eventHandler(evt interface{}) {
 				return
 			}
 
-			if reactText == "🔍" {
+			if reactText != "" {
 				msgList := commands.MessageStore[v.Info.Chat.String()]
 				var origMsg *events.Message
 				for _, m := range msgList {
