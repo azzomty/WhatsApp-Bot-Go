@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 
 	"whatsapp-bot/internal/stickers"
@@ -15,10 +17,11 @@ import (
 )
 
 type StickerPackSession struct {
-	Images [][]byte
-	Author string
-	Title  string
-	Mu     sync.Mutex
+	Images   [][]byte
+	Author   string
+	Title    string
+	MaxLimit int
+	Mu       sync.Mutex
 }
 
 var (
@@ -42,12 +45,26 @@ func CreateStickerPackCommand(ctx *BotContext) {
 		authorName = rights["author"]
 	}
 
-	packSessions[sender] = &StickerPackSession{
-		Author: authorName,
-		Title:  packName,
+	limit := 30
+	parts := strings.Split(ctx.Text, " ")
+	if len(parts) > 2 {
+		if parsedLimit, err := strconv.Atoi(parts[2]); err == nil && parsedLimit > 0 {
+			if parsedLimit > 100 {
+				parsedLimit = 100
+			}
+			limit = parsedLimit
+		}
+	} else if len(parts) == 2 && parts[0] != ".عمل" && parts[0] != ".صنع" {
+		// e.g. if the user sent .حزمة 25 without space? Wait, .عمل حزمة is two words.
 	}
 
-	sendMessage(ctx, "تم بدء إنشاء حزمة ملصقات جديدة! أرسل الصور أو الملصقات الآن (كحد أقصى 30).\nولما تخلص أرسل `.انهاء الحزمة` أو `.إلغاء الحزمة`.")
+	packSessions[sender] = &StickerPackSession{
+		Author:   authorName,
+		Title:    packName,
+		MaxLimit: limit,
+	}
+
+	sendMessage(ctx, fmt.Sprintf("تم بدء إنشاء حزمة ملصقات جديدة! أرسل الصور أو الملصقات الآن (كحد أقصى %d).\nولما تخلص أرسل `.انهاء الحزمة` أو `.إلغاء الحزمة`.", limit))
 }
 
 func FinishStickerPackCommand(ctx *BotContext) {
@@ -164,11 +181,15 @@ func HandleStickerPackSession(ctx *BotContext) bool {
 
 	if len(imgData) > 0 {
 		session.Mu.Lock()
-		if len(session.Images) < 30 {
+		limit := session.MaxLimit
+		if limit == 0 {
+			limit = 30
+		}
+		if len(session.Images) < limit {
 			session.Images = append(session.Images, imgData)
-			sendMessage(ctx, fmt.Sprintf("تم إضافة الملصق (%d/30)", len(session.Images)))
+			sendMessage(ctx, fmt.Sprintf("تم إضافة الملصق (%d/%d)", len(session.Images), limit))
 		} else {
-			sendMessage(ctx, "وصلت للحد الأقصى (30 ملصق)! أرسل `.انهاء الحزمة` لإنشائها.")
+			sendMessage(ctx, fmt.Sprintf("وصلت للحد الأقصى (%d ملصق)! أرسل `.انهاء الحزمة` لإنشائها.", limit))
 		}
 		session.Mu.Unlock()
 		return true
