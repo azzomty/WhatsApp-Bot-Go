@@ -1,0 +1,451 @@
+<!DOCTYPE html><html lang="ar"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap-grid.css">
+    <link rel="stylesheet" href="/assets/bootstrap/css/bootstrap-reboot.css">
+            <link rel="stylesheet" href="/assets/css/app-v6.css">
+        <link rel="stylesheet" href="/assets/css/flag-icons.min.css">
+    <link rel="stylesheet" href="/assets/fontawesome/css/all.css">
+    <!--<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js" type="text/javascript"></script>-->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js" type="text/javascript"></script>-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akinator</title>
+    <meta name="description" content="Akinator">
+    <link rel="canonical" href="https://akinator.com">
+    <meta name="author" content="Elokence">
+        <!--BEGIN FIRSTIMPRESSION TAG - http://akinator.com -->
+    <script data-cfasync="false" type="text/javascript">
+        window.apd_options = { 'websiteId': 7256, 'runFromFrame': false };
+        (function() {
+            var w = window.apd_options.runFromFrame ? window.top : window;
+            if(window.apd_options.runFromFrame && w!==window.parent) w=window.parent;
+            if (w.location.hash.indexOf('apdAdmin') !== -1){if(typeof(Storage) !== 'undefined') {w.localStorage.apdAdmin = 1;}}
+            var adminMode = ((typeof(Storage) == 'undefined') || (w.localStorage.apdAdmin === 1));
+            w.apd_options=window.apd_options;
+            var apd = w.document.createElement('script'); apd.type = 'text/javascript'; apd.async = true;
+            apd.src = '//' + (adminMode ? 'cdn' : 'ecdn') + '.firstimpression.io/' + (adminMode ? 'fi.js?id=' + window.apd_options.websiteId : 'fi_client.js') ;
+            var s = w.document.getElementsByTagName('head')[0]; s.appendChild(apd);
+        })();</script><script type="text/javascript" async="" src="//ecdn.firstimpression.io/fi_client.js"></script>
+    <!-- END FIRSTIMPRESSION TAG -->
+        <!-- MANDATORY: BEGIN IAB STUB -->
+    <!--<script type="text/javascript">
+        !function(){var e=function(){var e,t="__tcfapiLocator",a=[],n=window;for(;n;){try{if(n.frames[t]){e=n;break}}catch(e){}if(n===window.top)break;n=n.parent}e||(!function e(){var a=n.document,r=!!n.frames[t];if(!r)if(a.body){var s=a.createElement("iframe");s.style.cssText="display:none",s.name=t,a.body.appendChild(s)}else setTimeout(e,5);return!r}(),n.__tcfapi=function(){for(var e,t=arguments.length,n=new Array(t),r=0;r<t;r++)n[r]=arguments[r];if(!n.length)return a;if("setGdprApplies"===n[0])n.length>3&&2===parseInt(n[1],10)&&"boolean"==typeof n[3]&&(e=n[3],"function"==typeof n[2]&&n[2]("set",!0));else if("ping"===n[0]){var s={gdprApplies:e,cmpLoaded:!1,cmpStatus:"stub"};"function"==typeof n[2]&&n[2](s)}else a.push(n)},n.addEventListener("message",(function(e){var t="string"==typeof e.data,a={};try{a=t?JSON.parse(e.data):e.data}catch(e){}var n=a.__tcfapiCall;n&&window.__tcfapi(n.command,n.version,(function(a,r){var s={__tcfapiReturn:{returnValue:a,success:r,callId:n.callId}};t&&(s=JSON.stringify(s)),e&&e.source&&e.source.postMessage&&e.source.postMessage(s,"*")}),n.parameter)}),!1))};"undefined"!=typeof module?module.exports=e:e()}();
+    </script>-->
+    <!-- MANDATORY: END IAB STUB -->
+    <!--<script type="text/javascript">
+                const configSFBXAppConsent = {
+            appKey: '20f6cf75-78eb-42e4-aaab-2ae22fe7aeda',
+            enableGCM: true
+        }
+        
+    </script>-->
+    <!--<script src="https://cdn.appconsent.io/tcf2-clear/current/core.bundle.js" defer="" async="" type="d9e4f4f9250657044b99599c-text/javascript"></script>-->
+    <!--<script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
+        gtag('consent', 'default', {
+            'analytics_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'functionality_storage': 'granted',
+            'security_storage': 'granted',
+            'personalization_storage': 'denied',
+            'ad_storage': 'denied',
+            'wait_for_update': 500
+        });
+    </script>-->
+            <!-- HEAD -->
+    <!--<script type="text/javascript">
+        // A/B test logic to load either the Fuse ad tag or the competitor's ad tag
+        function loadScript(scriptUrl) {
+            var script = document.createElement('script');
+            script.async = true;
+            script.src = scriptUrl;
+            document.head.appendChild(script);
+        }
+        loadScript('https://cdn.fuseplatform.net/publift/tags/2/3935/fuse.js');
+    </script>-->
+        <style type="text/css">@font-face {font-family:'PT Sans';font-style:normal;font-weight:400;src:url(/cf-fonts/s/pt-sans/5.2.8/cyrillic/400/normal.woff2);unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;font-display:swap;}@font-face {font-family:'PT Sans';font-style:normal;font-weight:400;src:url(/cf-fonts/s/pt-sans/5.2.8/cyrillic-ext/400/normal.woff2);unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F;font-display:swap;}@font-face {font-family:'PT Sans';font-style:normal;font-weight:400;src:url(/cf-fonts/s/pt-sans/5.2.8/latin-ext/400/normal.woff2);unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;font-display:swap;}@font-face {font-family:'PT Sans';font-style:normal;font-weight:400;src:url(/cf-fonts/s/pt-sans/5.2.8/latin/400/normal.woff2);unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;font-display:swap;}</style>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon-180x180.png">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="mask-icon" href="/assets/img/safari-pinned-tab.svg" color="#5bbad5">
+<script src="data:text/javascript,1" onload="window.x143341()"></script><link rel="preload" as="script" href="https://live.primis.tech/live/liveView.php?s=120005&amp;schain=1.0,1!publift.com,01JNJR5B8TTV2QRQG23KT2JKBN,1&amp;cbuster=%%CACHEBUSTER%%"><link rel="preload" as="script" href="https://www.googletagmanager.com/gtag/js?id=G-LY61K7D00G"><link rel="preload" as="script" href="/assets/js/app-v3.js"><link rel="preload" as="script" href="/assets/bootstrap/js/bootstrap.bundle.js"><link rel="preload" as="script" href="/assets/js/jquery-3.4.1.min.js"><link rel="preload" as="script" href="https://cdn.appconsent.io/tcf2-clear/current/core.bundle.js"><link rel="preload" as="script" href="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.9.6/lottie.min.js"><link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"><script>(function(){function a0L(){const Ld=['write','_as_prehooked_functions','hostname','onerror','append','50878ryRBPN','prototype','prepend','error','removeEventListener','83747VYjHlo','handleEvent','onload','15ThcWSE','httpEquiv','84xxFdcG','window','concat','4758061LrLJla','get','globalDeferTimeout','__as_xhr_open_args','as_','open','text','getItem','contentDocument','push','innerHTML','EventTarget','matches','includes','getOwnPropertyDescriptor','type','appendChild','insertAdjacentElement','send','DONE','load','querySelectorAll','call','src','length','_as_prehooked','__fr','Element','GET','__as_is_ready_state_change_loading','()\x20{\x20[native\x20code]\x20}','then','5877qeRLpl','1320dYDUtZ','writeln','location','Node','__as_is_xhr_loading','textContent','readyState','JSON','replaceChildren','replaceChild','__as_rej','_fa_','contentWindow','defineProperty','status','setAttributeNode','function','Window','__prehooked','charCodeAt','srcdoc','setAttribute','set','getResponseHeader','host','12mPmzVp','__as_new_xhr_data','onreadystatechange','apply','insertBefore','Function','entries','href','XMLHttpRequest','491202TMxvLJ','replaceWith','toString','decodeURIComponent','_as_injected_functions','btoa','function\x20','isDontDefer','LOADING','false','name','xhr_defer','fetch','isAdBlockerDetected','__as_xhr_onload','__sa_','response','53688aUhNSF','addEventListener','some','toLowerCase','177536FSNRqp','Document','value','__origin','script_onerror','content','collect','cache_is_blocking_ads','adshield','__as_ready_resolve','querySelector','insertAdjacentHTML','POST','catch','document','responseText','createElement'];a0L=function(){return Ld;};return a0L();}function a0p(L,p){const P=a0L();return a0p=function(j,Y){j=j-0x67;let l=P[j];return l;},a0p(L,p);}(function(L,p){const x=a0p,P=L();while(!![]){try{const j=-parseInt(x(0xda))/0x1+parseInt(x(0xd5))/0x2*(parseInt(x(0xa1))/0x3)+-parseInt(x(0xbf))/0x4+parseInt(x(0xdd))/0x5*(-parseInt(x(0xaa))/0x6)+-parseInt(x(0xdf))/0x7*(parseInt(x(0xbb))/0x8)+-parseInt(x(0x87))/0x9*(-parseInt(x(0x88))/0xa)+parseInt(x(0x67))/0xb;if(j===p)break;else P['push'](P['shift']());}catch(Y){P['push'](P['shift']());}}}(a0L,0x2895f),((()=>{'use strict';const y=a0p;const L={'HTMLIFrameElement_contentWindow':()=>Object[y(0x75)](HTMLIFrameElement[y(0xd6)],y(0x94)),'XMLHttpRequest_open':()=>Y(window,y(0xa9),y(0x6c)),'XMLHttpRequest_send':()=>Y(window,y(0xa9),y(0x79)),'Window_decodeURIComponent':()=>Y(window,y(0x99),y(0xad)),'Window_fetch':()=>Y(window,y(0x99),y(0xb6)),'Element_setAttribute':()=>Y(window,y(0x82),y(0x9d)),'EventTarget_addEventListener':()=>Y(window,y(0x72),y(0xbc)),'EventTarget_removeEventListener':()=>Y(window,y(0x72),y(0xd9)),'Document_write':()=>Y(window,y(0xc0),y(0xd0)),'Document_writeln':()=>Y(window,y(0xc0),y(0x89)),'Document_querySelector':()=>Y(window,y(0xc0),y(0xc9)),'Document_querySelectorAll':()=>Y(window,y(0xc0),y(0x7c)),'Document_createElement':()=>Y(window,y(0xc0),y(0xcf)),'Node_appendChild':()=>Y(window,y(0x8b),y(0x77)),'Node_insertBefore':()=>Y(window,y(0x8b),y(0xa5)),'Node_replaceChild':()=>Y(window,y(0x8b),y(0x91)),'Node_textContent':()=>Object[y(0x75)](Node[y(0xd6)],y(0x8d)),'Element_append':()=>Y(window,y(0x82),y(0xd4)),'Element_prepend':()=>Y(window,y(0x82),y(0xd7)),'Element_replaceWith':()=>Y(window,y(0x82),y(0xab)),'Element_replaceChildren':()=>Y(window,y(0x82),y(0x90)),'Element_insertAdjacentElement':()=>Y(window,y(0x82),y(0x78)),'Element_insertAdjacentHTML':()=>Y(window,y(0x82),y(0xca)),'Element_innerHTML':()=>Object[y(0x75)](Element[y(0xd6)],y(0x71)),'Element_setAttributeNode':()=>Y(window,y(0x82),y(0x97)),'Attr_value':()=>Object[y(0x75)](Attr[y(0xd6)],y(0xc1)),'HTMLScriptElement_text':()=>Object[y(0x75)](HTMLScriptElement[y(0xd6)],y(0x6d)),'HTMLScriptElement_type':()=>Object[y(0x75)](HTMLScriptElement[y(0xd6)],y(0x76)),'HTMLScriptElement_src':()=>Object[y(0x75)](HTMLScriptElement[y(0xd6)],y(0x7e)),'HTMLIFrameElement_src':()=>Object[y(0x75)](HTMLIFrameElement[y(0xd6)],y(0x7e)),'HTMLIFrameElement_srcdoc':()=>Object[y(0x75)](HTMLIFrameElement[y(0xd6)],y(0x9c)),'HTMLIFrameElement_contentDocument':()=>Object[y(0x75)](HTMLIFrameElement[y(0xd6)],y(0x6f)),'HTMLAnchorElement_href':()=>Object[y(0x75)](HTMLAnchorElement[y(0xd6)],y(0xa8)),'HTMLImageElement_src':()=>Object[y(0x75)](HTMLImageElement[y(0xd6)],y(0x7e)),'HTMLMetaElement_httpEquiv':()=>Object[y(0x75)](HTMLMetaElement[y(0xd6)],y(0xde)),'HTMLMetaElement_content':()=>Object[y(0x75)](HTMLMetaElement[y(0xd6)],y(0xc4)),'XMLHttpRequest_getResponseHeader':()=>Y(window,y(0xa9),y(0x9f)),'HTMLElement_onerror':()=>Object[y(0x75)](HTMLElement[y(0xd6)],y(0xd3)),'XMLHttpRequest_response':()=>Object[y(0x75)](XMLHttpRequest[y(0xd6)],y(0xba)),'XMLHttpRequest_responseText':()=>Object[y(0x75)](XMLHttpRequest[y(0xd6)],y(0xce)),'Window_Function':()=>Object[y(0x75)](window,y(0xa6)),'Element_matches':()=>Y(window,y(0x82),y(0x73)),'Function_toString':()=>Y(window,y(0xa6),y(0xac))},p=y(0xb9)+window[y(0xaf)](window[y(0x8a)][y(0xa8)]);function P(Z,a){const g=y;var U;return g(0xe0)===a[g(0xbe)]()?Z:g(0xcd)===a?Z[g(0xcd)]:g(0x8f)===a?Z[g(0x8f)]:null===(U=Z[a])||void 0x0===U?void 0x0:U[g(0xd6)];}const j={'get'(){const B=y;return this[B(0xc5)](),window[p];},'collectOne'(Z){window[p]=window[p]||{},window[p][Z]||(window[p][Z]=L[Z]());},'collect'(){const w=y;window[p]=window[p]||{};for(const [Z,a]of Object[w(0xa7)](L))window[p][Z]||(window[p][Z]=a());}};function Y(Z,a,U){var f;return null===(f=P(Z,a))||void 0x0===f?void 0x0:f[U];}const l=Z=>{const t=y;let a=0x0;for(let U=0x0,f=Z[t(0x7f)];U<f;U++){a=(a<<0x5)-a+Z[t(0x9b)](U),a|=0x0;}return a;};function z(Z,a,U){const X=y,f=Object[X(0x75)](Z,a);if(f){const d={...f,'value':U};delete d[X(0x68)],delete d[X(0x9e)],Object[X(0x95)](Z,a,d);}else Z[a]=U;}function R(Z){const E=y;return E(0x6b)+l(Z+E(0xae));}function b(Z){const o=y;return o(0x6b)+l(Z+o(0xd1));}function M(Z,a,U,f){const d=Z[a];if(d)return d;if(Z!==window&&a!==U){const c=Z[U];if(c)return c;}const u=f();return Z[a]=u,u;}function e(Z){return M(Z,function(a){const O=a0p;return b(a[O(0x8a)][O(0xd2)]);}(Z),b(''),()=>({}));}function H(Z){return M(Z,function(a){const K=a0p;return R(a[K(0x8a)][K(0xd2)]);}(Z),R(''),()=>({}));}function h(Z,a,U){const I=y;let f=arguments[I(0x7f)]>0x3&&void 0x0!==arguments[0x3]?arguments[0x3]:window;const d=Z+'_'+a,u=e(f);if(u[d])return;const c=P(f,Z),Q=f===window?j[I(0x68)]()[d]:null==c?void 0x0:c[a];if(!Q)return;const G=H(f),C=function(){const A=I;for(var N=arguments[A(0x7f)],J=new Array(N),D=0x0;D<N;D++)J[D]=arguments[D];try{const n=G[d];return n&&A(0x98)==typeof n?n[A(0x7d)](this,Q,...J):Q[A(0x7d)](this,...J);}catch(q){return Q[A(0x7d)](this,...J);}},V=U?U(C):C;Object[I(0x95)](V,I(0xb4),{'value':a}),Object[I(0x95)](V,I(0x9a),{'value':!0x0}),z(c,a,V),window[I(0xc8)][I(0x70)](()=>{const r=I;window[r(0xc7)]&&!window[r(0xc7)][r(0xb7)]&&c[a]===V&&z(c,a,Q);}),u[d]=V;}function k(Z){return function(){const W=a0p;for(var a=arguments[W(0x7f)],U=new Array(a),f=0x0;f<a;f++)U[f]=arguments[f];return this[W(0x6a)]=U,Z[W(0xa4)](this,U);};}function F(Z){return function(){const L0=a0p;if(this[L0(0x9a)]&&L0(0x73)===this[L0(0xb4)])return L0(0xb0)[L0(0xe1)](this[L0(0xb4)],L0(0x85));for(var a=arguments[L0(0x7f)],U=new Array(a),f=0x0;f<a;f++)U[f]=arguments[f];return Z[L0(0xa4)](this,U);};}((()=>{const L1=y;var Z,a;j[L1(0xc5)]();const U=location[L1(0xa0)]+L1(0x93)+window[L1(0xaf)](L1(0xc6));if(L1(0xb3)===localStorage[L1(0x6e)](U))return;const f=function(u){const L2=L1;return L2(0x6b)+l(u[L2(0x8a)][L2(0xd2)]+L2(0x80));}(window);if(window[f])return;(Z=window)[L1(0xc8)]||(Z[L1(0xc8)]=[]),(a=window)[L1(0x92)]||(a[L1(0x92)]=[]);const d=(function(){const L3=L1;let u=!0x1;return window[L3(0xc8)][L3(0x70)](()=>{u=!0x0;}),{'isDontDefer':()=>u,'globalDeferTimeout':new Promise(c=>{setTimeout(()=>{u=!0x0,c();},0x1b5d);})};}());h(L1(0xa9),L1(0x6c),k),h(L1(0x82),L1(0x9d)),h(L1(0x99),L1(0xb6),function(u){return c=>function(){const L4=a0p;for(var Q=arguments[L4(0x7f)],G=new Array(Q),C=0x0;C<Q;C++)G[C]=arguments[C];return u[L4(0xb1)]()?c(...G):new Promise((V,N)=>{const L5=L4;c(...G)[L5(0x86)](V)[L5(0xcc)](function(){const L6=L5;for(var J=arguments[L6(0x7f)],D=new Array(J),n=0x0;n<J;n++)D[n]=arguments[n];u[L6(0x69)][L6(0x86)](()=>N(...D)),window[L6(0x92)][L6(0x70)]({'type':L6(0xb6),'arguments':G,'errArgs':D,'reject':N,'resolve':V});});});};}(d)),h(L1(0x82),L1(0x73)),h(L1(0xa6),L1(0xac),F),function(u,c){const L7=L1,Q=c?N=>c[L7(0xbd)](J=>N[L7(0x7e)][L7(0x74)](J)):()=>!0x0,G=(N,J)=>new Promise((D,n)=>{const L8=L7,[q]=J;q[L8(0x81)]?n(J):(u[L8(0x69)][L8(0x86)](()=>n(J)),N[L8(0xbc)](L8(0x7b),()=>D()),window[L8(0x92)][L8(0x70)]({'type':L8(0xc3),'reject':()=>n(J),'errArgs':J,'tag':N}));}),C=Object[L7(0x75)](HTMLElement[L7(0xd6)],L7(0xd3));Object[L7(0x95)](HTMLElement[L7(0xd6)],L7(0xd3),{'get':function(){const L9=L7,N=C[L9(0x68)][L9(0x7d)](this);return(null==N?void 0x0:N[L9(0xc2)])||N;},'set':function(N){const LL=L7;var J=this;if(u[LL(0xb1)]()||!(this instanceof HTMLScriptElement)||LL(0x98)!=typeof N||!Q(this))return C[LL(0x9e)][LL(0x7d)](this,N);const D=function(){const Lp=LL;for(var n=arguments[Lp(0x7f)],q=new Array(n),T=0x0;T<n;T++)q[T]=arguments[T];return G(J,q)[Lp(0xcc)](v=>N[Lp(0xa4)](J,v));};D[LL(0xc2)]=N,C[LL(0x9e)][LL(0x7d)](this,D);}});const V=EventTarget[L7(0xd6)][L7(0xbc)];EventTarget[L7(0xd6)][L7(0xbc)]=function(){const LP=L7;for(var N=this,J=arguments[LP(0x7f)],D=new Array(J),n=0x0;n<J;n++)D[n]=arguments[n];const [q,T,...v]=D;if(u[LP(0xb1)]()||!(this instanceof HTMLScriptElement)||LP(0xd8)!==q||!(T instanceof Object)||!Q(this))return V[LP(0x7d)](this,...D);V[LP(0x7d)](this,q,function(){const Lj=LP;for(var m=arguments[Lj(0x7f)],s=new Array(m),S=0x0;S<m;S++)s[S]=arguments[S];return G(N,s)[Lj(0xcc)](i=>{const LY=Lj;LY(0x98)==typeof T?T[LY(0xa4)](N,i):T[LY(0xdb)](...i);});},...v);};}(d),function(u){const Ll=L1;let c=arguments[Ll(0x7f)]>0x1&&void 0x0!==arguments[0x1]&&arguments[0x1];const Q=J=>{const Lz=Ll;var D,n,q;const T=null===(D=J[Lz(0x6a)])||void 0x0===D?void 0x0:D[0x0];return(c?Lz(0x83)===T||Lz(0xcb)===T:Lz(0x83)===T)&&0x0===J[Lz(0x96)]&&((null===(n=J[Lz(0x6a)])||void 0x0===n?void 0x0:n[Lz(0x7f)])<0x3||!0x1!==(null===(q=J[Lz(0x6a)])||void 0x0===q?void 0x0:q[0x2]));},G=Object[Ll(0x75)](XMLHttpRequest[Ll(0xd6)],Ll(0xa3)),C=Object[Ll(0x75)](XMLHttpRequest[Ll(0xd6)],Ll(0x8e)),V=Object[Ll(0x75)](XMLHttpRequestEventTarget[Ll(0xd6)],Ll(0xd3)),N=Object[Ll(0x75)](XMLHttpRequestEventTarget[Ll(0xd6)],Ll(0xdc));G&&C&&V&&N&&(Object[Ll(0x95)](XMLHttpRequest[Ll(0xd6)],Ll(0xa3),{'get':function(){const LR=Ll,J=G[LR(0x68)][LR(0x7d)](this);return(null==J?void 0x0:J[LR(0xc2)])||J;},'set':function(J){const Lb=Ll;if(u[Lb(0xb1)]()||!J||Lb(0x98)!=typeof J)return G[Lb(0x9e)][Lb(0x7d)](this,J);const D=n=>{const LM=Lb;if(this[LM(0x8e)]===XMLHttpRequest[LM(0x7a)]&&Q(this))return this[LM(0x84)]=!0x0,u[LM(0x69)][LM(0x86)](()=>{const Le=LM;this[Le(0x84)]&&(this[Le(0x84)]=!0x1,J[Le(0x7d)](this,n));}),void window[LM(0x92)][LM(0x70)]({'type':LM(0xb5),'callback':()=>(this[LM(0x84)]=!0x1,J[LM(0x7d)](this,n)),'xhr':this});J[LM(0x7d)](this,n);};D[Lb(0xc2)]=J,G[Lb(0x9e)][Lb(0x7d)](this,D);}}),Object[Ll(0x95)](XMLHttpRequest[Ll(0xd6)],Ll(0x8e),{'get':function(){const LH=Ll;var J;return this[LH(0x84)]?XMLHttpRequest[LH(0xb2)]:null!==(J=this[LH(0xa2)])&&void 0x0!==J&&J[LH(0x8e)]?XMLHttpRequest[LH(0x7a)]:C[LH(0x68)][LH(0x7d)](this);}}),Object[Ll(0x95)](XMLHttpRequestEventTarget[Ll(0xd6)],Ll(0xd3),{'get':function(){const Lh=Ll,J=V[Lh(0x68)][Lh(0x7d)](this);return(null==J?void 0x0:J[Lh(0xc2)])||J;},'set':function(J){const Lk=Ll;if(u[Lk(0xb1)]()||!J||Lk(0x98)!=typeof J)return V[Lk(0x9e)][Lk(0x7d)](this,J);const D=n=>{const LF=Lk;if(Q(this))return this[LF(0x8c)]=!0x0,u[LF(0x69)][LF(0x86)](()=>{const LZ=LF;this[LZ(0x8c)]&&(this[LZ(0x8c)]=!0x1,J[LZ(0x7d)](this,n));}),void window[LF(0x92)][LF(0x70)]({'type':LF(0xb5),'callback':()=>(this[LF(0x8c)]=!0x1,J[LF(0x7d)](this,n)),'xhr':this});J[LF(0x7d)](this,n);};D[Lk(0xc2)]=J,V[Lk(0x9e)][Lk(0x7d)](this,D);}}),Object[Ll(0x95)](XMLHttpRequestEventTarget[Ll(0xd6)],Ll(0xdc),{'get':function(){const La=Ll;return N[La(0x68)][La(0x7d)](this);},'set':function(J){const LU=Ll;if(u[LU(0xb1)]()||!J||LU(0x98)!=typeof J)return N[LU(0x9e)][LU(0x7d)](this,J);this[LU(0xb8)]=J,this[LU(0xbc)](LU(0xd8),D=>{const Lf=LU;Q(this)&&window[Lf(0x92)][Lf(0x70)]({'type':Lf(0xb5),'callback':()=>{},'xhr':this});}),N[LU(0x9e)][LU(0x7d)](this,J);}}));}(d),window[f]=!0x0;})());})()));})()</script><script>(function(){function a0s(){const X=['set','length','requestIdleCallback','ZnVuY3Rpb24','204qvlaUb','includes','slice','get','requestAnimationFrame','6006707QqdIxE','error','setTimeout','setInterval','test','removeEventListener','filter','handleEvent','37384KuzGmn','forEach','68541kfNSRW','8eLvLLl','3605730GDKyDn','4401785mkSBtL','message','166128XXlIzJ','prototype','c3RyaW5n','delete','load','addEventListener','call','click','10468440SyWFpZ','eval'];a0s=function(){return X;};return a0s();}function a0x(s,x){const Z=a0s();return a0x=function(N,t){N=N-0x76;let b=Z[N];return b;},a0x(s,x);}(function(s,x){const c=a0x,Z=s();while(!![]){try{const N=parseInt(c(0x80))/0x1+-parseInt(c(0x79))/0x2+parseInt(c(0x7b))/0x3*(parseInt(c(0x8e))/0x4)+parseInt(c(0x7e))/0x5+parseInt(c(0x7d))/0x6+parseInt(c(0x93))/0x7*(-parseInt(c(0x7c))/0x8)+-parseInt(c(0x88))/0x9;if(N===x)break;else Z['push'](Z['shift']());}catch(t){Z['push'](Z['shift']());}}}(a0s,0xbca4c),((()=>{const J=a0x,s=(b,L)=>typeof b===L,x=atob(J(0x8d)),Z=atob(J(0x82));if(!s(Z,Z))return;{const b=RegExp[J(0x81)][J(0x97)];RegExp[J(0x81)][J(0x97)]=function(L){const n=J;return b[n(0x86)](this,L);};}[J(0x92),J(0x8c),J(0x96),J(0x95)][J(0x77)](L=>window[L])[J(0x7a)](L=>window[L]=t(window[L],L)),EventTarget[J(0x81)][J(0x85)]=t(EventTarget[J(0x81)][J(0x85)],J(0x85),0x1),EventTarget[J(0x81)][J(0x76)]=t(EventTarget[J(0x81)][J(0x76)],J(0x76),0x1);const N=new Map();function t(L,u){const U=J;let h=arguments[U(0x8b)]>0x2&&void 0x0!==arguments[0x2]?arguments[0x2]:0x0;return function(){const V=U;for(var i=arguments[V(0x8b)],p=new Array(i),m=0x0;m<i;m++)p[m]=arguments[m];const w=p[V(0x90)](0x0,h),H=p[h],O=p[V(0x90)](h+0x1);if(!H)return L[V(0x86)](this,...p);if(V(0x96)!==u&&V(0x95)!==u&&!s(H,x)&&!s(H[V(0x78)],x))return L[V(0x86)](this,...p);let Y=null;if(V(0x85)===u||V(0x76)===u){const v=[V(0x84),V(0x94),V(0x7f),V(0x87)],g=w[0x0];if(!v[V(0x8f)](g))return L[V(0x86)](this,...p);N[V(0x91)](this)||N[V(0x8a)](this,new Map()),N[V(0x91)](this)[V(0x91)](g)||N[V(0x91)](this)[V(0x8a)](g,new Map()),Y=N[V(0x91)](this)[V(0x91)](g)[V(0x91)](H);}if(Y=Y||function(){const r=V;for(var G=arguments[r(0x8b)],B=new Array(G),C=0x0;C<G;C++)B[C]=arguments[C];return s(H,x)?H[r(0x86)](this,...B):s(H,Z)?window[r(0x89)](H):s(H[r(0x78)],x)?H[r(0x78)][r(0x86)](H,...B):void 0x0;},V(0x85)===u){const G=w[0x0];N[V(0x91)](this)[V(0x91)](G)[V(0x8a)](H,Y);}else{if(V(0x76)===u){const B=w[0x0],C=N[V(0x91)](this)[V(0x91)](B)[V(0x91)](H)||H;return N[V(0x91)](this)[V(0x91)](B)[V(0x83)](H),L[V(0x86)](this,...w,C,...O);}}return L[V(0x86)](this,...w,Y,...O);};}})()));})()</script></head>
+<body>
+<div class="parallax-overlay " id="parallax-overlay">
+    <div class="parallax-layer-1"></div>
+    <div class="parallax-layer-2"></div>
+    <div class="parallax-layer-3"></div>
+    <div class="parallax-layer-4"></div>
+    <div class="parallax-layer-5"></div>
+    <div class="parallax-layer-6"></div>
+    <div class="parallax-layer-7"></div>
+    <div class="rhombus rhombus-layer-1"></div>
+    <div class="rhombus rhombus-layer-2"></div>
+    <div class="rhombus rhombus-group group-1" style="width: 50px">
+        <div class="rhombus rhombus-layer-3"></div>
+        <div class="rhombus rhombus-layer-4"></div>
+        <div class="rhombus rhombus-layer-5"></div>
+    </div>
+    <div class="rhombus rhombus-layer-6"></div>
+    <div class="rhombus rhombus-layer-7"></div>
+    <div class="rhombus rhombus-layer-8"></div>
+    <div class="rhombus rhombus-group group-2" style="width: 50px">
+        <div class="rhombus rhombus-layer-9"></div>
+        <div class="rhombus rhombus-layer-10"></div>
+        <div class="rhombus rhombus-layer-11"></div>
+    </div>
+    <div class="rhombus rhombus-group group-3" style="width: 50px">
+        <div class="rhombus rhombus-layer-12"></div>
+        <div class="rhombus rhombus-layer-13"></div>
+    </div>
+    <div class="rhombus rhombus-group group-4" style="width: 50px">
+        <div class="rhombus rhombus-layer-14"></div>
+        <div class="rhombus rhombus-layer-15"></div>
+    </div>
+    <div class="rhombus rhombus-group group-5" style="width: 50px">
+        <div class="rhombus rhombus-layer-16"></div>
+        <div class="rhombus rhombus-layer-17"></div>
+    </div>
+    <div class="rhombus rhombus-group group-6" style="width: 50px">
+        <div class="rhombus rhombus-layer-18"></div>
+        <div class="rhombus rhombus-layer-19"></div>
+    </div>
+    <div class="rhombus rhombus-group group-7" style="width: 50px">
+        <div class="rhombus rhombus-layer-20"></div>
+        <div class="rhombus rhombus-layer-21"></div>
+    </div>
+    <div class="rhombus rhombus-group group-8" style="width: 50px">
+        <div class="rhombus rhombus-layer-22"></div>
+        <div class="rhombus rhombus-layer-23"></div>
+    </div>
+</div>
+<header>
+    <div class="container ">
+        <div class="row direction-ltr ">
+                    <div class="col-md-2 col-sm-2 col-xs-2 home-logo">
+        <a href="/">
+            <img class="logo" src="/assets/img/logo_akinator.png" alt="logo akinator" height="auto" width="200px">
+        </a>
+    </div>
+                    <div class="col-xl-2 col-lg-2 col-md-2 col-sm-3 col-xs-3 col-3 lang-home-block">
+        <div class="lang-switcher">
+            <div class="lang-selected ">
+                <span class="lang-label">العربية</span>
+                <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_ar_carre.png)"></span>
+            </div>
+            <div class="dropdown-lang dialog-box selector">
+                <ul class="p-2">
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('en')">
+                        <p>English</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_uk_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('ar')">
+                        <p>العربية</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_ar_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('cn')">
+                        <p>中文</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_cn_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('de')">
+                        <p>Deutsch</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_gr_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('es')">
+                        <p>Español</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_sp_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('fr')">
+                        <p>Français</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_fr_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('il')">
+                        <p>עברית</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_il_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('it')">
+                        <p>Italiano</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_it_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('jp')">
+                        <p>日本</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_jp_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('kr')">
+                        <p>한국어</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_kr_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('nl')">
+                        <p>Nederlands</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_nl_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('pl')">
+                        <p>Polski</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_pl_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('pt')">
+                        <p>Português</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_pt_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('ru')">
+                        <p>русский</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_ru_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('tr')">
+                        <p>Türkçe</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_tr_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('id')">
+                        <p>Indonesian</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_id_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('vi')">
+                        <p>Tiếng Việt</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_vn_carre.png)"></span>
+                    </li>
+                                        <li class="lang-border d-inline-flex justify-content-between w-100" onclick="if (!window.__cfRLUnblockHandlers) return false; changeLocale('fa')">
+                        <p>فارسی</p>
+                        <span class="flag-custom" style="background-image: url(https://photos.clarinea.fr/fichiers/drapeaux/flag_fa_carre.png)"></span>
+                    </li>
+                                    </ul>
+            </div>
+        </div>
+    </div>
+                                    <div class="col-xl-8 col-lg-8 col-md-8 col-sm-5 col-xs-4" style="right :14%">
+                    <!-- GAM 71161633/AKINTR_akinator/theme_top_header -->
+    <div data-fuse="theme_top_header"></div>
+                                <div id="top_pub"></div>
+                                                <noscript>
+                    <div id="no_script_message">
+                        إذا أردت اللعب مع أكيناتور، الرجاء تفعيل الجافا سكريبت في متصفحك.
+                    </div>
+                </noscript>
+            </div>
+                    </div>
+
+    </div>
+    <div class="top-separator"></div>
+</header>
+<section id="base-section">
+    <div class="body-section">
+            <div class="container">
+            <div class="row row_main">
+            <div class="col-md-3">
+                <div class="akinator">
+                    <div class="akinator-body">
+                        <img src="/assets/img/akitudes_670x1096/serein_2.png" width="603" height="987" alt="akitude-serein_2">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 my-auto d-flex flex-column">
+                <div class="bubble-right bubble-database bubble"><p>حدد موضوع اللعبة التالي</p></div>
+                <div class="database-selection selector dialog-box mx-auto">
+                    <ul>
+                                                    <li class="mouse-hover li-game" onclick="if (!window.__cfRLUnblockHandlers) return false; chooseTheme('1')">شخصية</li>
+                                            </ul>
+                </div>
+            </div>
+            <div class="col-md-2 col-md-offset-0 col-sm-2 col-sm-offset-3 col-xs-2 col-xs-offset-3">
+                                <div id="lateral_pub" data-fuse="VREC"></div>
+                            </div>
+            <form action="/game" method="post" id="formTheme">
+                <input type="hidden" name="sid" id="sid">
+                <input type="hidden" name="cm" id="cm">
+                <input type="hidden" name="anim" id="anim">
+            </form>
+        </div>
+        </div>
+    </div>
+        <div class="bottom-separator"></div>
+    </section>
+<footer>
+        <div class="top-footer" id="top-footer">
+        <div class="container">
+            <div class="row ">
+                                    <div class="col-md-4">
+                        <div class="menu-btn">
+                            <button class="menu-btn" data-toggle="modal" data-target="#parametresModal">
+                                <img src="/assets/img/gear.svg" alt="الإعدادات" class="img-param">
+                            </button>
+                            <p class="text-white">الإعدادات</p>
+                        </div>
+                    </div>
+
+                            </div>
+        </div>
+    </div>
+    <div class="middle-footer" dir="rtl">
+        <div class="container">
+            <div class="row no-gutters">
+                <div class="col-xl-3 col-lg-3 col-md-3">
+                    <ul class="social-network social-circle">
+                        <li>أتبعني</li>
+                        <li><a href="https://www.facebook.com/Akinator/" target="_blank" class="icoFacebook" title="Facebook"><i class="fab fa-facebook"></i></a></li>
+                        <li><a href="https://twitter.com/akinator_team" target="_blank" class="icoTwitter" title="X"><i class="fa-brands fa-x-twitter"></i></a></li>
+                        <li><a href="https://plus.google.com/115962598465031327867" target="_blank" class="icoGoogle" title="Google +"><i class="fab fa-google-plus"></i></a></li>
+                    </ul>
+                </div>
+                <div class="col-xl-9 col-xl-9 col-md-12">
+                    <div class="menu">
+                        <ul>
+                            <li><a title="الرئيسية" href="/">الرئيسية</a></li>
+                            <li>
+                                <a title="اتصل بنا" href="/contact?realfrom=website-desktop">اتصل بنا</a>
+                            </li>
+                                                                                                                        <li><a title="قانوني" href="/content/5/qanwny">قانوني</a></li>
+                                                                                                                            <li><a title="الشروط" href="/content/4/alshrwt">الشروط</a></li>
+                                                                                                                            <li><a title="من نحن" href="/content/7/mn-nhn">من نحن</a></li>
+                                                                                                                            <li><a title="Privacy Policy" href="/content/13/Privacy-Policy">Privacy Policy</a></li>
+                                                                                                                            <li><a title="الأسئلة المتكررة" href="/content/6/kl-ma-twd-m-rfth-n-akynatwr">الأسئلة المتكررة</a></li>
+                                                                                                                            <li><a title="الإعلام" href="/content/8/Akinator-in-the-media">الإعلام</a></li>
+                                                                                                                </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-footer">
+        <div class="container">
+            <div class="row">
+                <p>
+                    (3)
+                    &nbsp;© 2026 <a href="https://www.elokence.com" target="_blank">Elokence</a> - All rights reserved
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+<div id="notOfficial" class="modal fade" style="" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <p>من فضلك، العب معي على موقعي الرسمي&nbsp;<a style="text-decoration: underline;" onmouseover="if (!window.__cfRLUnblockHandlers) return false; this.style.color='black';" href="https://www.akinator.com" target="_blank">akinator.com</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="orientationModal" class="modal fade" role="dialog" data-backdrop="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="adblockDetected" class="modal fade" style="" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body text-center">
+                <p>Akinator.com يعتمد بشكل أساسي على الإعلانات. إذا كنت تستمتع بما يقدمه لك المارد العبقري، الرجاء التكرم باستثناء موقع Akinator.com من برنامج حجب الإعلانات Adblock.</p>
+                <img id="adblockHelper" src="" alt="">
+                <p>لأي أسئلة متعلقة بالإعلانات، يمكنك ترك رسالة هنا</p>
+                <a href="#?realfrom=website-desktop">اتصل بنا</a>
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="parametresModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">الإعدادات</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center py-2">
+                        <label>مصفاة المحتوى الحساس</label>
+                        <label class="switch-param">
+                                                        <input type="checkbox" id="tgl-enfant" onclick="if (!window.__cfRLUnblockHandlers) return false; childFilter()">
+                            <span class="slider"></span>
+                                                    </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2">
+                        <label>تحريك</label>
+                        <label class="switch-param">
+                                                            <input type="checkbox" id="tgl-animations" onclick="if (!window.__cfRLUnblockHandlers) return false; animFilter()" checked="">
+                                                        <span class="slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+<!--<script type="text/javascript" src="/assets/js/jquery-3.4.1.min.js"></script>-->
+<!--<script type="text/javascript" src="/assets/bootstrap/js/bootstrap.bundle.js"></script>-->
+<!--<script type="text/javascript" src="/assets/js/app-v3.js"></script>-->
+<!--<script type="text/javascript">
+    function beautifulCGU(){
+                $('body').addClass('body-cgu')
+        $('.middle-footer').remove()
+        $('.top-footer').remove()
+    }
+</script>-->
+<!--<script type="text/javascript">
+        function chooseTheme(subject_id) {
+        localStorage.setItem('current_theme', subject_id);
+        $('#sid').val(subject_id);
+        let childmode = 'true';
+        if (localStorage.getItem('child_mode') === "false" || localStorage.getItem('child_mode') === null) {
+            localStorage.setItem('child_mode','false');
+            childmode = 'false';
+        }
+        $('#cm').val(childmode);
+        let animmode = 'true';
+        if (localStorage.getItem('anim_mode') === "false") {
+            animmode = 'false';
+        } else {
+            localStorage.setItem('anim_mode','true');
+        }
+        $('#anim').val(animmode);
+        localStorage.removeItem('game_ended');
+        $('#formTheme').submit();
+    }
+</script>-->
+<!-- Global site tag (gtag.js) - Google Analytics V4 => test en cours, cohabitation avec universal analytics -->
+<!--<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-LY61K7D00G" type="text/javascript"></script>-->
+<!--<script type="text/javascript">
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-LY61K7D00G');
+</script>-->
+<!-- AdShield -->
+    <!-- AdShield -->
+
+
+
+<!-- AdShield -->
+
+<!--<script type="text/javascript">
+    /* Détection iframe */
+    $(document).ready(function() {
+        if (window.self !== window.top) {
+
+            $("#notOfficial").modal();
+        }
+    });
+</script>-->
+                <!-- code from Primis - akinator-discovery_ROW -->
+    <!--<script type="text/javascript" language="javascript" src="https://live.primis.tech/live/liveView.php?s=120005&amp;schain=1.0,1!publift.com,01JNJR5B8TTV2QRQG23KT2JKBN,1&amp;cbuster=%%CACHEBUSTER%%"></script>-->
+    <!-- code from Primis -->
+                        
+<img src="https://ad.doubleclick.net/favicon.ico?ad=300x250&amp;ad_box_=1&amp;adnet=1&amp;showad=1&amp;size=250x250" style="display: none;"><img src="https://widgets.outbrain.com/images/widgetIcons/achoice.svg" style="display: none;"><div class="pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links" style="width: 1px !important; height: 1px !important; position: absolute !important; left: -10000px !important; top: -1000px !important;"></div><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;330e096aaf0d4ea782a201b072b3f804&quot;}" crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2d4ed0e0beace04',t:'MTc4NzA5ODEyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none; visibility: hidden;"></iframe>
+</body></html>

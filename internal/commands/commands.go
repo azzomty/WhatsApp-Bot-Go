@@ -30,12 +30,21 @@ var (
 	msgMutex     sync.RWMutex
 )
 
+var (
+	startTime      time.Time
+	messageCount   int
+	commandsCount  int
+	IsBotEnabled   = true
+	AutoJoinGroups = false
+)
+
 type BotContext struct {
 	Client       *whatsmeow.Client
 	Event        *events.Message
 	ChatID       types.JID
 	Sender       types.JID
 	Text         string
+	MentionedJid []string
 	IsAdmin      bool
 	IsSuperAdmin bool
 }
@@ -70,6 +79,42 @@ func AddMessage(chatID string, msg *events.Message) {
 var lastValidCommand = make(map[string]string)
 
 func Handle(ctx *BotContext) {
+	if ctx.Text == ".bot off" {
+		IsBotEnabled = false
+		sendMessage(ctx, "🔴 تم إيقاف البوت بالكامل!")
+		return
+	}
+	if ctx.Text == ".bot on" {
+		IsBotEnabled = true
+		sendMessage(ctx, "🟢 تم تفعيل البوت بالكامل!")
+		return
+	}
+	if ctx.Text == ".دخلني قروبات" {
+		AutoJoinGroups = !AutoJoinGroups
+		if AutoJoinGroups {
+			sendMessage(ctx, "✅ تم تفعيل الانضمام التلقائي! (البوت سيقوم بطلب الانضمام لأي رابط قروب يرسل).")
+		} else {
+			sendMessage(ctx, "❌ تم إيقاف الانضمام التلقائي.")
+		}
+		return
+	}
+
+	if AutoJoinGroups && strings.Contains(ctx.Text, "chat.whatsapp.com/") {
+		parts := strings.Split(ctx.Text, "chat.whatsapp.com/")
+		if len(parts) > 1 {
+			code := strings.FieldsFunc(parts[1], func(r rune) bool {
+				return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
+			})
+			if len(code) > 0 {
+				go ctx.Client.JoinGroupWithLink(context.Background(), code[0])
+			}
+		}
+	}
+
+	if !IsBotEnabled {
+		return
+	}
+
 	if handleInteractiveReply(ctx) {
 		return
 	}
@@ -330,7 +375,14 @@ func Handle(ctx *BotContext) {
 		setAutoReact(ctx, parts)
 	case ".استقبال":
 		setWelcomeFeature(ctx)
+	case ".كتم", ".حذف الاغنية":
+		HandleRemoveMusic(ctx)
+	case ".اكيناتور":
+		HandleAkinator(ctx)
 	default:
+		if HandleAkinatorAnswer(ctx) {
+			return
+		}
 		gemini.HandleMessage(ctx.Client, ctx.ChatID, ctx.Sender, ctx.Text, strings.HasSuffix(ctx.ChatID.String(), "@g.us"), ctx.Event.Info.IsFromMe, ctx.Event.Message, ctx.Event.Info.ID, ctx.Event.Info.Sender.String())
 	}
 }

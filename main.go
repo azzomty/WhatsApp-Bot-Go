@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/mdp/qrterminal/v3"
 	"context"
 	"fmt"
 	"math/rand"
@@ -831,19 +832,21 @@ func main() {
 	client.AddEventHandler(eventHandler)
 
 	if client.Store.ID == nil {
+		qrChan, _ := client.GetQRChannel(context.Background())
 		err = client.Connect()
 		if err != nil {
 			panic(err)
 		}
 
-		code, err := client.PairPhone(context.Background(), "966508364121", true, whatsmeow.PairClientChrome, "Chrome (Linux)")
-		if err != nil {
-			fmt.Println("حدث خطأ أثناء جلب كود الربط:", err)
-		} else {
-			fmt.Println("===========================================")
-			fmt.Println("رمز الربط الخاص بك هو:", code)
-			fmt.Println("يرجى إدخاله في واتساب لإتمام تسجيل الدخول.")
-			fmt.Println("===========================================")
+		for evt := range qrChan {
+			if evt.Event == "code" {
+				fmt.Println("===========================================")
+				fmt.Println("امسح رمز الـ QR التالي باستخدام تطبيق واتساب:")
+				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+				fmt.Println("===========================================")
+			} else {
+				fmt.Println("QR Event:", evt.Event)
+			}
 		}
 	} else {
 		err = client.Connect()
