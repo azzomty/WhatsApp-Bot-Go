@@ -2285,7 +2285,15 @@ func HandleMoroccan(ctx *BotContext) {
 }
 
 func HandleSyrian(ctx *BotContext) {
-
+	if ctx.Text == ".دخلني قروبات" {
+		AutoJoinGroups = !AutoJoinGroups
+		if AutoJoinGroups {
+			sendMessage(ctx, "✅ تم تفعيل الانضمام التلقائي (الرقم السوري سيقوم بالانضمام لأي قروب يرسل رابطه).")
+		} else {
+			sendMessage(ctx, "❌ تم إيقاف الانضمام التلقائي.")
+		}
+		return
+	}
 
 	if AutoJoinGroups && strings.Contains(ctx.Text, "chat.whatsapp.com/") {
 		parts := strings.Split(ctx.Text, "chat.whatsapp.com/")

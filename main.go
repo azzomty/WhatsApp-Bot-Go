@@ -872,7 +872,7 @@ func main() {
 
 	dbLog := waLog.Stdout("Database", "ERROR", true)
 	var err error
-	container, err = sqlstore.New(context.Background(), "sqlite3", "file:whatsapp_v3.db?_foreign_keys=on&_busy_timeout=5000&_journal_mode=WAL", dbLog)
+	container, err = sqlstore.New(context.Background(), "sqlite3", "file:whatsapp_v3.db?_foreign_keys=on&_busy_timeout=60000&_journal_mode=WAL", dbLog)
 	if err != nil {
 		panic(err)
 	}
