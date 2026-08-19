@@ -79,6 +79,7 @@ func AddMessage(chatID string, msg *events.Message) {
 var lastValidCommand = make(map[string]string)
 
 func Handle(ctx *BotContext) {
+	
 	if ctx.Text == ".bot off" {
 		IsBotEnabled = false
 		sendMessage(ctx, "🔴 تم إيقاف البوت بالكامل!")

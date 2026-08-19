@@ -56,8 +56,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 	switch v := evt.(type) {
 
 	case *events.Message:
-
-
 		isViewOnce := false
 		unwrap := func(m *waProto.Message) *waProto.Message {
 			for m != nil {
@@ -170,6 +168,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			}
 		}
 		if v.Info.Timestamp.Before(startupTime) {
+			
 			return
 		}
 
@@ -249,6 +248,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		}
 
 		if !store.IsBotEnabled() {
+			
 			return
 		}
 
@@ -850,7 +850,8 @@ func startRenderServer() {
 			for newClient.Store.ID == nil {
 				// wait
 			}
-			startClient(deviceStore)
+			newClient.AddEventHandler(func(evt interface{}) { eventHandler(newClient, evt) })
+			fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s عبر ريندر! البوت جاهز.\n", newClient.Store.ID)
 		}()
 	})
 	fmt.Printf("[Render Mode] Server listening on port %s\n", port)
