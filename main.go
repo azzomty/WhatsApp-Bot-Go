@@ -606,7 +606,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect, overrideCount)
 					} else if aspect == "gif" {
-						results = pinterest.SearchPinterest(req.Query+" gif", "gif", overrideCount)
+						results = pinterest.SearchTenorGifs(req.Query, overrideCount)
 					} else if aspect == "video" {
 						results = pinterest.SearchPinterestMedia(req.Query, ".mp4", overrideCount)
 					} else {

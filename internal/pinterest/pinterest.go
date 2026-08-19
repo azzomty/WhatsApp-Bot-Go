@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"regexp"
 	"net/textproto"
 	"net/url"
 	"os"
@@ -143,6 +144,88 @@ func extractMediaByExtension(data interface{}, ext string) string {
 		}
 	}
 	return ""
+}
+
+func SearchTenorGifs(query string, count int) []PinResult {
+	query = url.QueryEscape(query)
+	req, _ := http.NewRequest("GET", "https://tenor.com/search/"+query+"-gifs", nil)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+	
+	body, _ := ioutil.ReadAll(resp.Body)
+	mp4Regex := regexp.MustCompile(`https://media.tenor.com/[^"]*\.mp4`)
+	matches := mp4Regex.FindAllString(string(body), -1)
+	
+	var results []PinResult
+	unique := make(map[string]bool)
+	for _, m := range matches {
+		if !unique[m] {
+			unique[m] = true
+			results = append(results, PinResult{Title: "GIF", URL: m})
+			if len(results) >= count {
+				break
+			}
+		}
+	}
+	return results
+}
+
+func SearchPinterestGifs(query string, count int) []PinResult {
+	pins := SearchPinterest(query+" gif", "all", count+20)
+	if len(pins) == 0 {
+		return nil
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	var results []PinResult
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	max := count + 10
+	if len(pins) < max {
+		max = len(pins)
+	}
+
+	for i := 0; i < max; i++ {
+		p := pins[i]
+		if p.ID == "" {
+			continue
+		}
+
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			req, _ := http.NewRequest("GET", "https://api.pinterest.com/v3/pins/"+id+"/", nil)
+			setPinterestHeaders(req)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				return
+			}
+			
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			var respJson interface{}
+			json.Unmarshal(bodyBytes, &respJson)
+
+			mp4Url := extractMediaByExtension(respJson, ".mp4")
+
+			if mp4Url != "" {
+				mu.Lock()
+				if len(results) < count {
+					results = append(results, PinResult{ID: id, Title: "GIF", URL: mp4Url})
+				}
+				mu.Unlock()
+			}
+		}(p.ID)
+	}
+	wg.Wait()
+	return results
 }
 
 func parsePinterestData(data []interface{}, aspect string) []PinResult {
