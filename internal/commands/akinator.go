@@ -162,10 +162,50 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 			activeAkiSessions.Unlock()
 			return true
 		} else if txt == "2" || txt == "٢" || txt == "لا" || txt == "غلط" || txt == "خطأ" {
-			sendMessage(ctx, "أحتاج إلى المزيد من التفاصيل لإكمال اللعبة.\n(ننتظر بيانات decline-toplist من المطور...)")
-			// activeAkiSessions.Lock()
-			// sess.IsActive = false
-			// activeAkiSessions.Unlock()
+			// User rejected the guess, continue game
+			activeAkiSessions.Lock()
+			sess.Guessing = false
+			sess.Step++
+			currentStep := strconv.Itoa(sess.Step)
+			activeAkiSessions.Unlock()
+
+			payload := &bytes.Buffer{}
+			writer := multipart.NewWriter(payload)
+			_ = writer.WriteField("queue_prio", "0")
+			_ = writer.WriteField("step", currentStep)
+			writer.Close()
+
+			url := fmt.Sprintf("https://srv17.akinator.com:9641/game/sessions/%s/resume", sess.SessionID)
+			req, _ := http.NewRequest("POST", url, payload)
+			req.Header.Set("Content-Type", writer.FormDataContentType())
+			req.Header.Set("Accept", "application/json")
+			req.Header.Set("User-Agent", "okhttp/5.4.0")
+
+			client := &http.Client{Timeout: 10 * time.Second}
+			resp, err := client.Do(req)
+			if err != nil {
+				sendMessage(ctx, "انقطع الاتصال، حاول الإجابة مرة أخرى.")
+				return true
+			}
+			defer resp.Body.Close()
+			body, _ := io.ReadAll(resp.Body)
+
+			var resumeResult struct {
+				Result struct {
+					HasQuestion int    `json:"hasQuestion"`
+					Question    string `json:"question"`
+				} `json:"result"`
+			}
+			json.Unmarshal(body, &resumeResult)
+
+			if resumeResult.Result.Question != "" {
+				sendAkiQuestion(ctx, resumeResult.Result.Question, sess.Step)
+			} else {
+				sendMessage(ctx, "حدث خطأ أثناء محاولة إكمال اللعبة.")
+				activeAkiSessions.Lock()
+				sess.IsActive = false
+				activeAkiSessions.Unlock()
+			}
 			return true
 		} else {
 			sendMessage(ctx, "يرجى الإجابة بـ (نعم / 1) إذا كانت الشخصية صحيحة، أو (لا / 2) إذا كانت خاطئة.")
