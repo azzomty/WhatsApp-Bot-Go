@@ -606,7 +606,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect, overrideCount)
 					} else if aspect == "gif" {
-						results = pinterest.SearchPinterestGifs(req.Query, overrideCount)
+						results = pinterest.SearchPinterest(req.Query+" gif", "gif", overrideCount)
 					} else if aspect == "video" {
 						results = pinterest.SearchPinterestMedia(req.Query, ".mp4", overrideCount)
 					} else {
@@ -659,6 +659,8 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 							mediaType := whatsmeow.MediaImage
 							if isVid {
 								mediaType = whatsmeow.MediaVideo
+							} else if aspect == "gif" {
+								mediaType = whatsmeow.MediaDocument
 							}
 
 							resp, err := client.Upload(context.Background(), data, mediaType)
@@ -683,6 +685,23 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 										vidMsg.GifPlayback = proto.Bool(true)
 									}
 									msg.VideoMessage = vidMsg
+								} else if aspect == "gif" {
+									docMsg := &waProto.DocumentMessage{
+										URL:           proto.String(resp.URL),
+										DirectPath:    proto.String(resp.DirectPath),
+										MediaKey:      resp.MediaKey,
+										Mimetype:      proto.String("image/gif"),
+										FileEncSHA256: resp.FileEncSHA256,
+										FileSHA256:    resp.FileSHA256,
+										FileLength:    proto.Uint64(uint64(len(data))),
+										FileName:      proto.String("animated.gif"),
+										ContextInfo: &waProto.ContextInfo{
+											StanzaID:      proto.String(v.Info.ID),
+											Participant:   proto.String(v.Info.Sender.String()),
+											QuotedMessage: v.Message,
+										},
+									}
+									msg.DocumentMessage = docMsg
 								} else {
 									imgMsg := &waProto.ImageMessage{
 										URL:           proto.String(resp.URL),
