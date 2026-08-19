@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/mdp/qrterminal/v3"
 	"context"
 	"fmt"
 	"math/rand"
@@ -881,10 +880,6 @@ func main() {
 		panic(err)
 	}
 
-	if len(devices) == 0 {
-		dev := container.NewDevice()
-		devices = append(devices, dev)
-	}
 
 	for _, deviceStore := range devices {
 		go startClient(deviceStore)
@@ -902,28 +897,10 @@ func startClient(deviceStore *whatsmeowStore.Device) {
 
 	client.AddEventHandler(func(evt interface{}) { eventHandler(client, evt) })
 
-	if client.Store.ID == nil {
-		qrChan, _ := client.GetQRChannel(context.Background())
-		err := client.Connect()
-		if err != nil {
-			panic(err)
-		}
-
-		for evt := range qrChan {
-			if evt.Event == "code" {
-				fmt.Println("===========================================")
-				fmt.Println("امسح رمز الـ QR التالي باستخدام تطبيق واتساب:")
-				qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-				fmt.Println("===========================================")
-			} else {
-				fmt.Println("QR Event:", evt.Event)
-			}
-		}
-	} else {
-		err := client.Connect()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s! البوت جاهز.\n", client.Store.ID)
+	err := client.Connect()
+	if err != nil {
+		fmt.Println("Error connecting:", err)
+		return
 	}
+	fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s! البوت جاهز.\n", client.Store.ID)
 }
