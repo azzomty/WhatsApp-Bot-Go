@@ -128,23 +128,25 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		
 
 		if v.Info.IsGroup && !store.IsGroupActivated(v.Info.Chat.String()) {
-			// Allow ONLY .baymax to activate
+			isActivating := false
 			if v.Message != nil && v.Message.Conversation != nil {
 				text := strings.TrimSpace(strings.ToLower(*v.Message.Conversation))
 				if text == ".baymax" || text == ".buymax" {
 					store.ActivateGroup(v.Info.Chat.String())
 					store.SaveActivatedGroups(".")
-					// Let it fall through to HandleMessage so baymax personalized message triggers
+					isActivating = true
 				}
 			} else if v.Message != nil && v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.Text != nil {
 				text := strings.TrimSpace(strings.ToLower(*v.Message.ExtendedTextMessage.Text))
 				if text == ".baymax" || text == ".buymax" {
 					store.ActivateGroup(v.Info.Chat.String())
 					store.SaveActivatedGroups(".")
-					// Let it fall through to HandleMessage so baymax personalized message triggers
+					isActivating = true
 				}
 			}
-			return
+			if !isActivating {
+				return
+			}
 		}
 
 		if v.Info.IsGroup && store.IsGroupActivated(v.Info.Chat.String()) {
@@ -893,7 +895,7 @@ func main() {
 func startClient(deviceStore *whatsmeowStore.Device) {
 	clientLog := waLog.Stdout("Client", "INFO", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
-	startupTime = time.Now()
+	startupTime = time.Now().Add(-5 * time.Minute)
 
 	client.AddEventHandler(func(evt interface{}) { eventHandler(client, evt) })
 
