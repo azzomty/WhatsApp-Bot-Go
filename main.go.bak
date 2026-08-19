@@ -57,77 +57,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 	switch v := evt.(type) {
 
 	case *events.Message:
-
-
-		isViewOnce := false
-		unwrap := func(m *waProto.Message) *waProto.Message {
-			for m != nil {
-				if m.EphemeralMessage != nil && m.EphemeralMessage.Message != nil {
-					m = m.EphemeralMessage.Message
-					continue
-				}
-				if m.ViewOnceMessage != nil && m.ViewOnceMessage.Message != nil {
-					isViewOnce = true
-					m = m.ViewOnceMessage.Message
-					continue
-				}
-				if m.ViewOnceMessageV2 != nil && m.ViewOnceMessageV2.Message != nil {
-					isViewOnce = true
-					m = m.ViewOnceMessageV2.Message
-					continue
-				}
-				if m.ViewOnceMessageV2Extension != nil && m.ViewOnceMessageV2Extension.Message != nil {
-					isViewOnce = true
-					m = m.ViewOnceMessageV2Extension.Message
-					continue
-				}
-				break
-			}
-			return m
-		}
-
-		uMsg := unwrap(v.Message)
-		text := ""
-		if uMsg != nil {
-			if uMsg.GetExtendedTextMessage() != nil {
-				text = uMsg.GetExtendedTextMessage().GetText()
-			} else if uMsg.GetConversation() != "" {
-				text = uMsg.GetConversation()
-			} else if uMsg.GetImageMessage() != nil {
-				text = uMsg.GetImageMessage().GetCaption()
-			} else if uMsg.GetVideoMessage() != nil {
-				text = uMsg.GetVideoMessage().GetCaption()
-			}
-		}
-		text = strings.TrimSpace(text)
-		
-		senderLID := getLID(client, v.Info.Sender)
-		senderID := senderLID // for consistency
-		ctx := &commands.BotContext{
-			Client: client,
-			Event:  v,
-			ChatID: v.Info.Chat,
-			Sender: v.Info.Sender,
-			Text:   text,
-		}
-
-		myNumber := client.Store.ID.User
-		if strings.HasPrefix(myNumber, "212") {
-			commands.HandleMoroccan(ctx)
-			return
-		}
-		if strings.HasPrefix(myNumber, "963") {
-			commands.HandleSyrian(ctx)
-			return
-		}
-
-		// Saudi logic continues down below
-
-
-
-
-		
-
 		if v.Info.IsGroup && !store.IsGroupActivated(v.Info.Chat.String()) {
 			// Allow ONLY .baymax to activate
 			if v.Message != nil && v.Message.Conversation != nil {
@@ -226,7 +155,52 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		commands.AddMessage(v.Info.Chat.String(), v)
 
+		text := ""
 
+		isViewOnce := false
+
+		unwrap := func(m *waProto.Message) *waProto.Message {
+			for m != nil {
+				if m.EphemeralMessage != nil && m.EphemeralMessage.Message != nil {
+					m = m.EphemeralMessage.Message
+					continue
+				}
+				if m.ViewOnceMessage != nil && m.ViewOnceMessage.Message != nil {
+					isViewOnce = true
+					m = m.ViewOnceMessage.Message
+					continue
+				}
+				if m.ViewOnceMessageV2 != nil && m.ViewOnceMessageV2.Message != nil {
+					isViewOnce = true
+					m = m.ViewOnceMessageV2.Message
+					continue
+				}
+				if m.ViewOnceMessageV2Extension != nil && m.ViewOnceMessageV2Extension.Message != nil {
+					isViewOnce = true
+					m = m.ViewOnceMessageV2Extension.Message
+					continue
+				}
+				break
+			}
+			return m
+		}
+
+		uMsg := unwrap(v.Message)
+
+		text = ""
+		if uMsg.GetExtendedTextMessage() != nil {
+			text = uMsg.GetExtendedTextMessage().GetText()
+		} else if uMsg.GetConversation() != "" {
+			text = uMsg.GetConversation()
+		} else if uMsg.GetImageMessage() != nil {
+			text = uMsg.GetImageMessage().GetCaption()
+		} else if uMsg.GetVideoMessage() != nil {
+			text = uMsg.GetVideoMessage().GetCaption()
+		}
+
+		text = strings.TrimSpace(text)
+		senderLID := getLID(client, v.Info.Sender)
+		senderID := senderLID // for consistency
 
 		if text == ".bot on" {
 			if store.IsAllowed(senderID) || v.Info.IsFromMe {
@@ -340,7 +314,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		// Anti-swear logic
 		if v.Info.IsGroup {
-			swearWords := []string{"قحبة", "قحبه", "قحبتي", "قحباني", "خنزير", "خنزيري", "خنزيرتي", "خنزيرة", "خنزيره", "شرموط", "شرموطة", "شرموطه", "زاني", "زانية", "زانيه", "كس", "كسمك", "زب", "زبي", "معرص", "عرص", "منيوك", "منيوكة", "منيوكه", "بضان", "بضاني", "يبضاني", "بضانك", "زرق", "زرقها", "زرقيها", "طيزك", "طيزكي", "كسك", "كسكي", "شرموطتي", "شرموطي", "تعرص", "يلعن", "منيوكتي", "منيوكي", "يا ابن", "يبن", "قحبوني"}
+			swearWords := []string{"قحبة", "قحبه", "قحبتي", "قحباني", "خنزير", "خنزيري", "خنزيرتي", "خنزيرة", "خنزيره", "شرموط", "شرموطة", "شرموطه", "زاني", "زانية", "زانيه", "كس", "كسمك", "زب", "زبي", "معرص", "عرص", "منيوك", "منيوكة", "منيوكه"}
 			containsSwear := false
 
 			// We check for exact word matches to avoid false positives (e.g. "عكس" shouldn't trigger "كس")
@@ -452,7 +426,13 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		text = strings.TrimSpace(text)
 
-
+		ctx := &commands.BotContext{
+			Client: client,
+			Event:  v,
+			ChatID: v.Info.Chat,
+			Sender: v.Info.Sender,
+			Text:   text,
+		}
 
 		if store.IsAntiContactGroup(v.Info.Chat.String()) {
 			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
@@ -803,15 +783,11 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 	case *events.LoggedOut:
 		fmt.Println("تم تسجيل الخروج من الهاتف! جاري حذف الجلسة...")
 		client.Logout(context.Background())
+		os.Exit(0)
 	case *events.Connected:
 		client.SendPresence(context.Background(), types.PresenceAvailable)
 	}
 }
-
-
-var (
-	container *sqlstore.Container
-)
 
 func startRenderServer() {
 	port := os.Getenv("PORT")
@@ -819,38 +795,7 @@ func startRenderServer() {
 		port = "3000"
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Go Bot is Alive! 🚀\n\nTo pair a new number, go to /pair?phone=YOURNUMBER")
-	})
-	http.HandleFunc("/pair", func(w http.ResponseWriter, r *http.Request) {
-		phone := r.URL.Query().Get("phone")
-		if phone == "" {
-			fmt.Fprintf(w, "Error: Missing phone parameter. Usage: /pair?phone=966...")
-			return
-		}
-		
-		deviceStore := container.NewDevice()
-		clientLog := waLog.Stdout("Client", "INFO", true)
-		newClient := whatsmeow.NewClient(deviceStore, clientLog)
-		
-		err := newClient.Connect()
-		if err != nil {
-			fmt.Fprintf(w, "Connect error: %v", err)
-			return
-		}
-
-		code, err := newClient.PairPhone(context.Background(), phone, true, whatsmeow.PairClientChrome, "Chrome (Linux)")
-		if err != nil {
-			fmt.Fprintf(w, "Error pairing: %v", err)
-			return
-		}
-		fmt.Fprintf(w, "Pairing code for %s: %s\n\nPlease enter this code on your phone.\nAfter connecting, the bot will automatically start for this number on the server!", phone, code)
-		
-		go func() {
-			for newClient.Store.ID == nil {
-				// wait
-			}
-			startClient(deviceStore)
-		}()
+		fmt.Fprintf(w, "Go Bot is Alive! 🚀")
 	})
 	fmt.Printf("[Render Mode] Server listening on port %s\n", port)
 	http.ListenAndServe(":"+port, nil)
@@ -870,8 +815,7 @@ func main() {
 	store.LoadAll(".")
 
 	dbLog := waLog.Stdout("Database", "ERROR", true)
-	var err error
-	container, err = sqlstore.New(context.Background(), "sqlite3", "file:whatsapp_v3.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite3", "file:whatsapp_v3.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		panic(err)
 	}
@@ -908,6 +852,7 @@ func startClient(deviceStore *whatsmeowStore.Device) {
 		if err != nil {
 			panic(err)
 		}
+		go commands.StartExchangeBackgroundLoop(client)
 
 		for evt := range qrChan {
 			if evt.Event == "code" {
@@ -924,6 +869,7 @@ func startClient(deviceStore *whatsmeowStore.Device) {
 		if err != nil {
 			panic(err)
 		}
+		go commands.StartExchangeBackgroundLoop(client)
 		fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s! البوت جاهز.\n", client.Store.ID)
 	}
 }

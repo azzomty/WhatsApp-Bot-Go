@@ -159,6 +159,7 @@ func saveJSON(filename string, v interface{}) error {
 }
 
 func LoadAll(baseDir string) {
+	LoadExchange()
 	loadJSON(baseDir+"/muted_users.json", &MutedUsers)
 	loadJSON(baseDir+"/protected_users.json", &ProtectedUsers)
 	loadJSON(baseDir+"/anti_contact_groups.json", &AntiContactGroups)

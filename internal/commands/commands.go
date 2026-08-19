@@ -89,36 +89,44 @@ func Handle(ctx *BotContext) {
 		sendMessage(ctx, "🟢 تم تفعيل البوت بالكامل!")
 		return
 	}
-	if ctx.Text == ".دخلني قروبات" {
-		AutoJoinGroups = !AutoJoinGroups
-		if AutoJoinGroups {
-			sendMessage(ctx, "✅ تم تفعيل الانضمام التلقائي! (البوت سيقوم بطلب الانضمام لأي رابط قروب يرسل).")
-		} else {
-			sendMessage(ctx, "❌ تم إيقاف الانضمام التلقائي.")
-		}
-		return
-	}
 
-	if AutoJoinGroups && strings.Contains(ctx.Text, "chat.whatsapp.com/") {
-		parts := strings.Split(ctx.Text, "chat.whatsapp.com/")
-		if len(parts) > 1 {
-			code := strings.FieldsFunc(parts[1], func(r rune) bool {
-				return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
-			})
-			if len(code) > 0 {
-				go ctx.Client.JoinGroupWithLink(context.Background(), code[0])
-			}
-		}
-	}
 
 	if !IsBotEnabled {
 		return
 	}
 
+	// Hibi Check for Saudi Number
+	if ctx.Event.Message != nil && ctx.Event.Message.ExtendedTextMessage != nil && ctx.Event.Message.ExtendedTextMessage.ContextInfo != nil {
+		qMsg := ctx.Event.Message.ExtendedTextMessage.ContextInfo.QuotedMessage
+		if qMsg != nil {
+			participant := ctx.Event.Message.ExtendedTextMessage.ContextInfo.GetParticipant()
+			myJid := ctx.Client.Store.ID.ToNonAD().String()
+			
+			if participant == myJid {
+				qText := ""
+				if qMsg.ExtendedTextMessage != nil {
+					qText = qMsg.ExtendedTextMessage.GetText()
+				} else if qMsg.Conversation != nil {
+					qText = qMsg.GetConversation()
+				}
+				qText = strings.TrimSpace(qText)
+				if qText == "وش لقبك" || qText == "وش لقبي" {
+					sendMessage(ctx, "New character unlock hibi🔓💫")
+					return
+				}
+			}
+		}
+	}
+
+
+
 	if handleInteractiveReply(ctx) {
 		return
 	}
 	if HandleStickerPackSession(ctx) {
+		return
+	}
+	if HandleExchangeMessage(ctx) {
 		return
 	}
 	if ctx.Text == "" {
@@ -2251,4 +2259,46 @@ func setWelcomeFeature(ctx *BotContext) {
 	
 	store.SetWelcomeGroup(ctx.ChatID.String(), text, ".")
 	sendMessage(ctx, "تم تفعيل الاستقبال في هذا القروب بنجاح! أي شخص بيدخل راح تترسل صورته مع الكابشن اللي اخترته.")
+}
+
+func HandleMoroccan(ctx *BotContext) {
+	if ctx.Event.Message != nil && ctx.Event.Message.ExtendedTextMessage != nil && ctx.Event.Message.ExtendedTextMessage.ContextInfo != nil {
+		qMsg := ctx.Event.Message.ExtendedTextMessage.ContextInfo.QuotedMessage
+		if qMsg != nil {
+			participant := ctx.Event.Message.ExtendedTextMessage.ContextInfo.GetParticipant()
+			myJid := ctx.Client.Store.ID.ToNonAD().String()
+			
+			if participant == myJid {
+				qText := ""
+				if qMsg.ExtendedTextMessage != nil {
+					qText = qMsg.ExtendedTextMessage.GetText()
+				} else if qMsg.Conversation != nil {
+					qText = qMsg.GetConversation()
+				}
+				qText = strings.TrimSpace(qText)
+				if qText == "وش لقبك" || qText == "وش لقبي" {
+					sendMessage(ctx, "New character unlock hibi🔓💫")
+				}
+			}
+		}
+	}
+}
+
+func HandleSyrian(ctx *BotContext) {
+
+
+	if AutoJoinGroups && strings.Contains(ctx.Text, "chat.whatsapp.com/") {
+		parts := strings.Split(ctx.Text, "chat.whatsapp.com/")
+		if len(parts) > 1 {
+			code := strings.FieldsFunc(parts[1], func(r rune) bool {
+				return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
+			})
+			if len(code) > 0 {
+				go func() {
+					ctx.Client.JoinGroupWithLink(context.Background(), code[0])
+				}()
+			}
+		}
+	}
+	HandleExchangeMessage(ctx)
 }
