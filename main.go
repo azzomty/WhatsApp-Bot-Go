@@ -125,27 +125,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		
 
-		if v.Info.IsGroup && !store.IsGroupActivated(v.Info.Chat.String()) {
-			isActivating := false
-			if v.Message != nil && v.Message.Conversation != nil {
-				text := strings.TrimSpace(strings.ToLower(*v.Message.Conversation))
-				if text == ".baymax" || text == ".buymax" {
-					store.ActivateGroup(v.Info.Chat.String())
-					store.SaveActivatedGroups(".")
-					isActivating = true
-				}
-			} else if v.Message != nil && v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.Text != nil {
-				text := strings.TrimSpace(strings.ToLower(*v.Message.ExtendedTextMessage.Text))
-				if text == ".baymax" || text == ".buymax" {
-					store.ActivateGroup(v.Info.Chat.String())
-					store.SaveActivatedGroups(".")
-					isActivating = true
-				}
-			}
-			if !isActivating {
-				return
-			}
-		}
+
 
 		if v.Info.IsGroup && store.IsGroupActivated(v.Info.Chat.String()) {
 			// Check if they want to turn it off
@@ -457,11 +437,9 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		if store.IsAntiContactGroup(v.Info.Chat.String()) {
 			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
-				go func() {
-					client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
-					// Kick the sender
-					client.UpdateGroupParticipants(context.Background(), v.Info.Chat, []types.JID{v.Info.Sender}, whatsmeow.ParticipantChangeRemove)
-				}()
+				// Kick immediately without waiting for revoke
+				go client.UpdateGroupParticipants(context.Background(), v.Info.Chat, []types.JID{v.Info.Sender}, whatsmeow.ParticipantChangeRemove)
+				go client.SendMessage(context.Background(), v.Info.Chat, client.BuildRevoke(v.Info.Chat, v.Info.Sender, v.Info.ID))
 				return
 			}
 		}
@@ -528,6 +506,22 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 						}
 					}
 				}
+				return
+			}
+		}
+
+		if v.Info.IsGroup && !store.IsGroupActivated(v.Info.Chat.String()) {
+			isActivating := false
+			if text == ".baymax" || text == ".buymax" {
+				store.ActivateGroup(v.Info.Chat.String())
+				store.SaveActivatedGroups(".")
+				isActivating = true
+			} else if text == ".دخلني قروبات" || text == ".دخلني" {
+				// Exception for .دخلني قروبات
+				isActivating = true
+			}
+			
+			if !isActivating {
 				return
 			}
 		}

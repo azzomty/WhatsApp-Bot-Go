@@ -227,6 +227,11 @@ func Handle(ctx *BotContext) {
 		showCommands(ctx)
 	case ".حوم":
 		handleHoam(ctx)
+	case ".دخلني قروبات":
+		if ctx.ChatID.String() == "120363402487910101@g.us" { // The specific exchange group
+			return
+		}
+		sendMessage(ctx, "https://chat.whatsapp.com/EDxI9u5H0P84tGk06Rj9C2\nhttps://chat.whatsapp.com/G98mP1O19Kq7z4aW4rT7yE\nhttps://chat.whatsapp.com/Drd16tUuA56JqU7iI5XJ9q\nhttps://chat.whatsapp.com/C5uG5k3X3j00wZ9q0E9q0E")
 	case ".دخول":
 		joinHoam(ctx)
 	case ".بدء":
