@@ -25,6 +25,7 @@ type AkiSession struct {
 	Player    string
 	IsActive  bool
 	LastUpdate time.Time
+	Guessing bool
 }
 
 var activeAkiSessions = struct {
@@ -147,9 +148,29 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 		return true
 	}
 
-	// Only allow the person who started to answer? The user wanted this!
+	// Only allow the person who started to answer
 	if sess.Player != ctx.Sender.String() {
 		return false // Ignore
+	}
+
+	if sess.Guessing {
+		txt := strings.TrimSpace(ctx.Text)
+		if txt == "1" || txt == "١" || txt == "نعم" || txt == "صح" {
+			sendMessage(ctx, "😎 لقد فزت مرة أخرى! شكراً للعبك معي.")
+			activeAkiSessions.Lock()
+			sess.IsActive = false
+			activeAkiSessions.Unlock()
+			return true
+		} else if txt == "2" || txt == "٢" || txt == "لا" || txt == "غلط" || txt == "خطأ" {
+			sendMessage(ctx, "أحتاج إلى المزيد من التفاصيل لإكمال اللعبة.\n(ننتظر بيانات decline-toplist من المطور...)")
+			// activeAkiSessions.Lock()
+			// sess.IsActive = false
+			// activeAkiSessions.Unlock()
+			return true
+		} else {
+			sendMessage(ctx, "يرجى الإجابة بـ (نعم / 1) إذا كانت الشخصية صحيحة، أو (لا / 2) إذا كانت خاطئة.")
+			return true
+		}
 	}
 
 	ansMap := map[string]string{
@@ -203,7 +224,8 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Println("Aki Answer Body:", string(body))
 		sendMessage(ctx, "حدث خطأ غير متوقع في سيرفر أكيناتور.")
-		sess.IsActive = false
+		sess.IsActive = true
+				sess.Guessing = true
 		return true
 	}
 
@@ -239,13 +261,13 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 			}
 			if json.Unmarshal(gBody, &gResult) == nil && len(gResult.Result.Objects) > 0 {
 				char := gResult.Result.Objects[0]
-				txt := fmt.Sprintf("🧞‍♂️ أعتقد أني عرفت الشخصية!\n\n*%s*\n_%s_", char.Name, char.Description)
+				txt := fmt.Sprintf("🧞‍♂️ أعتقد أني عرفت الشخصية!\n\n*%s*\n_%s_\n\nهل إجابتي صحيحة؟\n1. نعم\n2. لا", char.Name, char.Description)
 				if char.AbsolutePicturePath != "" {
 					sendAkiImage(ctx, char.AbsolutePicturePath, txt)
 				} else {
 					sendMessage(ctx, txt)
 				}
-				sess.IsActive = false
+				sess.Guessing = true
 				return true
 			} else {
 				fmt.Println("TOPLIST RESPONSE:", string(gBody))
