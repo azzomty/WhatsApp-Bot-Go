@@ -895,7 +895,7 @@ func main() {
 func startClient(deviceStore *whatsmeowStore.Device) {
 	clientLog := waLog.Stdout("Client", "INFO", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
-	startupTime = time.Now().Add(-5 * time.Minute)
+	startupTime = time.Now()
 
 	client.AddEventHandler(func(evt interface{}) { eventHandler(client, evt) })
 
