@@ -112,7 +112,7 @@ func Handle(ctx *BotContext) {
 				}
 				qText = strings.TrimSpace(qText)
 				if qText == "وش لقبك" || qText == "وش لقبي" {
-					sendMessage(ctx, "New character unlock hibi💫")
+					sendMessage(ctx, "New character unlock hibi💫🔓")
 					return
 				}
 			}
@@ -1144,6 +1144,7 @@ func showCommands(ctx *BotContext) {
 ====================
 
 [ أوامر الإدارة والحماية ]
+.حماية (لحماية أدمن معين بالرد عليه، إذا انطرد أو انسحب إشرافه بينسحب إشراف الكل)
 .طرد (لطرد شخص بالرد على رسالته)
 .ميوت (لكتم شخص بالرد عليه، أي رسالة يرسلها تنحذف فورا)
 .فك ميوت (لفك الكتم عن شخص)
@@ -2306,7 +2307,7 @@ func HandleMoroccan(ctx *BotContext) {
 				}
 				qText = strings.TrimSpace(qText)
 				if qText == "وش لقبك" || qText == "وش لقبي" {
-					sendMessage(ctx, "New character unlock hibi💫")
+					sendMessage(ctx, "New character unlock hibi💫🔓")
 				}
 			}
 		}
