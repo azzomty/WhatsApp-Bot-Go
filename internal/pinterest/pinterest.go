@@ -381,10 +381,7 @@ func extractDataFromJSON(bodyBytes []byte) []interface{} {
 
 func SearchPinterest(query string, aspect string, count int) []PinResult {
 	query = url.QueryEscape(query)
-	pageSize := count + 10
-	if pageSize > 100 {
-		pageSize = 100
-	}
+	pageSize := 100 // Always fetch max to shuffle properly
 	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s&page_size=%d", query, pageSize)
 	req, _ := http.NewRequest("GET", searchUrl, nil)
 	setPinterestHeaders(req)
