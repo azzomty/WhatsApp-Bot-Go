@@ -53,8 +53,8 @@ func CreateStickerPackCommand(ctx *BotContext) {
 	parts := strings.Split(ctx.Text, " ")
 	if len(parts) > 2 {
 		if parsedLimit, err := strconv.Atoi(parts[2]); err == nil && parsedLimit > 0 {
-			if parsedLimit > 30 {
-				parsedLimit = 30
+			if parsedLimit > 1000 {
+				parsedLimit = 1000
 			}
 			limit = parsedLimit
 		}
