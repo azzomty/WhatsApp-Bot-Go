@@ -11,6 +11,7 @@ var (
 	FavoriteList     = make(map[string]bool)
 	ExchangeGroup    string
 	MyExchangeMsgs   [][]byte
+	StrikeList       = make(map[string]int)
 )
 
 func LoadExchange() {
@@ -30,6 +31,11 @@ func LoadExchange() {
 	msgData, err := os.ReadFile("my_exchange.json")
 	if err == nil {
 		json.Unmarshal(msgData, &MyExchangeMsgs)
+	}
+
+	strikeData, err := os.ReadFile("strikes.json")
+	if err == nil {
+		json.Unmarshal(strikeData, &StrikeList)
 	}
 }
 
@@ -91,4 +97,31 @@ func GetFavorites() []string {
 		list = append(list, k)
 	}
 	return list
+}
+
+
+func IncrementStrike(id string) int {
+	exchangeMu.Lock()
+	defer exchangeMu.Unlock()
+	StrikeList[id]++
+	val := StrikeList[id]
+	data, _ := json.Marshal(StrikeList)
+	os.WriteFile("strikes.json", data, 0644)
+	return val
+}
+
+func ResetStrike(id string) {
+	exchangeMu.Lock()
+	defer exchangeMu.Unlock()
+	if StrikeList[id] != 0 {
+		StrikeList[id] = 0
+		data, _ := json.Marshal(StrikeList)
+		os.WriteFile("strikes.json", data, 0644)
+	}
+}
+
+func GetStrike(id string) int {
+	exchangeMu.RLock()
+	defer exchangeMu.RUnlock()
+	return StrikeList[id]
 }

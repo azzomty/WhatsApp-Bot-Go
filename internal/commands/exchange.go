@@ -30,11 +30,18 @@ func BroadcastExchange(client *whatsmeow.Client) {
 	go func() {
 		favs := store.GetFavorites()
 		for _, favStr := range favs {
+			if store.GetStrike(favStr) >= 3 {
+				continue // Skip users who ignored 3 times
+			}
+			
 			favJid, err := types.ParseJID(favStr)
 			if err != nil {
 				continue
 			}
-			msg := "تبادل عشان نتبادل اكتب .تبادل وبعدها ارسل روابطك. ولما تنتهي من إرسال الروابط اكتب .انتهيت"
+			
+			store.IncrementStrike(favStr)
+			
+			msg := "للتبادل اكتب .تبادل"
 			client.SendMessage(context.Background(), favJid, &waProto.Message{
 				Conversation: proto.String(msg),
 			})
@@ -96,6 +103,7 @@ func HandleExchangeMessage(ctx *BotContext) bool {
 
 	// Handle starting exchange session
 	if ctx.Text == ".تبادل" {
+		store.ResetStrike(chatStr)
 		exchangeMu.Lock()
 		if _, exists := exchangeSessions[chatStr]; exists {
 			exchangeMu.Unlock()

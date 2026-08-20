@@ -798,6 +798,11 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		// Handle Demote or Kick of Protected Users
 		if len(v.Demote) > 0 || len(v.Leave) > 0 {
 			if v.Sender != nil && v.Sender.ToNonAD().String() != client.Store.ID.ToNonAD().String() {
+				// Check Roulette Demotion First (if they kicked someone, demote them!)
+				if len(v.Leave) > 0 {
+					commands.CheckRouletteDemotion(client, v.JID.String(), v.Sender.ToNonAD().String())
+				}
+				
 				affected := append(v.Demote, v.Leave...)
 				for _, participant := range affected {
 					if store.IsProtectedUser(getLID(client, participant)) {
