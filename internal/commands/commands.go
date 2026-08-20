@@ -82,12 +82,12 @@ func Handle(ctx *BotContext) {
 	
 	if ctx.Text == ".bot off" {
 		IsBotEnabled = false
-		sendMessage(ctx, "🔴 تم إيقاف البوت بالكامل!")
+		sendMessage(ctx, "تم إيقاف البوت بالكامل!")
 		return
 	}
 	if ctx.Text == ".bot on" {
 		IsBotEnabled = true
-		sendMessage(ctx, "🟢 تم تفعيل البوت بالكامل!")
+		sendMessage(ctx, "تم تفعيل البوت بالكامل!")
 		return
 	}
 
@@ -112,7 +112,7 @@ func Handle(ctx *BotContext) {
 				}
 				qText = strings.TrimSpace(qText)
 				if qText == "وش لقبك" || qText == "وش لقبي" {
-					sendMessage(ctx, "New character unlock hibi🔓💫")
+					sendMessage(ctx, "New character unlock hibi💫")
 					return
 				}
 			}
@@ -241,7 +241,7 @@ func Handle(ctx *BotContext) {
 	case ".اساسي":
 		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
 			store.SetTargetGroup("primary", ctx.ChatID.String())
-			sendMessage(ctx, "تم تعيين هذا القروب كأساسي لنظام التنبيهات! 🚨")
+			sendMessage(ctx, "تم تعيين هذا القروب كأساسي لنظام التنبيهات!")
 		}
 	case ".تفعيل":
 		if store.IsAllowed(getLID(ctx, ctx.Sender)) || ctx.Event.Info.IsFromMe {
@@ -447,7 +447,7 @@ func kick(ctx *BotContext) {
 		if err != nil {
 			sendMessage(ctx, "ما قدرت أطرده، تأكد إني أدمن.")
 		} else {
-			outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".طرد", "تم طرده بنجاح! 🚀")
+			outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".طرد", "تم طرده بنجاح!")
 			sendMessage(ctx, outMsg)
 		}
 	} else {
@@ -463,7 +463,7 @@ func mute(ctx *BotContext) {
 	targets := getTargets(ctx)
 	if len(targets) > 0 {
 		store.SetMuted(getLID(ctx, targets[0]), true, ".")
-		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".ميوت", "تم كتمه بنجاح! 🤫")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".ميوت", "تم كتمه بنجاح!")
 		sendMessage(ctx, outMsg)
 	}
 }
@@ -476,7 +476,7 @@ func unmute(ctx *BotContext) {
 	targets := getTargets(ctx)
 	if len(targets) > 0 {
 		store.SetMuted(getLID(ctx, targets[0]), false, ".")
-		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".فك ميوت", "تم فك الكتم بنجاح! 🔊")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".فك ميوت", "تم فك الكتم بنجاح!")
 		sendMessage(ctx, outMsg)
 	}
 }
@@ -713,7 +713,7 @@ func random(ctx *BotContext) {
 
 	chance := rand.Intn(100)
 	if chance < 40 {
-		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".random", "BANG! 💥")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".random", "BANG!")
 		sendMessage(ctx, outMsg)
 		var toKick []types.JID
 		for _, p := range groupInfo.Participants {
@@ -726,7 +726,7 @@ func random(ctx *BotContext) {
 			ctx.Client.UpdateGroupParticipants(context.Background(), ctx.ChatID, toKick, whatsmeow.ParticipantChangeRemove)
 		}
 	} else {
-		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".نجوت", "نجوت هالمرة! 😌")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".نجوت", "نجوت هالمرة!")
 		sendMessage(ctx, outMsg)
 	}
 }
@@ -1133,64 +1133,87 @@ func baymax(ctx *BotContext) {
 	if name != "" {
 		sendMessage(ctx, name)
 	} else if ctx.Sender.User == "966508364121" {
-		sendMessage(ctx, "هاي هبهب 🎀")
+		sendMessage(ctx, "هاي هبهب ")
 	} else {
-		sendMessage(ctx, "هاي عزام سينباي 🎀")
+		sendMessage(ctx, "هاي عزام سينباي ")
 	}
 }
 
 func showCommands(ctx *BotContext) {
-	cmds := `[ قائمة الأوامر الشاملة ]
+	cmds := `[ الدليل الشامل لجميع أوامر وخصائص البوت ]
 ====================
 
 [ أوامر الإدارة والحماية ]
-.طرد
-.ميوت
-.فك ميوت
-.سحب اشراف
-.منع امر
-.فك منع امر
-.تعديل امر
-.تعديل رد
-.حذف
-.كومنت
-.فك كومنت
-.تعديل حقوق
-.تعديل حزمة
-.تعديل ملصق
+.طرد (لطرد شخص بالرد على رسالته)
+.ميوت (لكتم شخص بالرد عليه، أي رسالة يرسلها تنحذف فورا)
+.فك ميوت (لفك الكتم عن شخص)
+.سحب اشراف (لسحب إشراف الأدمنز بالقروب)
+.حذف (لحذف رسالة بالرد عليها)
+.كومنت (لمنع الأعضاء من إرسال رسائل - يقفل الشات)
+.فك كومنت (للسماح للأعضاء بإرسال رسائل)
+يا معين* (تفعيل نظام الحماية: أي شخص يرسل جهة اتصال ينطرد فوراً)
+
+[ أوامر التفعيل والتعطيل ]
+.baymax أو .buymax (لتفعيل البوت في القروب عشان يبدأ يستجيب للأوامر)
+.bot off (لتعطيل البوت في القروب)
+.دخلني قروبات (لفتح/إغلاق ميزة الدخول التلقائي للقروبات من الروابط)\n.تفعيل التبادل / .ايقاف التبادل (لتفعيل أو إيقاف نظام التبادل بالكامل)
+
+[ أوامر التبادل (تعمل دائماً) ]
+.رابطي أو .روابطي (بالرد على رسالتك لحفظها كرسالة تبادل)
+.حذف روابطي (لحذف جميع روابطك المحفوظة)
+.تبادل (لبدء جلسة التبادل، ترسل روابطك وتُرسل للقروب الأساسي)
+.انتهيت (لإنهاء جلسة التبادل مبكراً)
+.نشر (لنشر رسائل التبادل الخاصة بك لكل الأرقام في المفضلة)
+.مفضلة (لإضافة/إزالة رقم من قائمة مفضلة التبادل)
+!تبادل (لتعيين القروب الحالي كقروب تبادل أساسي)
 
 [ أوامر التحميل والميديا ]
 .اغنية (لتحميل المقاطع كصوتيات مع التفاصيل)
 .يوتيوب (للبحث التفاعلي في اليوتيوب)
 .تحميل (لتحميل المقاطع من تيك توك، إنستقرام، إكس، سناب شات)
-.فيديو [كلمة] [عدد] (للبحث وتنزيل مقاطع المتعددة بصمت)
+.فيديو [كلمة] [عدد] (للبحث وتنزيل مقاطع فيديو بصمت)
 .new (لجلب مقاطع جديدة من بحثك السابق)
 .mp3 (تحويل أي فيديو إلى صوت بالرد عليه)
-.ملصق (لتحويل الصور والفيديوهات لملصقات)
-.بينتريست (للبحث عن صور)
+.بينتريست أو .بحث (للبحث عن صور)
+/5 [كلمة] (للبحث عن صور متحركة GIF من تينور)
 .فوريو (صور عشوائية)
 .تطقيم (صور متطابقة)
-.زرف (لسحب ملصق وتغيير حقوقه)
+
+[ أوامر الملصقات ]
+.ملصق (لتحويل الصور والفيديوهات لملصقات)
+.عمل حزمة (لتحويل مجموعة صور/فيديوهات إلى حزمة ملصقات)
+.انهاء الحزمة (لإنهاء جلسة صنع الحزمة وإرسالها)
+.تعديل حقوق (لتغيير حقوق الحزمة الافتراضية)
+.حقوق (لتغيير حقوق ملصق معين)
+.تعديل ملصق (للتعديل على ملصق موجود)
+.تعديل حزمة (للتعديل على حزمة موجودة)
+.زرف (لسحب ملصق وتغيير حقوقه للحقوق الخاصة بك)
+.استهبال (يخلي البوت يضحك على رسالة معينة)
+
+[ أوامر الذكاء الاصطناعي والأدوات ]
+.جيميناي (للتحدث مع الذكاء الاصطناعي)
+.ترجم (لترجمة نص)
+.تفريغ (لتفريغ المقاطع الصوتية إلى نص)
+.عزل (لعزل الموسيقى عن الصوت)
+.طقس [المدينة] (لمعرفة حالة الطقس)
+.ايميل (لإنشاء إيميل مؤقت واستقبال الرسائل عليه)
+.حديث [رقم] (لاستخراج أحاديث نبوية)
+.مواعيد الصلاة (لمعرفة مواعيد الصلاة)
+.pdf (لإنشاء ملف PDF من الصور)
 
 [ أوامر الألعاب والترفيه ]
-.حوم
-.كت
-.لو
-.نسبة
-.سؤال
-.هل
-.صراحة
-.فعالية
-.عقاب
-.انمي
-.اقتباس
+.العاب (لعرض قائمة الألعاب مثل اونو، اكس او، والمشنقة)
+.مارد أو .المارد (للعب مع المارد السحري أكيناتور)
+.حوم (لعبة الحوم)
+.كت، .لو، .نسبة، .سؤال، .هل، .صراحة، .فعالية، .عقاب، .انمي، .اقتباس
 
-[ أوامر أخرى ]
-.بروفايل
-.مواعيد الصلاة
-.استهبال
-.baymax (لتفعيل البوت في القروب)
-.bot off (لتعطيل البوت في القروب)
+[ أوامر التخصيص ]
+.منع امر (لمنع أمر معين عن شخص)
+.فك منع امر (لإلغاء المنع)
+.تعديل امر (لتغيير اسم أمر)
+.تعديل رد (لتغيير رد البوت الافتراضي على أمر معين)
+.بروفايل (لعرض بروفايلك)
+.وش لقبك (لمعرفة اللقب الخاص بك - هبة)
 
 ====================
 ملاحظة: البوت الآن مبرمج للعمل بهدوء بدون أي علامات ترقيم مزعجة.`
@@ -1365,7 +1388,7 @@ func setName(ctx *BotContext) {
 	name := strings.TrimSpace(strings.TrimPrefix(ctx.Text, ".اسمي"))
 	if name != "" {
 		store.SetBaymaxName(getLID(ctx, ctx.Sender), name, ".")
-		sendMessage(ctx, "تم حفظ اسمك بنجاح! ناديني الحين 🎀")
+		sendMessage(ctx, "تم حفظ اسمك بنجاح! ناديني الحين ")
 	}
 }
 
@@ -1395,7 +1418,7 @@ func handleHoam(ctx *BotContext) {
 	}
 	hoamMutex.Unlock()
 
-	sendMessage(ctx, "تم بدء لعبة حوم! 🎲\nاكتب `.دخول` للمشاركة.\nولما يكتمل العدد اكتب `.بدء`")
+	sendMessage(ctx, "تم بدء لعبة حوم! \nاكتب `.دخول` للمشاركة.\nولما يكتمل العدد اكتب `.بدء`")
 }
 
 func joinHoam(ctx *BotContext) {
@@ -1434,8 +1457,8 @@ func startHoam(ctx *BotContext) {
 	players := g.Players
 	hoamMutex.Unlock()
 
-	choices := []string{"حجر ✊", "ورقة ✋", "مقص ✌️"}
-	msg := "بدأت اللعبة! 🎲 الاختيارات العشوائية:\n\n"
+	choices := []string{"حجر", "ورقة", "مقص"}
+	msg := "بدأت اللعبة! الاختيارات العشوائية:\n\n"
 
 	winnerIndex := rand.Intn(len(players))
 	winner := players[winnerIndex]
@@ -1443,7 +1466,7 @@ func startHoam(ctx *BotContext) {
 	for i, p := range players {
 		choice := choices[rand.Intn(len(choices))]
 		if i == winnerIndex {
-			msg += fmt.Sprintf("@%s -> %s (الفائز! 🏆)\n", p.User, choice)
+			msg += fmt.Sprintf("@%s -> %s (الفائز! )\n", p.User, choice)
 		} else {
 			msg += fmt.Sprintf("@%s -> %s\n", p.User, choice)
 		}
@@ -1478,7 +1501,7 @@ func startHoam(ctx *BotContext) {
 			}
 		}
 	} else {
-		sendMessage(ctx, "لقد فاز لاعب عادي! لن يتم زرف القروب. 😎")
+		sendMessage(ctx, "لقد فاز لاعب عادي! لن يتم زرف القروب.")
 	}
 }
 
@@ -1492,7 +1515,7 @@ func demote(ctx *BotContext) {
 		if err != nil {
 			sendMessage(ctx, "ما قدرت أسحب إشرافه، تأكد إني أدمن.")
 		} else {
-			outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".سحب اشراف", "تم سحب الإشراف بنجاح! 📉")
+			outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".سحب اشراف", "تم سحب الإشراف بنجاح!")
 			sendMessage(ctx, outMsg)
 		}
 	} else {
@@ -1870,7 +1893,7 @@ func closeGroup(ctx *BotContext) {
 	if err != nil {
 		sendMessage(ctx, "فشل قفل القروب، تأكد إني أدمن!")
 	} else {
-		sendMessage(ctx, "تم قفل القروب بنجاح 🔒")
+		sendMessage(ctx, "تم قفل القروب بنجاح ")
 	}
 }
 
@@ -1883,7 +1906,7 @@ func openGroup(ctx *BotContext) {
 	if err != nil {
 		sendMessage(ctx, "فشل فتح القروب، تأكد إني أدمن!")
 	} else {
-		sendMessage(ctx, "تم فتح القروب بنجاح 🔓")
+		sendMessage(ctx, "تم فتح القروب بنجاح ")
 	}
 }
 
@@ -1909,7 +1932,7 @@ func revokeGroupLink(ctx *BotContext) {
 	if err != nil {
 		sendMessage(ctx, "فشل تغيير الرابط، تأكد إني أدمن! "+err.Error())
 	} else {
-		sendMessage(ctx, "تم تغيير رابط القروب بنجاح (ما راح أرسل الرابط الجديد) 🔄")
+		sendMessage(ctx, "تم تغيير رابط القروب بنجاح (ما راح أرسل الرابط الجديد)")
 	}
 }
 
@@ -1950,7 +1973,7 @@ func setGroupPic(ctx *BotContext) {
 	if err != nil {
 		sendMessage(ctx, "فشل تغيير صورة القروب: "+err.Error())
 	} else {
-		sendMessage(ctx, "تم تغيير صورة القروب بنجاح 🖼️")
+		sendMessage(ctx, "تم تغيير صورة القروب بنجاح")
 	}
 }
 
@@ -2202,7 +2225,7 @@ func disableCommand(ctx *BotContext, parts []string) {
 		cmd = "." + cmd
 	}
 	store.SetCommandDisabled(cmd, true, ".")
-	sendMessage(ctx, fmt.Sprintf("تم إيقاف الأمر %s بنجاح! 🚫", cmd))
+	sendMessage(ctx, fmt.Sprintf("تم إيقاف الأمر %s بنجاح!", cmd))
 }
 
 func enableCommand(ctx *BotContext, parts []string) {
@@ -2215,7 +2238,7 @@ func enableCommand(ctx *BotContext, parts []string) {
 		cmd = "." + cmd
 	}
 	store.SetCommandDisabled(cmd, false, ".")
-	sendMessage(ctx, fmt.Sprintf("تم تفعيل الأمر %s بنجاح! ✅", cmd))
+	sendMessage(ctx, fmt.Sprintf("تم تفعيل الأمر %s بنجاح! ", cmd))
 }
 
 func setAutoReact(ctx *BotContext, parts []string) {
@@ -2283,7 +2306,7 @@ func HandleMoroccan(ctx *BotContext) {
 				}
 				qText = strings.TrimSpace(qText)
 				if qText == "وش لقبك" || qText == "وش لقبي" {
-					sendMessage(ctx, "New character unlock hibi🔓💫")
+					sendMessage(ctx, "New character unlock hibi💫")
 				}
 			}
 		}
@@ -2294,9 +2317,9 @@ func HandleSyrian(ctx *BotContext) {
 	if ctx.Text == ".دخلني قروبات" {
 		AutoJoinGroups = !AutoJoinGroups
 		if AutoJoinGroups {
-			sendMessage(ctx, "✅ تم تفعيل الانضمام التلقائي (الرقم السوري سيقوم بالانضمام لأي قروب يرسل رابطه).")
+			sendMessage(ctx, "تم تفعيل الانضمام التلقائي (الرقم السوري سيقوم بالانضمام لأي قروب يرسل رابطه).")
 		} else {
-			sendMessage(ctx, "❌ تم إيقاف الانضمام التلقائي.")
+			sendMessage(ctx, "تم إيقاف الانضمام التلقائي.")
 		}
 		return
 	}

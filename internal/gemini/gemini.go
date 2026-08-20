@@ -60,14 +60,14 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		return true
 	} else if lowerText == "/extended" {
 		IsExtended = true
-		sendMessage(clientWA, chatID, "تم تفعيل الوضع الموسع (Extended Mode) بنجاح ✅", msg, stanzaID, participant)
+		sendMessage(clientWA, chatID, "تم تفعيل الوضع الموسع (Extended Mode) بنجاح ", msg, stanzaID, participant)
 		return true
 	} else if lowerText == "/unextended" {
 		IsExtended = false
-		sendMessage(clientWA, chatID, "تم إيقاف الوضع الموسع (Extended Mode) بنجاح ❌", msg, stanzaID, participant)
+		sendMessage(clientWA, chatID, "تم إيقاف الوضع الموسع (Extended Mode) بنجاح ", msg, stanzaID, participant)
 		return true
 	} else if lowerText == ".new chat" {
-		sendMessage(clientWA, chatID, "تم بدء محادثة جديدة مع جيميناي 💬✨", msg, stanzaID, participant)
+		sendMessage(clientWA, chatID, "تم بدء محادثة جديدة مع جيميناي", msg, stanzaID, participant)
 		return true
 	}
 
@@ -115,7 +115,7 @@ func HandleMessage(clientWA *whatsmeow.Client, chatID types.JID, sender types.JI
 		prompt = strings.TrimSpace(prompt)
 
 		if prompt != "" {
-			sendMessage(clientWA, chatID, "⏳ جاري التفكير...", msg, stanzaID, participant)
+			sendMessage(clientWA, chatID, "جاري التفكير...", msg, stanzaID, participant)
 
 			finalPrompt := prompt
 			if CurrentModel != "" {

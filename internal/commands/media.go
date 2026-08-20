@@ -42,7 +42,7 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		return
 	}
 
-	sendMessage(ctx, "جاري البحث... ⏳")
+	sendMessage(ctx, "جاري البحث... ")
 
 	var results []MediaResult
 
@@ -134,25 +134,25 @@ func sendMediaResult(ctx *BotContext, res MediaResult) {
 	// Fetch extra details if it's TMDB
 	fetchTMDBDetails(&res)
 
-	msg := fmt.Sprintf("🎬 *%s*\n\n", res.Title)
+	msg := fmt.Sprintf("*%s*\n\n", res.Title)
 	if res.Rating != "" && res.Rating != "0.0/10" && res.Rating != "0.00/10" {
-		msg += fmt.Sprintf("⭐️ *التقييم:* %s\n", res.Rating)
+		msg += fmt.Sprintf("️ *التقييم:* %s\n", res.Rating)
 	}
 	if res.Year != "" {
-		msg += fmt.Sprintf("📅 *السنة:* %s\n", res.Year)
+		msg += fmt.Sprintf("*السنة:* %s\n", res.Year)
 	}
 	if res.Episodes != "" {
-		msg += fmt.Sprintf("🔢 *عدد الحلقات:* %s\n", res.Episodes)
+		msg += fmt.Sprintf("*عدد الحلقات:* %s\n", res.Episodes)
 	}
 	if res.Duration != "" {
 		msg += fmt.Sprintf("⏱️ *المدة:* %s\n", res.Duration)
 	}
 	if res.Status != "" {
-		msg += fmt.Sprintf("✅ *الحالة:* %s\n", res.Status)
+		msg += fmt.Sprintf("*الحالة:* %s\n", res.Status)
 	}
 
-	msg += fmt.Sprintf("\n📝 *الوصف:*\n%s\n\n", res.Description)
-	msg += "💡 للمزيد من النتائج لنفس البحث، ارسل `.new`"
+	msg += fmt.Sprintf("\n*الوصف:*\n%s\n\n", res.Description)
+	msg += "للمزيد من النتائج لنفس البحث، ارسل `.new`"
 
 	if res.PosterURL != "" {
 		data, err := downloadImage(res.PosterURL)

@@ -21,31 +21,31 @@ type OpenMeteoResponse struct {
 func getWeatherDescription(code int) string {
 	switch code {
 	case 0:
-		return "صافٍ ☀️"
+		return "صافٍ"
 	case 1:
-		return "غالباً صافٍ 🌤️"
+		return "غالباً صافٍ"
 	case 2:
-		return "غائم جزئياً ⛅"
+		return "غائم جزئياً"
 	case 3:
-		return "غائم ☁️"
+		return "غائم"
 	case 45, 48:
-		return "ضباب 🌫️"
+		return "ضباب"
 	case 51, 53, 55:
-		return "رذاذ خفيف 🌦️"
+		return "رذاذ خفيف"
 	case 61:
-		return "مطر خفيف 🌧️"
+		return "مطر خفيف"
 	case 63:
-		return "مطر متوسط 🌧️"
+		return "مطر متوسط"
 	case 65:
-		return "مطر غزير 🌧️"
+		return "مطر غزير"
 	case 71, 73, 75:
-		return "ثلج ❄️"
+		return "ثلج"
 	case 80, 81, 82:
-		return "زخات مطر 🌧️"
+		return "زخات مطر"
 	case 95, 96, 99:
-		return "عواصف رعدية ⛈️"
+		return "عواصف رعدية"
 	default:
-		return "غير معروف 🤷‍♂️"
+		return "غير معروف"
 	}
 }
 
@@ -83,12 +83,12 @@ func GetWeather(ctx *BotContext) {
 	current := w.Current
 	desc := getWeatherDescription(current.WeatherCode)
 
-	msg := fmt.Sprintf("🌤️ *حالة الطقس في: %s*\n\n", query)
-	msg += fmt.Sprintf("🌡️ *درجة الحرارة:* %.1f°C (المحسوسة: %.1f°C)\n", current.Temperature2m, current.ApparentTemperature)
-	msg += fmt.Sprintf("☁️ *الوصف:* %s\n", desc)
-	msg += fmt.Sprintf("💧 *نسبة الرطوبة:* %.0f%%\n", current.RelativeHumidity2m)
-	msg += fmt.Sprintf("🌧️ *احتمالية هطول المطر:* %.0f%%\n", current.PrecipitationProbability)
-	msg += fmt.Sprintf("💨 *سرعة الرياح:* %.1f كم/س\n", current.WindSpeed10m)
+	msg := fmt.Sprintf("*حالة الطقس في: %s*\n\n", query)
+	msg += fmt.Sprintf("*درجة الحرارة:* %.1f°C (المحسوسة: %.1f°C)\n", current.Temperature2m, current.ApparentTemperature)
+	msg += fmt.Sprintf("*الوصف:* %s\n", desc)
+	msg += fmt.Sprintf("*نسبة الرطوبة:* %.0f%%\n", current.RelativeHumidity2m)
+	msg += fmt.Sprintf("*احتمالية هطول المطر:* %.0f%%\n", current.PrecipitationProbability)
+	msg += fmt.Sprintf("*سرعة الرياح:* %.1f كم/س\n", current.WindSpeed10m)
 
 	sendMessage(ctx, msg)
 }

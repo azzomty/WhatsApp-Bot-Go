@@ -377,7 +377,7 @@ func HandleGameCommand(ctx *commands.BotContext) bool {
 			for range []rune(g.Word) {
 				disp += "_ "
 			}
-			txt := fmt.Sprintf("الكلمة: %s\nالقلوب: %s\nدور: @%s", disp, strings.Repeat("❤️", g.Lives), strings.Split(turnID, "@")[0])
+			txt := fmt.Sprintf("الكلمة: %s\nالقلوب: %s\nدور: @%s", disp, strings.Repeat("", g.Lives), strings.Split(turnID, "@")[0])
 			safeSendMentions(ctx, txt, []string{turnID})
 			SaveGames()
 			return true
@@ -387,7 +387,7 @@ func HandleGameCommand(ctx *commands.BotContext) bool {
 				safeSend(ctx, "تحتاج لاعبين 2")
 				return true
 			}
-			choices := []string{"حجر ✊", "ورقة ✋", "مقص ✌️"}
+			choices := []string{"حجر", "ورقة", "مقص"}
 			c1 := choices[rand.Intn(len(choices))]
 			c2 := choices[rand.Intn(len(choices))]
 			p1, p2 := g.Players[0], g.Players[1]
@@ -395,9 +395,9 @@ func HandleGameCommand(ctx *commands.BotContext) bool {
 			if c1 == c2 {
 				res = "تعادل!"
 			} else if (strings.Contains(c1, "حجر") && strings.Contains(c2, "مقص")) || (strings.Contains(c1, "ورقة") && strings.Contains(c2, "حجر")) || (strings.Contains(c1, "مقص") && strings.Contains(c2, "ورقة")) {
-				res = "فاز " + p1.Name + "! 🎉"
+				res = "فاز " + p1.Name + "!"
 			} else {
-				res = "فاز " + p2.Name + "! 🎉"
+				res = "فاز " + p2.Name + "!"
 			}
 			safeSend(ctx, fmt.Sprintf("%s طلع: %s\n%s طلع: %s\n\nالنتيجة: %s", p1.Name, c1, p2.Name, c2, res))
 			deleteGame(chatID)
@@ -566,7 +566,7 @@ func HandleGameCommand(ctx *commands.BotContext) bool {
 		g.TurnIndex = (g.TurnIndex + 1) % len(g.Players)
 		nextID := g.Players[g.TurnIndex].ID
 
-		boardTxt := "الكلمة: " + disp + "\nالقلوب: " + strings.Repeat("❤️", max(g.Lives, 0))
+		boardTxt := "الكلمة: " + disp + "\nالقلوب: " + strings.Repeat("", max(g.Lives, 0))
 		if won {
 			boardTxt += "\n\nفزت! الكلمة هي " + g.Word
 			safeSend(ctx, boardTxt)

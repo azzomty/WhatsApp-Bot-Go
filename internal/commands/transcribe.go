@@ -31,7 +31,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	audioMsg := quoted.GetAudioMessage()
 	audioData, err := ctx.Client.Download(context.Background(), audioMsg)
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء تحميل المقطع الصوتي ❌")
+		sendMessage(ctx, "حدث خطأ أثناء تحميل المقطع الصوتي ")
 		return
 	}
 
@@ -41,7 +41,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 
 	part, err := writer.CreateFormFile("file", "audio.ogg")
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ داخلي ❌")
+		sendMessage(ctx, "حدث خطأ داخلي ")
 		return
 	}
 	part.Write(audioData)
@@ -56,13 +56,13 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	}
 	err = writer.Close()
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ داخلي ❌")
+		sendMessage(ctx, "حدث خطأ داخلي ")
 		return
 	}
 
 	req, err := http.NewRequest("POST", "https://api.groq.com/openai/v1/audio/transcriptions", body)
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي ❌")
+		sendMessage(ctx, "حدث خطأ أثناء الاتصال بالذكاء الاصطناعي ")
 		return
 	}
 
@@ -72,7 +72,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء إرسال الصوت للذكاء الاصطناعي ❌")
+		sendMessage(ctx, "حدث خطأ أثناء إرسال الصوت للذكاء الاصطناعي ")
 		return
 	}
 	defer resp.Body.Close()
@@ -88,7 +88,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 		Text string `json:"text"`
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		sendMessage(ctx, "فشل في قراءة النتيجة ❌")
+		sendMessage(ctx, "فشل في قراءة النتيجة ")
 		return
 	}
 
@@ -108,7 +108,7 @@ func transcribeAudio(ctx *BotContext, targetLang string) {
 	}
 
 	if finalText == "" {
-		sendMessage(ctx, "لم يتمكن الذكاء الاصطناعي من فهم أي كلمات في المقطع 🤫")
+		sendMessage(ctx, "لم يتمكن الذكاء الاصطناعي من فهم أي كلمات في المقطع")
 		return
 	}
 

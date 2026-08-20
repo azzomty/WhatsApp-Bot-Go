@@ -44,41 +44,45 @@ func BroadcastExchange(client *whatsmeow.Client) {
 }
 
 func HandleExchangeMessage(ctx *BotContext) bool {
-	if !AutoJoinGroups {
-		return false
-	}
+
 
 	chatStr := ctx.ChatID.String()
 
 	// Handle saving my exchange link
-	if ctx.Text == ".رابطي" {
+	if ctx.Text == ".رابطي" || ctx.Text == ".روابطي" {
 		qMsg := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
 		if qMsg != nil {
 			data, err := proto.Marshal(qMsg)
 			if err == nil {
-				store.SetMyExchangeMsg(data)
-				sendMessage(ctx, "✅ تم حفظ رسالة التبادل الخاصة بك بنجاح!")
+				store.AddMyExchangeMsg(data)
+				sendMessage(ctx, "تم إضافة هذه الرسالة لقائمة روابط التبادل الخاصة بك بنجاح!")
 			}
 		} else {
-			sendMessage(ctx, "لازم تسوي ريبلاي على رسالتك اللي فيها الكابشن والروابط وتكتب .رابطي")
+			sendMessage(ctx, "لازم تسوي ريبلاي على رسالتك وتكتب .رابطي أو .روابطي")
 		}
 		return true
+	}
+	
+	if ctx.Text == ".حذف روابطي" {
+	    store.ClearMyExchangeMsgs()
+	    sendMessage(ctx, "تم حذف جميع روابط التبادل الخاصة بك!")
+	    return true
 	}
 
 	// Handle toggling favorite
 	if ctx.Text == ".مفضلة" {
 		status := store.ToggleFavorite(chatStr)
 		if status {
-			sendMessage(ctx, "⭐ تم إضافة هذا الشخص لقائمة المفضلة لنظام التبادل.")
+			sendMessage(ctx, "تم إضافة هذا الشخص لقائمة المفضلة لنظام التبادل.")
 		} else {
-			sendMessage(ctx, "❌ تم إزالة هذا الشخص من قائمة المفضلة.")
+			sendMessage(ctx, "تم إزالة هذا الشخص من قائمة المفضلة.")
 		}
 		return true
 	}
 
 	// Handle .نشر broadcast
 	if ctx.Text == ".نشر" {
-		sendMessage(ctx, "⏳ جاري إرسال رسالة التبادل لجميع الأرقام في المفضلة...")
+		sendMessage(ctx, "جاري إرسال رسالة التبادل لجميع الأرقام في المفضلة...")
 		BroadcastExchange(ctx.Client)
 		return true
 	}
@@ -86,7 +90,7 @@ func HandleExchangeMessage(ctx *BotContext) bool {
 	// Handle setting exchange group
 	if ctx.Text == "!تبادل" && ctx.Event.Info.IsGroup {
 		store.SetExchangeGroup(chatStr)
-		sendMessage(ctx, "🎯 تم تعيين هذا القروب كقروب التبادل الأساسي! سيتم تحويل الروابط هنا.")
+		sendMessage(ctx, "تم تعيين هذا القروب كقروب التبادل الأساسي! سيتم تحويل الروابط هنا.")
 		return true
 	}
 
@@ -180,9 +184,9 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 		}
 	}
 
-	// Send my saved exchange message to them
-	myMsgData := store.GetMyExchangeMsg()
-	if len(myMsgData) > 0 {
+	// Send ALL my saved exchange messages to them
+	myMsgsData := store.GetMyExchangeMsgs()
+	for _, myMsgData := range myMsgsData {
 		var myMsg waProto.Message
 		if err := proto.Unmarshal(myMsgData, &myMsg); err == nil {
 			msgCopy := proto.Clone(&myMsg).(*waProto.Message)
@@ -194,6 +198,10 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 				msgCopy.ExtendedTextMessage.ContextInfo = ctxInfo
 			} else if msgCopy.ImageMessage != nil {
 				msgCopy.ImageMessage.ContextInfo = ctxInfo
+			} else if msgCopy.VideoMessage != nil {
+				msgCopy.VideoMessage.ContextInfo = ctxInfo
+			} else if msgCopy.DocumentMessage != nil {
+			    msgCopy.DocumentMessage.ContextInfo = ctxInfo
 			} else if msgCopy.Conversation != nil {
 				msgCopy.ExtendedTextMessage = &waProto.ExtendedTextMessage{
 					Text:        msgCopy.Conversation,
@@ -203,6 +211,7 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 			}
 
 			client.SendMessage(context.Background(), session.ChatID, msgCopy)
+			time.Sleep(1 * time.Second)
 		}
 	}
 

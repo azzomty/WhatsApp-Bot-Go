@@ -144,7 +144,7 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 
 	if ctx.Text == ".انسحاب" || ctx.Text == ".ايقاف_اكيناتور" {
 		sess.IsActive = false
-		sendMessage(ctx, "🛑 تم إنهاء لعبة أكيناتور في هذا القروب.")
+		sendMessage(ctx, "تم إنهاء لعبة أكيناتور في هذا القروب.")
 		return true
 	}
 
@@ -156,7 +156,7 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 	if sess.Guessing {
 		txt := strings.TrimSpace(ctx.Text)
 		if txt == "1" || txt == "١" || txt == "نعم" || txt == "صح" {
-			sendMessage(ctx, "😎 لقد فزت مرة أخرى! شكراً للعبك معي.")
+			sendMessage(ctx, "لقد فزت مرة أخرى! شكراً للعبك معي.")
 			activeAkiSessions.Lock()
 			sess.IsActive = false
 			activeAkiSessions.Unlock()
@@ -301,7 +301,7 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 			}
 			if json.Unmarshal(gBody, &gResult) == nil && len(gResult.Result.Objects) > 0 {
 				char := gResult.Result.Objects[0]
-				txt := fmt.Sprintf("🧞‍♂️ أعتقد أني عرفت الشخصية!\n\n*%s*\n_%s_\n\nهل إجابتي صحيحة؟\n1. نعم\n2. لا", char.Name, char.Description)
+				txt := fmt.Sprintf("أعتقد أني عرفت الشخصية!\n\n*%s*\n_%s_\n\nهل إجابتي صحيحة؟\n1. نعم\n2. لا", char.Name, char.Description)
 				if char.AbsolutePicturePath != "" {
 					sendAkiImage(ctx, char.AbsolutePicturePath, txt)
 				} else {

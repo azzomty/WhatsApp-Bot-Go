@@ -31,7 +31,7 @@ type GuerrillaMailListResponse struct {
 }
 
 func HandleTempMail(ctx *BotContext) {
-	sendMessage(ctx, "جاري إنشاء إيميلك المؤقت... ⏳")
+	sendMessage(ctx, "جاري إنشاء إيميلك المؤقت... ")
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Get("https://api.guerrillamail.com/ajax.php?f=get_email_address")
@@ -47,7 +47,7 @@ func HandleTempMail(ctx *BotContext) {
 		return
 	}
 
-	msg := fmt.Sprintf("📧 *تم إنشاء إيميلك المؤقت بنجاح!*\n\nالإيميل: `%s`\n\n⏳ الإيميل بيكون شغال لمدة 15 دقيقة، وأي رسالة بتوصل عليه (مثل كود تفعيل) راح أحولها لك هنا فوراً!", gmResp.EmailAddr)
+	msg := fmt.Sprintf("*تم إنشاء إيميلك المؤقت بنجاح!*\n\nالإيميل: `%s`\n\nالإيميل بيكون شغال لمدة 15 دقيقة، وأي رسالة بتوصل عليه (مثل كود تفعيل) راح أحولها لك هنا فوراً!", gmResp.EmailAddr)
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(msg)},
 	})
@@ -98,7 +98,7 @@ func pollTempMail(client *whatsmeow.Client, chatID types.JID, sidToken string) {
 							body = strings.ReplaceAll(body, "<br>", "\n")
 						}
 
-						alertMsg := fmt.Sprintf("📩 *رسالة جديدة وصلت لإيميلك!*\n\n*من:* %s\n*الموضوع:* %s\n\n*الرسالة:*\n%s", m.MailFrom, m.MailSubject, body)
+						alertMsg := fmt.Sprintf("*رسالة جديدة وصلت لإيميلك!*\n\n*من:* %s\n*الموضوع:* %s\n\n*الرسالة:*\n%s", m.MailFrom, m.MailSubject, body)
 						client.SendMessage(context.Background(), chatID, &waProto.Message{
 							ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(alertMsg)},
 						})

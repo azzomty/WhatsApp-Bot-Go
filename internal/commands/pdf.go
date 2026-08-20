@@ -35,7 +35,7 @@ func HandlePDF(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, fmt.Sprintf("جاري تجميع آخر %d صور وتحويلها لـ PDF... ⏳", count))
+	sendMessage(ctx, fmt.Sprintf("جاري تجميع آخر %d صور وتحويلها لـ PDF... ", count))
 
 	msgMutex.Lock()
 	msgs := MessageStore[ctx.ChatID.String()]
@@ -168,7 +168,7 @@ func HandleRenamePDF(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, "جاري تغيير اسم الملف وإعادة إرساله... ⏳")
+	sendMessage(ctx, "جاري تغيير اسم الملف وإعادة إرساله... ")
 
 	data, err := ctx.Client.Download(context.Background(), docMsg)
 	if err != nil {

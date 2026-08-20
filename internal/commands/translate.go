@@ -39,7 +39,7 @@ func translateMessage(ctx *BotContext, targetLang string) {
 	)
 
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء الترجمة ❌")
+		sendMessage(ctx, "حدث خطأ أثناء الترجمة ")
 		return
 	}
 

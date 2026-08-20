@@ -10,7 +10,7 @@ var (
 	exchangeMu       sync.RWMutex
 	FavoriteList     = make(map[string]bool)
 	ExchangeGroup    string
-	MyExchangeMsg    []byte
+	MyExchangeMsgs   [][]byte
 )
 
 func LoadExchange() {
@@ -29,7 +29,7 @@ func LoadExchange() {
 
 	msgData, err := os.ReadFile("my_exchange.json")
 	if err == nil {
-		MyExchangeMsg = msgData
+		json.Unmarshal(msgData, &MyExchangeMsgs)
 	}
 }
 
@@ -62,17 +62,25 @@ func GetExchangeGroup() string {
 	return ExchangeGroup
 }
 
-func SetMyExchangeMsg(data []byte) {
+func AddMyExchangeMsg(data []byte) {
 	exchangeMu.Lock()
 	defer exchangeMu.Unlock()
-	MyExchangeMsg = data
-	os.WriteFile("my_exchange.json", data, 0644)
+	MyExchangeMsgs = append(MyExchangeMsgs, data)
+	b, _ := json.Marshal(MyExchangeMsgs)
+	os.WriteFile("my_exchange.json", b, 0644)
 }
 
-func GetMyExchangeMsg() []byte {
+func ClearMyExchangeMsgs() {
+	exchangeMu.Lock()
+	defer exchangeMu.Unlock()
+	MyExchangeMsgs = make([][]byte, 0)
+	os.WriteFile("my_exchange.json", []byte("[]"), 0644)
+}
+
+func GetMyExchangeMsgs() [][]byte {
 	exchangeMu.RLock()
 	defer exchangeMu.RUnlock()
-	return MyExchangeMsg
+	return MyExchangeMsgs
 }
 
 func GetFavorites() []string {

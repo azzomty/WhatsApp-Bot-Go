@@ -134,7 +134,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				if text == ".bot off" {
 					store.DeactivateGroup(v.Info.Chat.String())
 					store.SaveActivatedGroups(".")
-					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير 💤 (تم تعطيل البوت)")})
+					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير (تم تعطيل البوت)")})
 					return
 				}
 			} else if v.Message != nil && v.Message.ExtendedTextMessage != nil && v.Message.ExtendedTextMessage.Text != nil {
@@ -142,7 +142,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				if text == ".bot off" {
 					store.DeactivateGroup(v.Info.Chat.String())
 					store.SaveActivatedGroups(".")
-					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير 💤 (تم تعطيل البوت)")})
+					client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{Conversation: proto.String("تصبح على خير (تم تعطيل البوت)")})
 					return
 				}
 			}
@@ -156,7 +156,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			reactText := v.Message.GetReactionMessage().GetText()
 
 			// Auto-kick for middle finger
-			if strings.HasPrefix(reactText, "🖕") && v.Info.Chat.Server == "g.us" {
+			if strings.HasPrefix(reactText, "") && v.Info.Chat.Server == "g.us" {
 				go func() {
 					// Target is the person who sent the reaction
 					target := []types.JID{v.Info.Sender.ToNonAD()}
@@ -212,7 +212,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			if store.IsAllowed(senderID) || v.Info.IsFromMe {
 				store.SetBotEnabled(true)
 				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
-					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم تفعيل البوت ✅")},
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم تفعيل البوت ")},
 				})
 			}
 			return
@@ -221,7 +221,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			if store.IsAllowed(senderID) || v.Info.IsFromMe {
 				store.SetBotEnabled(false)
 				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
-					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم إيقاف البوت ❌")},
+					ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("تم إيقاف البوت ")},
 				})
 			}
 			return
@@ -241,7 +241,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				if senderName == "" {
 					senderName = v.Info.Sender.User
 				}
-				captionAdd := fmt.Sprintf("\n\n---\n👁️ *رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
+				captionAdd := fmt.Sprintf("\n\n---\n*رسالة عرض لمرة واحدة!*\n👤 من: %s\n📱 الرقم: %s", senderName, v.Info.Sender.User)
 
 				var data []byte
 				var err error
@@ -348,7 +348,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		}
 
 		if strings.Contains(senderLID, "224245258948685") {
-			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, "👍🏻"))
+			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, ""))
 		}
 
 		// أمر معرفة الـ LID
@@ -780,7 +780,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 						if len(toDemote) > 0 {
 							client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
 							client.SendMessage(context.Background(), v.JID, &waProto.Message{
-								Conversation: proto.String("🚨 شخص غير محمي قام بتغيير اسم/وصف القروب! تم سحب إشراف الجميع كإجراء أمني."),
+								Conversation: proto.String("شخص غير محمي قام بتغيير اسم/وصف القروب! تم سحب إشراف الجميع كإجراء أمني."),
 							})
 						}
 					}
@@ -805,7 +805,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 							if len(toDemote) > 0 {
 								client.UpdateGroupParticipants(context.Background(), v.JID, toDemote, whatsmeow.ParticipantChangeDemote)
 								client.SendMessage(context.Background(), v.JID, &waProto.Message{
-									Conversation: proto.String("🚨 تم المساس بأحد الأرقام المحمية! تم سحب إشراف الجميع كإجراء أمني."),
+									Conversation: proto.String("تم المساس بأحد الأرقام المحمية! تم سحب إشراف الجميع كإجراء أمني."),
 								})
 							}
 						}
@@ -833,7 +833,7 @@ func startRenderServer() {
 		port = "3000"
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Go Bot is Alive! 🚀\n\nTo pair a new number, go to /pair?phone=YOURNUMBER")
+		fmt.Fprintf(w, "Go Bot is Alive!\n\nTo pair a new number, go to /pair?phone=YOURNUMBER")
 	})
 	http.HandleFunc("/pair", func(w http.ResponseWriter, r *http.Request) {
 		phone := r.URL.Query().Get("phone")
@@ -860,11 +860,16 @@ func startRenderServer() {
 		fmt.Fprintf(w, "Pairing code for %s: %s\n\nPlease enter this code on your phone.\nAfter connecting, the bot will automatically start for this number on the server!", phone, code)
 		
 		go func() {
-			for newClient.Store.ID == nil {
-				// wait
+			for i := 0; i < 60; i++ {
+				if newClient.Store.ID != nil {
+					break
+				}
+				time.Sleep(1 * time.Second)
 			}
-			newClient.AddEventHandler(func(evt interface{}) { eventHandler(newClient, evt) })
-			fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s عبر ريندر! البوت جاهز.\n", newClient.Store.ID)
+			if newClient.Store.ID != nil {
+				newClient.AddEventHandler(func(evt interface{}) { eventHandler(newClient, evt) })
+				fmt.Printf("تم تسجيل الدخول بنجاح للرقم %s عبر ريندر! البوت جاهز.\n", newClient.Store.ID)
+			}
 		}()
 	})
 	fmt.Printf("[Render Mode] Server listening on port %s\n", port)
@@ -899,6 +904,7 @@ func main() {
 
 	for _, deviceStore := range devices {
 		go startClient(deviceStore)
+		time.Sleep(5 * time.Second) // Stagger startup to prevent SQLite locking
 	}
 
 	c := make(chan os.Signal, 1)

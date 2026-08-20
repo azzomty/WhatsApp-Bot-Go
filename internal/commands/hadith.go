@@ -47,7 +47,7 @@ func HandleHadithMenu(ctx *BotContext) {
 		return
 	}
 
-	msg := "📚 *قائمة أقسام الأحاديث*\n\nالعدد الكلي للأقسام: " + strconv.Itoa(len(allCategories)) + "\n\n"
+	msg := "*قائمة أقسام الأحاديث*\n\nالعدد الكلي للأقسام: " + strconv.Itoa(len(allCategories)) + "\n\n"
 	msg += "بسبب كثرة الأقسام، يمكنك البحث عن قسم معين بكتابة:\n"
 	msg += "`.بحث قسم <كلمة>`\n\n"
 	msg += "مثال:\n"
@@ -67,13 +67,13 @@ func HandleAllCategories(ctx *BotContext) {
 		return
 	}
 	
-	msg := fmt.Sprintf("📚 *جميع أقسام الأحاديث (%d قسم)*\n\n", len(allCategories))
+	msg := fmt.Sprintf("*جميع أقسام الأحاديث (%d قسم)*\n\n", len(allCategories))
 	var lines []string
 	for i, c := range allCategories {
 		lines = append(lines, fmt.Sprintf("*%d.* %s (عدد الأحاديث: %s)", i+1, c.Title, c.Count))
 	}
 	msg += strings.Join(lines, "\n")
-	msg += "\n\n💡 لاستخراج حديث، اكتب `.حديث <رقم القسم>`"
+	msg += "\n\nلاستخراج حديث، اكتب `.حديث <رقم القسم>`"
 
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(msg)},
@@ -104,13 +104,13 @@ func HandleCategorySearch(ctx *BotContext) {
 		return
 	}
 
-	msg := "🔍 *نتائج البحث:*\n\n"
+	msg := "*نتائج البحث:*\n\n"
 	if len(results) > 50 {
 		results = results[:50]
 		msg += "(تم إظهار أول 50 نتيجة فقط)\n\n"
 	}
 	msg += strings.Join(results, "\n")
-	msg += "\n\n💡 لاستخراج حديث، اكتب `.حديث <رقم القسم>`"
+	msg += "\n\nلاستخراج حديث، اكتب `.حديث <رقم القسم>`"
 
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(msg)},
@@ -204,9 +204,9 @@ func HandleHadith(ctx *BotContext) {
 		return
 	}
 
-	msg := fmt.Sprintf("📜 *حديث نبوي* (قسم: %s)\n\n", catName)
+	msg := fmt.Sprintf("*حديث نبوي* (قسم: %s)\n\n", catName)
 	msg += fmt.Sprintf("« %s »\n\n", strings.TrimSpace(oneData.Hadeeth))
-	msg += fmt.Sprintf("💡 *الشرح:*\n%s", strings.TrimSpace(oneData.Explanation))
+	msg += fmt.Sprintf("*الشرح:*\n%s", strings.TrimSpace(oneData.Explanation))
 
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(msg)},

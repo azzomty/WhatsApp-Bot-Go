@@ -21,7 +21,7 @@ func HandleReminder(ctx *BotContext, command string) {
 	}
 
 	if command == ".ذكرني اتصال" {
-		sendMessage(ctx, "للأسف ميزة الاتصال (المكالمات) غير مدعومة حالياً من طرف مكتبة الواتساب لأنها تتطلب إعدادات WebRTC كاملة. لكن تم تحويل طلبك إلى (تذكير رسالة) مؤقتاً! ⏳")
+		sendMessage(ctx, "للأسف ميزة الاتصال (المكالمات) غير مدعومة حالياً من طرف مكتبة الواتساب لأنها تتطلب إعدادات WebRTC كاملة. لكن تم تحويل طلبك إلى (تذكير رسالة) مؤقتاً! ")
 	}
 
 	// Remove the command prefix
@@ -67,7 +67,7 @@ func HandleReminder(ctx *BotContext, command string) {
 		return
 	}
 
-	sendMessage(ctx, fmt.Sprintf("تم! راح أذكرك بـ (%s) بعد %d %s ⏳", reminderText, timeValue, getUnitName(timeUnit)))
+	sendMessage(ctx, fmt.Sprintf("تم! راح أذكرك بـ (%s) بعد %d %s ", reminderText, timeValue, getUnitName(timeUnit)))
 
 	go func(jid string, text string, d time.Duration) {
 		time.Sleep(d)

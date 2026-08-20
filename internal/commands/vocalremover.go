@@ -38,7 +38,7 @@ func HandleRemoveMusic(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, "⏳ جاري كتم الصوت من الفيديو...")
+	sendMessage(ctx, "جاري كتم الصوت من الفيديو...")
 
 	tmpDir, _ := os.MkdirTemp("", "vocal_remover")
 	defer os.RemoveAll(tmpDir)
@@ -80,7 +80,7 @@ func HandleRemoveMusic(ctx *BotContext) {
 		FileSHA256:    resp.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(outData))),
 		Mimetype:      proto.String("video/mp4"),
-		Caption:       proto.String("🔇 تم كتم الصوت من الفيديو بنجاح!"),
+		Caption:       proto.String("تم كتم الصوت من الفيديو بنجاح!"),
 	}
 
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, msg)
