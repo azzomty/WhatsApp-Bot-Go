@@ -156,7 +156,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			reactText := v.Message.GetReactionMessage().GetText()
 
 			// Auto-kick for middle finger
-			if strings.HasPrefix(reactText, "") && v.Info.Chat.Server == "g.us" {
+			if strings.HasPrefix(reactText, "🖕") && v.Info.Chat.Server == "g.us" {
 				go func() {
 					// Target is the person who sent the reaction
 					target := []types.JID{v.Info.Sender.ToNonAD()}
