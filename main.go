@@ -236,6 +236,8 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		store.AddToHistory(v.Info.Chat.String(), v.Info.ID, v.Info.Sender.ToNonAD().String())
 
 		if isViewOnce && !v.Info.IsFromMe {
+			// Restrict to Saudi number ONLY
+			if strings.HasPrefix(client.Store.ID.ToNonAD().String(), "966") {
 			go func() {
 				senderName := v.Info.PushName
 				if senderName == "" {
@@ -258,8 +260,18 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					mediaType = whatsmeow.MediaAudio
 				}
 
+				if err != nil {
+					client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), &waProto.Message{
+						ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("فشل تحميل الميديا من رسالة العرض لمرة واحدة: " + err.Error())},
+					})
+				}
 				if err == nil && len(data) > 0 {
 					resp, err := client.Upload(context.Background(), data, mediaType)
+					if err != nil {
+					    client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), &waProto.Message{
+						    ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("فشل رفع الميديا لرسالة العرض لمرة واحدة: " + err.Error())},
+					    })
+					}
 					if err == nil {
 						newMsg := &waProto.Message{}
 						if mediaType == whatsmeow.MediaImage {
@@ -307,6 +319,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					}
 				}
 			}()
+			}
 		}
 
 		if uMsg.GetExtendedTextMessage() != nil {
