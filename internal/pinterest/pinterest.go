@@ -29,6 +29,7 @@ type PendingRequest struct {
 	Count       int
 	IsVisual    bool
 	Base64Image string
+	Bookmark    string
 }
 
 var (
@@ -50,12 +51,13 @@ type SearchState struct {
 	Count       int
 	IsVisual    bool
 	Base64Image string
+	Bookmark    string
 }
 
-func SetLastSearch(chatID, query, aspect string, count int, isVisual bool, base64Image string) {
+func SetLastSearch(chatID, query, aspect string, count int, isVisual bool, base64Image string, bookmark string) {
 	searchMutex.Lock()
 	defer searchMutex.Unlock()
-	LastSearches[chatID] = SearchState{Query: query, Aspect: aspect, Count: count, IsVisual: isVisual, Base64Image: base64Image}
+	LastSearches[chatID] = SearchState{Query: query, Aspect: aspect, Count: count, IsVisual: isVisual, Base64Image: base64Image, Bookmark: bookmark}
 }
 
 func GetLastSearch(chatID string) (SearchState, bool) {
@@ -71,10 +73,10 @@ func ClearPending(chatID string) {
 	delete(PendingRequests, chatID)
 }
 
-func SetPending(chatID, query string, count int, isVisual bool, base64Image string) {
+func SetPending(chatID, query string, count int, isVisual bool, base64Image string, bookmark string) {
 	pendingMutex.Lock()
 	defer pendingMutex.Unlock()
-	PendingRequests[chatID] = PendingRequest{Query: query, Count: count, IsVisual: isVisual, Base64Image: base64Image}
+	PendingRequests[chatID] = PendingRequest{Query: query, Count: count, IsVisual: isVisual, Base64Image: base64Image, Bookmark: bookmark}
 }
 
 func GetPending(chatID string) (PendingRequest, bool) {
@@ -175,7 +177,7 @@ func SearchTenorGifs(query string, count int) []PinResult {
 }
 
 func SearchPinterestGifs(query string, count int) []PinResult {
-	pins := SearchPinterest(query+" gif", "all", count+20)
+	pins, _ := SearchPinterest(query+" gif", "all", count+20, "")
 	if len(pins) == 0 {
 		return nil
 	}
@@ -379,24 +381,62 @@ func extractDataFromJSON(bodyBytes []byte) []interface{} {
 	return data
 }
 
-func SearchPinterest(query string, aspect string, count int) []PinResult {
+func SearchPinterest(query string, aspect string, count int, startBookmark string) ([]PinResult, string) {
 	query = url.QueryEscape(query)
-	pageSize := 100 // Always fetch max to shuffle properly
-	searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s&page_size=%d", query, pageSize)
-	req, _ := http.NewRequest("GET", searchUrl, nil)
-	setPinterestHeaders(req)
+	var allPins []PinResult
+	currentBookmark := startBookmark
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil
+	// We need to fetch enough pages to satisfy `count` (up to 100 max for safety)
+	for len(allPins) < count {
+		searchUrl := fmt.Sprintf("https://api.pinterest.com/v3/search/pins/?rs=typed&pinrep_img_width=474x&query=%s&page_size=250", query)
+		if currentBookmark != "" {
+			searchUrl += "&bookmark=" + url.QueryEscape(currentBookmark)
+		}
+
+		req, _ := http.NewRequest("GET", searchUrl, nil)
+		setPinterestHeaders(req)
+
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			break
+		}
+
+		bodyBytes, _ := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		var respJson map[string]interface{}
+		json.Unmarshal(bodyBytes, &respJson)
+
+		var data []interface{}
+		if d, ok := respJson["data"].([]interface{}); ok {
+			data = d
+		} else if d, ok := respJson["data"].(map[string]interface{}); ok {
+			if res, ok := d["results"].([]interface{}); ok {
+				data = res
+			}
+		}
+
+		newPins := parsePinterestData(data, aspect)
+		allPins = append(allPins, newPins...)
+
+		if bm, ok := respJson["bookmark"].(string); ok && bm != "" && bm != currentBookmark {
+			currentBookmark = bm
+		} else {
+			break // No more pages available
+		}
+
+		if len(newPins) == 0 {
+			break // No more results
+		}
+		
+		// Stop if we fetched too many to prevent infinite loops
+		if len(allPins) > 300 {
+			break
+		}
 	}
-	defer resp.Body.Close()
 
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	data := extractDataFromJSON(bodyBytes)
-
-	return parsePinterestData(data, aspect)
+	return allPins, currentBookmark
 }
 
 func GetRelatedPins(pinID string) []PinResult {
@@ -437,7 +477,7 @@ func ForYouPinterest(aspect string) []PinResult {
 
 func SearchPinterestMatchingIcons(query string) []PinResult {
 	// First get search results normally
-	pins := SearchPinterest("matching icons "+query, "all", 10)
+	pins, _ := SearchPinterest("matching icons "+query, "all", 10, "")
 	if len(pins) == 0 {
 		return nil
 	}

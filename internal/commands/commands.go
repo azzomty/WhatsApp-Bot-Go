@@ -772,8 +772,8 @@ func pinterestSearch(ctx *BotContext) {
 			query = strings.Join(parts[:len(parts)-1], " ")
 		}
 	}
-	if count > 60 {
-		count = 60
+	if count > 100 {
+		count = 100
 	}
 
 	isVisual := false
@@ -807,7 +807,7 @@ func pinterestSearch(ctx *BotContext) {
 		return
 	}
 
-	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image)
+	pinterest.SetPending(ctx.ChatID.String(), query, count, isVisual, base64Image, "")
 
 	promptMsg := "وش نوع الصور اللي تبيها لـ \"" + query + "\"؟\n\n1- Icons\n2- Banner\n3- Wallpaper\n4- Matching Icons\n5- GIF\n6- Video\n\nاكتب الرقم مع السلاش (مثال: /1)"
 	sendMessage(ctx, promptMsg)
@@ -1990,7 +1990,9 @@ func refreshPinterest(ctx *BotContext) {
 			} else if last.IsVisual && last.Base64Image != "" {
 				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect, last.Count)
 			} else {
-				results = pinterest.SearchPinterest(last.Query, last.Aspect, last.Count)
+				var newBm string
+				results, newBm = pinterest.SearchPinterest(last.Query, last.Aspect, last.Count, last.Bookmark)
+				pinterest.SetLastSearch(ctx.ChatID.String(), last.Query, last.Aspect, last.Count, last.IsVisual, last.Base64Image, newBm)
 			}
 
 			if len(results) > 0 && last.Aspect != "matching" {
@@ -2073,7 +2075,7 @@ func pinterestForYou(ctx *BotContext) {
 		count = 20
 	}
 	
-	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "")
+	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "", "")
 
 	sendMessage(ctx, "جاري جلب صور للفوريو")
 	go func() {

@@ -17,7 +17,7 @@ func SearchPinterestMedia(query string, ext string, count int) []PinResult {
 		searchQuery += " video"
 	}
 
-	pins := SearchPinterest(searchQuery, "all", count)
+	pins, _ := SearchPinterest(searchQuery, "all", count, "")
 	if len(pins) == 0 {
 		return nil
 	}

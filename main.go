@@ -543,6 +543,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				suffix := ""
 				aspect := "all"
 				overrideCount := req.Count
+				currentBookmark := req.Bookmark
 
 				switch choice {
 				case "1":
@@ -567,10 +568,11 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				default:
 					if choice == ".new" || choice == ".refresh" {
 						if last, ok := pinterest.GetLastSearch(v.Info.Chat.String()); ok {
-							req = pinterest.PendingRequest{Query: last.Query, Count: last.Count}
+							req = pinterest.PendingRequest{Query: last.Query, Count: last.Count, Bookmark: last.Bookmark}
 							suffix = ""
 							aspect = last.Aspect
 							overrideCount = last.Count
+							currentBookmark = last.Bookmark
 							goto RunSearch
 						}
 					}
@@ -579,7 +581,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				}
 
 			RunSearch:
-				pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount, req.IsVisual, req.Base64Image)
 				pinterest.ClearPending(v.Info.Chat.String())
 				client.SendMessage(context.Background(), v.Info.Chat, &waProto.Message{
 					ExtendedTextMessage: &waProto.ExtendedTextMessage{
@@ -594,6 +595,8 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 				go func() {
 					var results []pinterest.PinResult
+					newBookmark := ""
+					
 					if aspect == "foryou" {
 						results = pinterest.ForYouPinterest("all")
 					} else if aspect == "matching" {
@@ -606,8 +609,10 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					} else if aspect == "video" {
 						results = pinterest.SearchPinterestMedia(req.Query, ".mp4", overrideCount)
 					} else {
-						results = pinterest.SearchPinterest(req.Query+suffix, aspect, overrideCount)
+						results, newBookmark = pinterest.SearchPinterest(req.Query+suffix, aspect, overrideCount, currentBookmark)
 					}
+					
+					pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount, req.IsVisual, req.Base64Image, newBookmark)
 
 					if len(results) > 0 && aspect != "matching" {
 						rand.Shuffle(len(results), func(i, j int) {
