@@ -114,22 +114,56 @@ func ScrapeWitanimeEpisode(animeName string, epNum int) (string, error) {
 	// Look for exact match or exact word match to avoid matching 1210 when looking for 1
 	targetSuffix1 := fmt.Sprintf("-%d-", epNum)
 	targetSuffix2 := fmt.Sprintf("-%d/", epNum)
-	targetText := fmt.Sprintf("الحلقة %d ", epNum) // trailing space to avoid matching 12
+	targetText := fmt.Sprintf("الحلقة %d ", epNum)
 	
-	doc.Find("div.episodes-card-title a, h3 a, a").Each(func(i int, s *goquery.Selection) {
-		href, exists := s.Attr("href")
-		if exists && strings.Contains(href, "/episode/") {
-			text := strings.TrimSpace(s.Text()) + " "
-			// Exact episode match
-			if epLink == "" && (strings.Contains(href, targetSuffix1) || strings.Contains(href, targetSuffix2) || strings.HasPrefix(text, targetText)) {
-				epLink = href
+	findEp := func(d *goquery.Document) string {
+		var link string
+		d.Find("div.episodes-card-title a, h3 a, a, div.ep_num a").Each(func(i int, s *goquery.Selection) {
+			href, exists := s.Attr("href")
+			if exists && strings.Contains(href, "/episode/") {
+				text := strings.TrimSpace(s.Text()) + " "
+				if link == "" && (strings.Contains(href, targetSuffix1) || strings.Contains(href, targetSuffix2) || strings.HasPrefix(text, targetText)) {
+					link = href
+				}
+			}
+		})
+		return link
+	}
+	
+	epLink = findEp(doc)
+	
+	// If not found on page 1, check pagination!
+	if epLink == "" {
+		maxPages := 1
+		doc.Find(".episodes-load-more").Each(func(i int, s *goquery.Selection) {
+			maxP, _ := s.Attr("data-max-pages")
+			if maxP != "" {
+				fmt.Sscanf(maxP, "%d", &maxPages)
+			}
+		})
+		
+		if maxPages > 1 {
+			// Check from last page to page 2 (because old episodes are usually at the end)
+			for p := maxPages; p >= 2; p-- {
+				pageURL := fmt.Sprintf("%s/page/%d/", strings.TrimRight(animeLink, "/"), p)
+				reqP, _ := http.NewRequest("GET", pageURL, nil)
+				reqP.Header.Set("User-Agent", "Mozilla/5.0")
+				respP, err := client.Do(reqP)
+				if err == nil {
+					docP, err := goquery.NewDocumentFromReader(respP.Body)
+					respP.Body.Close()
+					if err == nil {
+						epLink = findEp(docP)
+						if epLink != "" {
+							break
+						}
+					}
+				}
 			}
 		}
-	})
+	}
 
 	if epLink == "" {
-		// Sometimes Witanime lists episodes in an external list or they use ajax, 
-		// but usually they are on the page. Let's just guess the URL if not found.
 		slug := strings.Trim(strings.ReplaceAll(animeLink, "https://4h.b9p2m6c.shop/anime/", ""), "/")
 		epLink = fmt.Sprintf("https://4h.b9p2m6c.shop/episode/انمي-%s-الحلقة-%d-مترجمة/", slug, epNum)
 	}
@@ -216,3 +250,4 @@ func getEnglishName(query string) string {
 	}
 	return ""
 }
+
