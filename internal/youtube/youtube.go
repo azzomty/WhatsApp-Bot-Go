@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"runtime"
 	"path/filepath"
 	"strings"
 	"time"
@@ -190,7 +191,24 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("yt_%d.%s", time.Now().UnixNano(), ext))
 	defer os.Remove(tmpFile)
 
-	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "node_modules/ffmpeg-static/ffmpeg", "--merge-output-format", ext, "-f", format, "-o", tmpFile, link)
+		ytdlp := "./yt-dlp"
+	if runtime.GOOS == "windows" {
+		ytdlp = "yt-dlp.exe"
+	} else if _, err := os.Stat(ytdlp); os.IsNotExist(err) {
+		ytdlp = "yt-dlp" // Try system path if local ./yt-dlp doesn't exist
+	}
+	
+	ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
+	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
+		ffmpegPath = "ffmpeg" // fallback to system ffmpeg
+	}
+	if runtime.GOOS == "windows" && ffmpegPath == "node_modules/ffmpeg-static/ffmpeg" {
+		if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg.exe"); err == nil {
+			ffmpegPath = "node_modules/ffmpeg-static/ffmpeg.exe"
+		}
+	}
+
+	cmd := exec.Command(ytdlp, "--ffmpeg-location", ffmpegPath, "--merge-output-format", ext, "-f", format, "-o", tmpFile, link)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		outStr := string(output)
@@ -247,7 +265,13 @@ func SearchVideos(query string, maxResults int, pageToken string) ([]string, str
 func DownloadDirectURL(url string) (string, error) {
 	outPath := fmt.Sprintf("/tmp/direct_video_%d.mp4", time.Now().UnixNano())
 	// Use yt-dlp to download directly from the URL
-	cmd := exec.Command("./yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
+		ytdlp := "./yt-dlp"
+	if runtime.GOOS == "windows" {
+		ytdlp = "yt-dlp.exe"
+	} else if _, err := os.Stat(ytdlp); os.IsNotExist(err) {
+		ytdlp = "yt-dlp"
+	}
+	cmd := exec.Command(ytdlp, "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
 	err := cmd.Run()
 	if err != nil {
 		return "", fmt.Errorf("failed to download video: %v", err)
