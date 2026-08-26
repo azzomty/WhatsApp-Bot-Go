@@ -271,7 +271,16 @@ func DownloadDirectURL(url string) (string, error) {
 	} else if _, err := os.Stat(ytdlp); os.IsNotExist(err) {
 		ytdlp = "yt-dlp"
 	}
-	cmd := exec.Command(ytdlp, "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
+	ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
+	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
+		ffmpegPath = "ffmpeg" // fallback to system ffmpeg
+	}
+	if runtime.GOOS == "windows" && ffmpegPath == "node_modules/ffmpeg-static/ffmpeg" {
+		if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg.exe"); err == nil {
+			ffmpegPath = "node_modules/ffmpeg-static/ffmpeg.exe"
+		}
+	}
+	cmd := exec.Command(ytdlp, "--ffmpeg-location", ffmpegPath, "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
 	err := cmd.Run()
 	if err != nil {
 		return "", fmt.Errorf("failed to download video: %v", err)
