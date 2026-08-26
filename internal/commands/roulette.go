@@ -22,10 +22,8 @@ var (
 
 func HandleRoulette(ctx *BotContext) {
 	senderNum := ctx.Event.Info.Sender.ToNonAD().String()
-	// Restrict to Saudi number (starting with 966)
-	if !strings.HasPrefix(senderNum, "966") {
-		return
-	}
+	// Allow all numbers
+
 
 	if !ctx.Event.Info.IsGroup {
 		sendMessage(ctx, "هذا الأمر مخصص للقروبات فقط!")

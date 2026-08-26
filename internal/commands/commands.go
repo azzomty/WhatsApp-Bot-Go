@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -221,6 +222,29 @@ func Handle(ctx *BotContext) {
 		pinterestSearch(ctx)
 	case ".random":
 		random(ctx)
+	case ".تحليل":
+		if ctx.Event.Message.GetExtendedTextMessage() != nil && ctx.Event.Message.GetExtendedTextMessage().GetContextInfo() != nil {
+			quoted := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
+			if quoted != nil {
+				if doc := quoted.GetDocumentMessage(); doc != nil {
+					data, err := ctx.Client.Download(context.Background(), doc)
+					if err == nil {
+						_ = os.WriteFile("har.json", data, 0644)
+						sendMessage(ctx, "تم حفظ الملف بنجاح! المبرمج سيقوم بتحليله الآن.")
+					} else {
+						sendMessage(ctx, "فشل تحميل الملف.")
+					}
+				} else if img := quoted.GetImageMessage(); img != nil {
+					data, err := ctx.Client.Download(context.Background(), img)
+					if err == nil {
+						_ = os.WriteFile("screenshot.jpg", data, 0644)
+						sendMessage(ctx, "تم حفظ الصورة بنجاح! المبرمج يراها الآن.")
+					} else {
+						sendMessage(ctx, "فشل تحميل الصورة.")
+					}
+				}
+			}
+		}
 	case ".baymax", ".buymax":
 		baymax(ctx)
 	case ".كل الاوامر", ".الاوامر":
@@ -269,8 +293,10 @@ func Handle(ctx *BotContext) {
 		HandlePDF(ctx)
 	case ".اسم pdf":
 		HandleRenamePDF(ctx)
-	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا":
+	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا", ".كرتون", ".انمي_مدبلج":
 		HandleMediaCommand(ctx, cmdName)
+	case ".حلقة":
+		HandleEpisodeCommand(ctx)
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":
@@ -482,12 +508,6 @@ func unmute(ctx *BotContext) {
 }
 
 func editAlias(ctx *BotContext) {
-	senderID := ctx.Sender.ToNonAD().String()
-	isAllowed := store.IsCommandAllowed(senderID, ".تعديل امر")
-
-	if !isAllowed && !ctx.Event.Info.IsFromMe && senderID != "224245258948685@lid" {
-		return
-	}
 	var newCmd, oldCmd string
 
 	// Explicit parsing for two-word commands without quote
@@ -573,9 +593,6 @@ func editAlias(ctx *BotContext) {
 }
 
 func editOutput(ctx *BotContext) {
-	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe && getLID(ctx, ctx.Sender) != "224245258948685@lid" {
-		return
-	}
 	if len(ctx.Text) <= 10 {
 		sendMessage(ctx, "اكتب الرد الجديد!")
 		return
@@ -991,9 +1008,11 @@ func makeSticker(ctx *BotContext) {
 	}
 
 	if isSteal {
-		sendMessage(ctx, "يتم التعديل")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".تعديل ملصق", "يتم التعديل")
+		sendMessage(ctx, outMsg)
 	} else {
-		sendMessage(ctx, "جاري صنع الملصق")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".ملصق", "جاري صنع الملصق")
+		sendMessage(ctx, outMsg)
 	}
 
 	data, err := ctx.Client.Download(context.Background(), mediaMsg)
@@ -1052,7 +1071,8 @@ func banCommand(ctx *BotContext) {
 	if len(targets) > 0 {
 		targetLID := getLID(ctx, targets[0])
 		store.SetCommandBan(targetLID, cmdToBan, true, ".")
-		sendMessage(ctx, "تم منع الشخص من استخدام أمر "+cmdToBan+" بنجاح!")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".منع امر", "تم منع الأمر بنجاح!")
+		sendMessage(ctx, outMsg)
 	} else {
 		sendMessage(ctx, "لازم تمنشن الشخص اللي تبي تمنعه.")
 	}
@@ -1075,7 +1095,8 @@ func unbanCommand(ctx *BotContext) {
 	if len(targets) > 0 {
 		targetLID := getLID(ctx, targets[0])
 		store.SetCommandBan(targetLID, cmdToUnban, false, ".")
-		sendMessage(ctx, "تم فك المنع عن أمر "+cmdToUnban+" بنجاح!")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".منع منع", "تم فك منع الأمر بنجاح!")
+		sendMessage(ctx, outMsg)
 	} else {
 		sendMessage(ctx, "لازم تمنشن الشخص اللي تبي تفك منعه.")
 	}
@@ -1124,15 +1145,25 @@ func preventUser(ctx *BotContext) {
 	if len(targets) > 0 {
 		delete(store.AllowedUsers, getLID(ctx, targets[0]))
 		store.SaveAllowed(".")
-		sendMessage(ctx, "تم منعه بنجاح!")
+		outMsg := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".منع", "تم منعه بنجاح!")
+		sendMessage(ctx, outMsg)
 	}
 }
 
 func baymax(ctx *BotContext) {
+	out := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".baymax", "")
+	if out == "" {
+		out = store.GetCustomOutput(getLID(ctx, ctx.Sender), ".buymax", "")
+	}
+	if out != "" {
+		sendMessage(ctx, out)
+		return
+	}
+
 	name := store.GetBaymaxName(getLID(ctx, ctx.Sender))
 	if name != "" {
 		sendMessage(ctx, name)
-	} else if ctx.Sender.User == "966508364121" {
+	} else if ctx.Sender.User == "966508364121" || ctx.Event.Info.IsFromMe {
 		sendMessage(ctx, "هاي هبهب ")
 	} else {
 		sendMessage(ctx, "هاي عزام سينباي ")

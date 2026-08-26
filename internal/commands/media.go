@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"os"
+	"strconv"
+
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"whatsapp-bot/internal/youtube"
 
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
@@ -30,9 +35,11 @@ type MediaResult struct {
 }
 
 var (
-	mediaSessions = make(map[string][]MediaResult)
-	mediaMutex    sync.Mutex
-	tmdbAPIKey    = "15d2ea6d0dc1d476efbca3eba2b9bbfb"
+	mediaSessions   = make(map[string][]MediaResult)
+	mediaMutex      sync.Mutex
+	cartoonSessions = make(map[string]string)
+	cartoonMutex    sync.Mutex
+	tmdbAPIKey      = "15d2ea6d0dc1d476efbca3eba2b9bbfb"
 )
 
 func HandleMediaCommand(ctx *BotContext, cmd string) {
@@ -51,9 +58,12 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		results = searchTMDB(query, "movie")
 	case ".مسلسل":
 		results = searchTMDB(query, "tv")
+	case ".كرتون", ".انمي_مدبلج":
+		results = searchTMDB(query, "tv")
 	case ".انمي", ".أنمي":
 		results = searchJikan(query, "anime")
 	case ".مانجا", ".مانهاوا":
+		results = searchJikan(query, "manga")
 		results = searchJikan(query, "manga")
 	}
 
@@ -67,7 +77,7 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 	mediaSessions[ctx.ChatID.String()] = results[1:] // save the rest
 	mediaMutex.Unlock()
 
-	sendMediaResult(ctx, results[0])
+	sendMediaResult(ctx, results[0], cmd)
 }
 
 func HandleMediaNew(ctx *BotContext) bool {
@@ -81,7 +91,15 @@ func HandleMediaNew(ctx *BotContext) bool {
 	mediaSessions[ctx.ChatID.String()] = results[1:]
 	mediaMutex.Unlock()
 
-	sendMediaResult(ctx, res)
+	sendMediaResult(ctx, res, "")
+	
+	// If it's a TV show, update cartoon session so .حلقة works on the new result!
+	if res.Episodes != "" || res.MediaType == "tv" {
+		cartoonMutex.Lock()
+		cartoonSessions[ctx.Sender.User] = res.Title
+		cartoonMutex.Unlock()
+	}
+	
 	return true
 }
 
@@ -130,7 +148,7 @@ func fetchTMDBDetails(res *MediaResult) {
 	}
 }
 
-func sendMediaResult(ctx *BotContext, res MediaResult) {
+func sendMediaResult(ctx *BotContext, res MediaResult, cmd string) {
 	// Fetch extra details if it's TMDB
 	fetchTMDBDetails(&res)
 
@@ -141,7 +159,7 @@ func sendMediaResult(ctx *BotContext, res MediaResult) {
 	if res.Year != "" {
 		msg += fmt.Sprintf("*السنة:* %s\n", res.Year)
 	}
-	if res.Episodes != "" {
+	if res.Episodes != "" && cmd != ".كرتون" && cmd != ".انمي_مدبلج" {
 		msg += fmt.Sprintf("*عدد الحلقات:* %s\n", res.Episodes)
 	}
 	if res.Duration != "" {
@@ -154,6 +172,7 @@ func sendMediaResult(ctx *BotContext, res MediaResult) {
 	msg += fmt.Sprintf("\n*الوصف:*\n%s\n\n", res.Description)
 	msg += "للمزيد من النتائج لنفس البحث، ارسل `.new`"
 
+	var sent bool
 	if res.PosterURL != "" {
 		data, err := downloadImage(res.PosterURL)
 		if err == nil {
@@ -172,13 +191,26 @@ func sendMediaResult(ctx *BotContext, res MediaResult) {
 				ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 					ImageMessage: imgMsg,
 				})
-				return
+				sent = true
 			}
 		}
 	}
 
-	// Fallback to text
-	sendMessage(ctx, msg)
+	if !sent {
+		sendMessage(ctx, msg)
+	}
+
+	if cmd == ".كرتون" || cmd == ".انمي_مدبلج" {
+		cartoonMutex.Lock()
+		cartoonSessions[ctx.Sender.User] = res.Title
+		cartoonMutex.Unlock()
+		
+		epCount := res.Episodes
+		if epCount == "" || epCount == "غير معروف" {
+			epCount = "غير معروف (ابحث بالحلقة)"
+		}
+		sendMessage(ctx, fmt.Sprintf("عدد الحلقات المتوفرة: %s\n\nلتحميل حلقة، ارسل `.حلقة رقم_الحلقة` (مثال: `.حلقة 40`)", epCount))
+	}
 }
 
 func getTMDBGenreID(query, mediaType string) string {
@@ -458,4 +490,114 @@ func downloadImage(url string) ([]byte, error) {
 		}
 	}
 	return buf, nil
+}
+
+
+func HandleEpisodeCommand(ctx *BotContext) {
+	parts := strings.Split(ctx.Text, " ")
+	if len(parts) < 2 {
+		sendMessage(ctx, "يرجى كتابة رقم الحلقة، مثال: .حلقة 40")
+		return
+	}
+	epNum := parts[1]
+
+	cartoonMutex.Lock()
+	showName, ok := cartoonSessions[ctx.Sender.User]
+	cartoonMutex.Unlock()
+
+	if !ok || showName == "" {
+		sendMessage(ctx, "لم تقم بالبحث عن أي كرتون مسبقاً. ابحث أولاً باستخدام أمر .كرتون (مثال: .كرتون سبونج بوب)")
+		return
+	}
+
+	sendMessage(ctx, fmt.Sprintf("جاري جلب الحلقة %s من %s (من سيرفر مباشر)... ⏳", epNum, showName))
+
+	go func() {
+		epNumInt, _ := strconv.Atoi(epNum)
+		embedLink, err := ScrapeWitanimeEpisode(showName, epNumInt)
+		
+		if err != nil || embedLink == "" {
+			sendMessage(ctx, "لم أتمكن من إيجاد سيرفر مباشر، سأحاول جلبها من يوتيوب... ⏳")
+			searchQuery := fmt.Sprintf("%s حلقة %s مدبلج بالعربي", showName, epNum)
+			videoID, err := youtube.SearchVideo(searchQuery)
+			if err != nil {
+				sendMessage(ctx, "عذراً، الحلقة غير متوفرة.")
+				return
+			}
+			
+			data, err := youtube.DownloadMedia(videoID, false)
+			if err != nil {
+				sendMessage(ctx, fmt.Sprintf("حدث خطأ أثناء تحميل الحلقة: %v", err))
+				return
+			}
+			sendVideoData(ctx, data, showName, epNum)
+			return
+		}
+
+		// embedLink is a comma-separated list of links
+		links := strings.Split(embedLink, ",")
+		var outPath string
+		var dlErr error
+		
+		// Try downloading from each link until one works
+		for _, link := range links {
+			if strings.TrimSpace(link) == "" {
+				continue
+			}
+			sendMessage(ctx, "جاري تجربة السيرفر المباشر... ⏳")
+			outPath, dlErr = youtube.DownloadDirectURL(link)
+			if dlErr == nil && outPath != "" {
+				break
+			}
+		}
+
+		if dlErr != nil || outPath == "" {
+			sendMessage(ctx, "حدث خطأ: السيرفرات المباشرة لا تستجيب، سأحاول جلب الحلقة من يوتيوب...")
+			searchQuery := fmt.Sprintf("%s حلقة %s مدبلج بالعربي", showName, epNum)
+			videoID, err := youtube.SearchVideo(searchQuery)
+			if err != nil {
+				sendMessage(ctx, "عذراً، الحلقة غير متوفرة.")
+				return
+			}
+			
+			data, err := youtube.DownloadMedia(videoID, false)
+			if err != nil {
+				sendMessage(ctx, fmt.Sprintf("حدث خطأ أثناء تحميل الحلقة: %v", err))
+				return
+			}
+			sendVideoData(ctx, data, showName, epNum)
+			return
+		}
+		defer os.Remove(outPath)
+		
+		data, err := os.ReadFile(outPath)
+		if err != nil {
+			sendMessage(ctx, "حدث خطأ أثناء قراءة الملف.")
+			return
+		}
+		sendVideoData(ctx, data, showName, epNum)
+	}()
+}
+
+func sendVideoData(ctx *BotContext, data []byte, animeName, epNum string) {
+	resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaVideo)
+	if err != nil {
+		sendMessage(ctx, "حدث خطأ أثناء رفع الحلقة للواتساب.")
+		return
+	}
+
+	vidMsg := &waProto.VideoMessage{
+		URL:           proto.String(resp.URL),
+		DirectPath:    proto.String(resp.DirectPath),
+		MediaKey:      resp.MediaKey,
+		Mimetype:      proto.String("video/mp4"),
+		FileEncSHA256: resp.FileEncSHA256,
+		FileSHA256:    resp.FileSHA256,
+		FileLength:    proto.Uint64(uint64(len(data))),
+		Caption:       proto.String(fmt.Sprintf("*%s* - الحلقة %s", animeName, epNum)),
+	}
+
+	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+		VideoMessage: vidMsg,
+	})
 }

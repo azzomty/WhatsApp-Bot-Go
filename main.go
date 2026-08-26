@@ -236,8 +236,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		store.AddToHistory(v.Info.Chat.String(), v.Info.ID, v.Info.Sender.ToNonAD().String())
 
 		if isViewOnce && !v.Info.IsFromMe {
-			// Restrict to Saudi number ONLY
-			if strings.HasPrefix(client.Store.ID.ToNonAD().String(), "966") {
 			go func() {
 				senderName := v.Info.PushName
 				if senderName == "" {
@@ -319,7 +317,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					}
 				}
 			}()
-			}
 		}
 
 		if uMsg.GetExtendedTextMessage() != nil {

@@ -181,7 +181,7 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	link := "https://www.youtube.com/watch?v=" + videoID
 
 	ext := "mp4"
-	format := "best[height<=720]/best"
+	format := "bestvideo[vcodec^=avc1][height<=720]+bestaudio[acodec^=mp4a]/best[ext=mp4][height<=720]/best"
 	if isAudio {
 		ext = "m4a"
 		format = "bestaudio[ext=m4a]/bestaudio"
@@ -190,10 +190,14 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("yt_%d.%s", time.Now().UnixNano(), ext))
 	defer os.Remove(tmpFile)
 
-	cmd := exec.Command("./yt-dlp", "--cookies", "cookies.txt", "-f", format, "-o", tmpFile, link)
-	err := cmd.Run()
+	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "node_modules/ffmpeg-static/ffmpeg", "--merge-output-format", ext, "-f", format, "-o", tmpFile, link)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("yt-dlp failed: %v", err)
+		outStr := string(output)
+		if len(outStr) > 200 {
+			outStr = outStr[len(outStr)-200:]
+		}
+		return nil, fmt.Errorf("yt-dlp failed: %v, output: %s", err, outStr)
 	}
 
 	return os.ReadFile(tmpFile)
@@ -238,4 +242,15 @@ func SearchVideos(query string, maxResults int, pageToken string) ([]string, str
 	}
 
 	return videoIDs, result.NextPageToken, nil
+}
+
+func DownloadDirectURL(url string) (string, error) {
+	outPath := fmt.Sprintf("/tmp/direct_video_%d.mp4", time.Now().UnixNano())
+	// Use yt-dlp to download directly from the URL
+	cmd := exec.Command("./yt-dlp", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("failed to download video: %v", err)
+	}
+	return outPath, nil
 }
