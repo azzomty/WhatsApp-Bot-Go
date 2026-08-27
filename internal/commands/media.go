@@ -67,12 +67,24 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		results = searchJikan(query, "manga")
 	}
 
-	if len(results) == 0 {
-		sendMessage(ctx, "للأسف ما لقيت أي نتيجة لطلبك!")
-		return
-	}
+		if len(results) == 0 {
+			sendMessage(ctx, "للأسف ما لقيت أي نتيجة لطلبك!")
+			return
+		}
 
-	// Save to session for .new
+		if (cmd == ".كرتون" || cmd == ".انمي_مدبلج") && len(results) > 1 {
+			msg := "🔍 *اختر الجزء أو الكرتون المطلوب بدقة، واكتب اسمه كاملاً:*\n\n"
+			for i, r := range results {
+				if i >= 20 {
+					break
+				}
+				msg += fmt.Sprintf("▪️ %s\n", r.Title)
+			}
+			msg += fmt.Sprintf("\nمثال: `%s %s`", cmd, results[0].Title)
+			sendMessage(ctx, msg)
+			return
+		}
+		// Save to session for .new
 	mediaMutex.Lock()
 	mediaSessions[ctx.ChatID.String()] = results[1:] // save the rest
 	mediaMutex.Unlock()
