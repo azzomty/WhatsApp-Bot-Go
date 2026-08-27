@@ -144,7 +144,7 @@ func Handle(ctx *BotContext) {
 
 	if len(parts) > 1 {
 		twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
-		if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مشرفين القروبات" || twoWordCmd == ".تنظيف القروبات" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".روليت" || twoWordCmd == ".اعرف الرقم" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" {
+		if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مشرفين القروبات" || twoWordCmd == ".تنظيف القروبات" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".روليت" || twoWordCmd == ".اعرف الرقم" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" || twoWordCmd == ".قائمة الكراتين" {
 			cmdName = twoWordCmd
 		}
 	}
@@ -156,7 +156,7 @@ func Handle(ctx *BotContext) {
 			cmdName = strings.ToLower(parts[0])
 			if len(parts) > 1 {
 				twoWordCmd := cmdName + " " + strings.ToLower(parts[1])
-				if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مشرفين القروبات" || twoWordCmd == ".تنظيف القروبات" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".روليت" || twoWordCmd == ".اعرف الرقم" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" {
+				if twoWordCmd == ".مواعيد صلاة" || twoWordCmd == ".مشرفين القروبات" || twoWordCmd == ".تنظيف القروبات" || twoWordCmd == ".مواعيد الصلاة" || twoWordCmd == ".فك ميوت" || twoWordCmd == ".تعديل امر" || twoWordCmd == ".تعديل رد" || twoWordCmd == ".روليت" || twoWordCmd == ".اعرف الرقم" || twoWordCmd == ".كل الاوامر" || twoWordCmd == ".تعديل حقوق" || twoWordCmd == ".تعديل حقوقي" || twoWordCmd == ".تعديل حزمة" || twoWordCmd == ".تعديل ملصق" || twoWordCmd == ".معلومات هبهبية" || twoWordCmd == ".سحب اشراف" || twoWordCmd == ".منع امر" || twoWordCmd == ".منع منع" || twoWordCmd == ".فك منع امر" || twoWordCmd == ".فك كومنت" || twoWordCmd == ".عمل حزمة" || twoWordCmd == ".صنع حزمة" || twoWordCmd == ".انهاء الحزمة" || twoWordCmd == ".إلغاء الحزمة" || twoWordCmd == ".الغاء الحزمة" || twoWordCmd == ".ذكرني اتصال" || twoWordCmd == ".ذكرني رسالة" || twoWordCmd == ".قائمة الاحاديث" || twoWordCmd == ".قائمة الأحاديث" || twoWordCmd == ".اسم pdf" || twoWordCmd == ".بحث قسم" || twoWordCmd == ".كل الاقسام" || twoWordCmd == ".كل الأقسام" || twoWordCmd == ".قائمة الكراتين" {
 					cmdName = twoWordCmd
 				}
 			}
@@ -295,6 +295,10 @@ func Handle(ctx *BotContext) {
 		HandleRenamePDF(ctx)
 	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا", ".كرتون", ".انمي_مدبلج":
 		HandleMediaCommand(ctx, cmdName)
+	case ".الجزء":
+		HandlePartCommand(ctx)
+	case ".قائمة الكراتين":
+		HandleCartoonList(ctx)
 	case ".حلقة":
 		HandleEpisodeCommand(ctx)
 	case ".قفل":

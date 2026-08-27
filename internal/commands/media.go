@@ -40,6 +40,7 @@ var (
 	mediaSessions   = make(map[string][]MediaResult)
 	mediaMutex      sync.Mutex
 	cartoonSessions = make(map[string]string)
+	cartoonListSessions = make(map[string][]MediaResult)
 	cartoonMutex    sync.Mutex
 	tmdbAPIKey      = "15d2ea6d0dc1d476efbca3eba2b9bbfb"
 )
@@ -62,6 +63,9 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		results = searchTMDB(query, "tv")
 	case ".كرتون", ".انمي_مدبلج":
 			results = SearchArabicCartoon(query)
+		cartoonMutex.Lock()
+		cartoonListSessions[ctx.Sender.User] = results
+		cartoonMutex.Unlock()
 	case ".انمي", ".أنمي":
 		results = searchJikan(query, "anime")
 	case ".مانجا", ".مانهاوا":
@@ -75,14 +79,14 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		}
 
 		if (cmd == ".كرتون" || cmd == ".انمي_مدبلج") && len(results) > 1 {
-			msg := "🔍 *اختر الجزء أو الكرتون المطلوب بدقة، واكتب اسمه كاملاً:*\n\n"
+			msg := "*اختر الجزء أو الكرتون المطلوب بدقة، واكتب اسمه كاملاً:*\n\n"
 			for i, r := range results {
 				if i >= 20 {
 					break
 				}
-				msg += fmt.Sprintf("▪️ %s\n", r.Title)
+				msg += fmt.Sprintf("- %s\n", r.Title)
 			}
-			msg += fmt.Sprintf("\nمثال: `%s %s`", cmd, results[0].Title)
+			msg += fmt.Sprintf("\nمثال:\n`.الجزء الأول`")
 			sendMessage(ctx, msg)
 			return
 		}
@@ -742,4 +746,84 @@ func SearchArabicCartoon(query string) []MediaResult {
 		results = append(results, res)
 	}
 	return results
+}
+
+
+func HandlePartCommand(ctx *BotContext) {
+	partQuery := strings.TrimSpace(strings.TrimPrefix(ctx.Text, ".الجزء"))
+	if partQuery == "" {
+		sendMessage(ctx, "يرجى تحديد الجزء، مثال: .الجزء الثاني")
+		return
+	}
+	
+	cartoonMutex.Lock()
+	results, ok := cartoonListSessions[ctx.Sender.User]
+	cartoonMutex.Unlock()
+	
+	if !ok || len(results) == 0 {
+		sendMessage(ctx, "يرجى البحث عن الكرتون أولاً باستخدام أمر .كرتون")
+		return
+	}
+	
+	var selected MediaResult
+	found := false
+	for _, r := range results {
+		if strings.Contains(r.Title, partQuery) {
+			selected = r
+			found = true
+			break
+		}
+	}
+	
+	if !found {
+		sendMessage(ctx, "لم أتمكن من العثور على هذا الجزء في نتائج بحثك السابقة! تأكد من كتابة الاسم الصحيح كما ظهر في القائمة.")
+		return
+	}
+	
+	sendMediaResult(ctx, selected, ".كرتون")
+}
+
+func HandleCartoonList(ctx *BotContext) {
+	sendMessage(ctx, "جاري جلب القائمة... ⏳")
+	
+	reqURL := "https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/series?select=title&order=title.asc"
+	req, _ := http.NewRequest("GET", reqURL, nil)
+	req.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
+	
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		sendMessage(ctx, "حدث خطأ أثناء جلب القائمة.")
+		return
+	}
+	defer resp.Body.Close()
+	
+	var data []struct {
+		Title string `json:"title"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		sendMessage(ctx, "حدث خطأ أثناء جلب القائمة.")
+		return
+	}
+	
+	// Deduplicate base names (e.g. "المحقق كونان الجزء الأول" -> "المحقق كونان")
+	uniqueShows := make(map[string]bool)
+	var shows []string
+	
+	for _, item := range data {
+		baseName := strings.Split(item.Title, " الجزء ")[0]
+		baseName = strings.Split(baseName, " الموسم ")[0]
+		if !uniqueShows[baseName] {
+			uniqueShows[baseName] = true
+			shows = append(shows, baseName)
+		}
+	}
+	
+	msg := "*قائمة الكراتين المتوفرة:*\n\n"
+	for _, show := range shows {
+		msg += "- " + show + "\n"
+	}
+	msg += "\n*للبحث عن أي كرتون، اكتب:* `.كرتون اسم_الكرتون`"
+	
+	sendMessage(ctx, msg)
 }
