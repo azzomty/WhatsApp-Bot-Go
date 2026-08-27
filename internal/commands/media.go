@@ -59,7 +59,7 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 	case ".مسلسل":
 		results = searchTMDB(query, "tv")
 	case ".كرتون", ".انمي_مدبلج":
-		results = searchTMDB(query, "tv")
+			results = SearchArabicCartoon(query)
 	case ".انمي", ".أنمي":
 		results = searchJikan(query, "anime")
 	case ".مانجا", ".مانهاوا":
@@ -319,7 +319,7 @@ func searchTMDB(query, searchType string) []MediaResult {
 	if genreID != "" {
 		apiURL = fmt.Sprintf("https://api.themoviedb.org/3/discover/%s?api_key=%s&with_genres=%s&language=ar-SA&sort_by=popularity.desc", searchType, tmdbAPIKey, genreID)
 	} else {
-		apiURL = fmt.Sprintf("https://api.themoviedb.org/3/search/%s?api_key=%s&query=%s&language=ar-SA", searchType, tmdbAPIKey, url.QueryEscape(query))
+		apiURL = fmt.Sprintf("https://api.themoviedb.org/3/search/%s?api_key=%s&query=%s&language=ar-SA", searchType, tmdbAPIKey, strings.ReplaceAll(url.QueryEscape(query), "+", "%20"))
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -390,7 +390,7 @@ func searchJikan(query, searchType string) []MediaResult {
 	if genreID != "" {
 		apiURL = fmt.Sprintf("https://api.jikan.moe/v4/%s?genres=%s&order_by=score&sort=desc", searchType, genreID)
 	} else {
-		apiURL = fmt.Sprintf("https://api.jikan.moe/v4/%s?q=%s", searchType, url.QueryEscape(query))
+		apiURL = fmt.Sprintf("https://api.jikan.moe/v4/%s?q=%s", searchType, strings.ReplaceAll(url.QueryEscape(query), "+", "%20"))
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -579,25 +579,102 @@ func HandleEpisodeCommand(ctx *BotContext) {
 	}()
 }
 
+
 func sendVideoData(ctx *BotContext, data []byte, animeName, epNum string) {
-	resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaVideo)
+	if len(data) > 64*1024*1024 {
+		// Send as Document
+		resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaDocument)
+		if err != nil {
+			sendMessage(ctx, "حدث خطأ أثناء رفع الحلقة للواتساب.")
+			return
+		}
+
+		docMsg := &waProto.DocumentMessage{
+			URL:           proto.String(resp.URL),
+			DirectPath:    proto.String(resp.DirectPath),
+			MediaKey:      resp.MediaKey,
+			Mimetype:      proto.String("video/mp4"),
+			FileEncSHA256: resp.FileEncSHA256,
+			FileSHA256:    resp.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(data))),
+			Title:         proto.String(fmt.Sprintf("%s - الحلقة %s.mp4", animeName, epNum)),
+			FileName:      proto.String(fmt.Sprintf("%s - الحلقة %s.mp4", animeName, epNum)),
+			Caption:       proto.String(fmt.Sprintf("*%s* - الحلقة %s", animeName, epNum)),
+		}
+
+		ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+			DocumentMessage: docMsg,
+		})
+	} else {
+		// Send as Video
+		resp, err := ctx.Client.Upload(context.Background(), data, whatsmeow.MediaVideo)
+		if err != nil {
+			sendMessage(ctx, "حدث خطأ أثناء رفع الحلقة للواتساب.")
+			return
+		}
+
+		vidMsg := &waProto.VideoMessage{
+			URL:           proto.String(resp.URL),
+			DirectPath:    proto.String(resp.DirectPath),
+			MediaKey:      resp.MediaKey,
+			Mimetype:      proto.String("video/mp4"),
+			FileEncSHA256: resp.FileEncSHA256,
+			FileSHA256:    resp.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(data))),
+			Caption:       proto.String(fmt.Sprintf("*%s* - الحلقة %s", animeName, epNum)),
+		}
+
+		ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+			VideoMessage: vidMsg,
+		})
+	}
+}
+
+
+func SearchArabicCartoon(query string) []MediaResult {
+	reqURL := fmt.Sprintf("https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/series?select=*&title=ilike.*%%25%s%%25*", strings.ReplaceAll(url.QueryEscape(query), "+", "%20"))
+	
+	req, _ := http.NewRequest("GET", reqURL, nil)
+	req.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
+	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
+	
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
 	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء رفع الحلقة للواتساب.")
-		return
+		return nil
 	}
-
-	vidMsg := &waProto.VideoMessage{
-		URL:           proto.String(resp.URL),
-		DirectPath:    proto.String(resp.DirectPath),
-		MediaKey:      resp.MediaKey,
-		Mimetype:      proto.String("video/mp4"),
-		FileEncSHA256: resp.FileEncSHA256,
-		FileSHA256:    resp.FileSHA256,
-		FileLength:    proto.Uint64(uint64(len(data))),
-		Caption:       proto.String(fmt.Sprintf("*%s* - الحلقة %s", animeName, epNum)),
+	defer resp.Body.Close()
+	
+	var data []struct {
+		Title         string  `json:"title"`
+		Description   string  `json:"description"`
+		PosterURL     string  `json:"poster_url"`
+		Rating        float64 `json:"rating"`
+		YearStarted   int     `json:"year_started"`
+		TotalEpisodes int     `json:"total_episodes"`
 	}
-
-	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
-		VideoMessage: vidMsg,
-	})
+	
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil
+	}
+	
+	var results []MediaResult
+	for _, item := range data {
+		res := MediaResult{
+			Title:       item.Title,
+			Description: item.Description,
+			PosterURL: item.PosterURL,
+		}
+		if item.Rating > 0 {
+			res.Rating = fmt.Sprintf("%.1f", item.Rating)
+		}
+		if item.YearStarted > 0 {
+			res.Year = fmt.Sprintf("%d", item.YearStarted)
+		}
+		if item.TotalEpisodes > 0 {
+			res.Episodes = fmt.Sprintf("%d", item.TotalEpisodes)
+		}
+		results = append(results, res)
+	}
+	return results
 }
