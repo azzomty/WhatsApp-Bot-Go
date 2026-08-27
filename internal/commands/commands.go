@@ -297,7 +297,7 @@ func Handle(ctx *BotContext) {
 		HandleMediaCommand(ctx, cmdName)
 	case ".الجزء":
 		HandlePartCommand(ctx)
-	case ".قائمة الكراتين":
+	case ".قائمة الكراتين", ".قائمة":
 		HandleCartoonList(ctx)
 	case ".حلقة":
 		HandleEpisodeCommand(ctx)
