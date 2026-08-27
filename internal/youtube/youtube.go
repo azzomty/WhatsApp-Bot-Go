@@ -280,7 +280,7 @@ func DownloadDirectURL(url string) (string, error) {
 			ffmpegPath = "node_modules/ffmpeg-static/ffmpeg.exe"
 		}
 	}
-	cmd := exec.Command(ytdlp, "--ffmpeg-location", ffmpegPath, "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "-o", outPath, url)
+	cmd := exec.Command(ytdlp, "--ffmpeg-location", ffmpegPath, "--sleep-requests", "1", "-f", "best[height<=480]/best", "-o", outPath, url)
 	err := cmd.Run()
 	if err != nil {
 		return "", fmt.Errorf("failed to download video: %v", err)
