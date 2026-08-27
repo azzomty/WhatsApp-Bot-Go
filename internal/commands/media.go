@@ -172,7 +172,7 @@ func sendMediaResult(ctx *BotContext, res MediaResult, cmd string) {
 
 	msg := fmt.Sprintf("*%s*\n\n", res.Title)
 	if res.Rating != "" && res.Rating != "0.0/10" && res.Rating != "0.00/10" {
-		msg += fmt.Sprintf("️ *التقييم:* %s\n", res.Rating)
+		msg += fmt.Sprintf("*التقييم:* %s\n", res.Rating)
 	}
 	if res.Year != "" {
 		msg += fmt.Sprintf("*السنة:* %s\n", res.Year)
@@ -181,7 +181,7 @@ func sendMediaResult(ctx *BotContext, res MediaResult, cmd string) {
 		msg += fmt.Sprintf("*عدد الحلقات:* %s\n", res.Episodes)
 	}
 	if res.Duration != "" {
-		msg += fmt.Sprintf("⏱️ *المدة:* %s\n", res.Duration)
+		msg += fmt.Sprintf("*المدة:* %s\n", res.Duration)
 	}
 	if res.Status != "" {
 		msg += fmt.Sprintf("*الحالة:* %s\n", res.Status)
@@ -528,14 +528,14 @@ func HandleEpisodeCommand(ctx *BotContext) {
 		return
 	}
 
-	sendMessage(ctx, fmt.Sprintf("جاري جلب الحلقة %s من %s (من سيرفر مباشر)... ⏳", epNum, showName))
+	sendMessage(ctx, fmt.Sprintf("جاري جلب الحلقة %s من %s (من سيرفر مباشر)... ", epNum, showName))
 
 	go func() {
 		epNumInt, _ := strconv.Atoi(epNum)
 		embedLink, err := ScrapeWitanimeEpisode(showName, epNumInt)
 		
 		if err != nil || embedLink == "" {
-			sendMessage(ctx, "لم أتمكن من إيجاد سيرفر مباشر، سأحاول جلبها من يوتيوب... ⏳")
+			sendMessage(ctx, "لم أتمكن من إيجاد سيرفر مباشر، سأحاول جلبها من يوتيوب... ")
 			searchQuery := fmt.Sprintf("%s حلقة %s مدبلج بالعربي", showName, epNum)
 			videoID, err := youtube.SearchVideo(searchQuery)
 			if err != nil {
@@ -562,7 +562,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 			if strings.TrimSpace(link) == "" {
 				continue
 			}
-			sendMessage(ctx, "جاري تجربة السيرفر المباشر... ⏳")
+			sendMessage(ctx, "جاري تجربة السيرفر المباشر... ")
 			outPath, dlErr = youtube.DownloadDirectURL(link)
 			if dlErr == nil && outPath != "" {
 				break
@@ -626,7 +626,7 @@ func sendVideoData(ctx *BotContext, data []byte, animeName, epNum string) {
 	}
 	
 	// File is > 64MB, split it!
-	sendMessage(ctx, "حجم الحلقة كبير جداً (أكثر من 64 ميجا)، جاري تقسيمها إلى أجزاء وإرسالها... ⏳")
+	sendMessage(ctx, "حجم الحلقة كبير جداً (أكثر من 64 ميجا)، جاري تقسيمها إلى أجزاء وإرسالها... ")
 	
 	tempDir, err := os.MkdirTemp("", "video_split")
 	if err != nil {
@@ -784,7 +784,7 @@ func HandlePartCommand(ctx *BotContext) {
 }
 
 func HandleCartoonList(ctx *BotContext) {
-	sendMessage(ctx, "جاري جلب القائمة... ⏳")
+	sendMessage(ctx, "جاري جلب القائمة... ")
 	
 	reqURL := "https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/series?select=title&order=title.asc"
 	req, _ := http.NewRequest("GET", reqURL, nil)
