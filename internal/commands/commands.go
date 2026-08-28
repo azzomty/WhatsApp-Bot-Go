@@ -295,12 +295,36 @@ func Handle(ctx *BotContext) {
 		HandleRenamePDF(ctx)
 	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا", ".كرتون", ".انمي_مدبلج":
 		HandleMediaCommand(ctx, cmdName)
-	case ".الجزء":
-		HandlePartCommand(ctx)
+	case ".الجزء", ".جزء":
+		if activeSource[ctx.Sender.User] == "stardima" {
+			parts := strings.Split(ctx.Text, " ")
+			if len(parts) > 1 {
+				idx, _ := strconv.Atoi(parts[1])
+				HandleStardimaPart(ctx, idx)
+			} else {
+				sendMessage(ctx, "يرجى تحديد الرقم، مثال: .جزء 1")
+			}
+		} else {
+			HandlePartCommand(ctx)
+		}
 	case ".قائمة الكراتين", ".قائمة":
 		HandleCartoonList(ctx)
-	case ".حلقة":
-		HandleEpisodeCommand(ctx)
+	case ".ستارديما":
+		HandleStardimaCommand(ctx)
+	case ".رقم":
+		HandleNumberSelect(ctx)
+				case ".حلقة":
+		if activeSource[ctx.Sender.User] == "stardima" {
+			parts := strings.Split(ctx.Text, " ")
+			if len(parts) > 1 {
+				idx, _ := strconv.Atoi(parts[1])
+				HandleStardimaEpisode(ctx, idx)
+			} else {
+				sendMessage(ctx, "يرجى تحديد الرقم، مثال: .حلقة 1")
+			}
+		} else {
+			HandleEpisodeCommand(ctx)
+		}
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":

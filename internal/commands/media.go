@@ -46,6 +46,7 @@ var (
 )
 
 func HandleMediaCommand(ctx *BotContext, cmd string) {
+	activeSource[ctx.Sender.User] = "supabase"
 	query := strings.TrimSpace(strings.TrimPrefix(ctx.Text, cmd))
 	if query == "" {
 		sendMessage(ctx, fmt.Sprintf("يرجى كتابة اسم العمل بعد الأمر، مثال:\n%s باتمان", cmd))
@@ -935,4 +936,242 @@ func FetchMovieEmbeds(movieID string) []struct {
 	}
 	json.NewDecoder(resp.Body).Decode(&embeds)
 	return embeds
+}
+
+var activeSource = make(map[string]string)
+var stardimaSearchSessions = make(map[string][]StardimaVideo)
+var stardimaSelectedSession = make(map[string]StardimaVideo)
+var stardimaSeasonsList = make(map[string][]StardimaSeason)
+var stardimaSelectedSeason = make(map[string]StardimaSeason)
+
+func HandleStardimaCommand(ctx *BotContext) {
+	query := strings.TrimSpace(strings.TrimPrefix(ctx.Text, ".ستارديما"))
+	
+	if query == "قائمة الافلام" || query == "قائمة الأفلام" {
+		HandleStardimaList(ctx, "aflam")
+		return
+	}
+	if query == "قائمة الكراتين" {
+		HandleStardimaList(ctx, "mosalsalat")
+		return
+	}
+	
+	if query == "" {
+		sendMessage(ctx, "يرجى كتابة اسم الكرتون بعد الأمر، مثال: .ستارديما داني الشبح")
+		return
+	}
+
+	activeSource[ctx.Sender.User] = "stardima"
+	sendMessage(ctx, "جاري البحث في ستارديما...")
+	
+	videos, err := SearchStardima(query)
+	if err != nil || len(videos) == 0 {
+		sendMessage(ctx, "لم أتمكن من العثور على نتائج في ستارديما. تأكد من الاسم.")
+		return
+	}
+	
+	cartoonMutex.Lock()
+	stardimaSearchSessions[ctx.Sender.User] = videos
+	cartoonMutex.Unlock()
+	
+	msg := fmt.Sprintf("*نتائج البحث في ستارديما عن:* %s\n\n", query)
+	for i, v := range videos {
+		typ := "مسلسل"
+		if !v.IsSeries {
+			typ = "فيلم"
+		}
+		msg += fmt.Sprintf("%d. %s (%s)\n", i+1, v.Title, typ)
+	}
+	
+	msg += "\n*للاختيار اكتب:* `.رقم` متبوعاً بالرقم (مثال: `.رقم 1`)"
+	sendMessage(ctx, msg)
+}
+
+func HandleNumberSelect(ctx *BotContext) {
+	parts := strings.Split(ctx.Text, " ")
+	if len(parts) < 2 {
+		sendMessage(ctx, "يرجى تحديد الرقم، مثال: .رقم 1")
+		return
+	}
+	
+	idx, err := strconv.Atoi(parts[1])
+	if err != nil || idx < 1 {
+		sendMessage(ctx, "رقم غير صحيح.")
+		return
+	}
+	
+	cartoonMutex.Lock()
+	videos, ok := stardimaSearchSessions[ctx.Sender.User]
+	cartoonMutex.Unlock()
+	
+	if !ok || len(videos) == 0 {
+		sendMessage(ctx, "يرجى البحث أولاً باستخدام .ستارديما")
+		return
+	}
+	
+	if idx > len(videos) {
+		sendMessage(ctx, "الرقم غير موجود في النتائج.")
+		return
+	}
+	
+	selected := videos[idx-1]
+	
+	cartoonMutex.Lock()
+	stardimaSelectedSession[ctx.Sender.User] = selected
+	cartoonMutex.Unlock()
+	
+	if selected.IsSeries {
+		sendMessage(ctx, fmt.Sprintf("تم اختيار المسلسل: *%s*\nجاري جلب المواسم...", selected.Title))
+		seasons, err := GetStardimaSeasons(selected.URL)
+		if err != nil || len(seasons) == 0 {
+			sendMessage(ctx, "لم أتمكن من جلب المواسم.")
+			return
+		}
+		
+		cartoonMutex.Lock()
+		stardimaSeasonsList[ctx.Sender.User] = seasons
+		cartoonMutex.Unlock()
+		
+		msg := "*المواسم المتوفرة:*\n"
+		for i, s := range seasons {
+			msg += fmt.Sprintf("%d. %s\n", i+1, s.Name)
+		}
+		msg += "\n*لاختيار الموسم اكتب:* `.جزء` متبوعاً بالرقم (مثال: `.جزء 1`)"
+		sendMessage(ctx, msg)
+		
+	} else {
+		// It's a movie, download immediately
+		sendMessage(ctx, fmt.Sprintf("تم اختيار الفيلم: *%s*\nجاري التجهيز والتحميل...", selected.Title))
+		go downloadStardimaMovie(ctx, selected)
+	}
+}
+
+func HandleStardimaPart(ctx *BotContext, partIdx int) {
+	cartoonMutex.Lock()
+	seasons, ok := stardimaSeasonsList[ctx.Sender.User]
+	cartoonMutex.Unlock()
+	
+	if !ok || len(seasons) == 0 {
+		sendMessage(ctx, "يرجى البحث واختيار المسلسل أولاً.")
+		return
+	}
+	
+	if partIdx < 1 || partIdx > len(seasons) {
+		sendMessage(ctx, "رقم الجزء غير صحيح.")
+		return
+	}
+	
+	selSeason := seasons[partIdx-1]
+	
+	cartoonMutex.Lock()
+	stardimaSelectedSeason[ctx.Sender.User] = selSeason
+	cartoonMutex.Unlock()
+	
+	sendMessage(ctx, fmt.Sprintf("تم اختيار الموسم: *%s*\nجاري حساب عدد الحلقات...", selSeason.Name))
+	
+	go func() {
+		episodes, err := GetStardimaEpisodes(selSeason.ID)
+		if err == nil && len(episodes) > 0 {
+			sendMessage(ctx, fmt.Sprintf("الموسم يحتوي على *%d حلقة*\nلتحميل حلقة اكتب: `.حلقة` متبوعاً بالرقم (مثال: `.حلقة 1`)", len(episodes)))
+		} else {
+			sendMessage(ctx, "لتحميل حلقة اكتب: `.حلقة` متبوعاً بالرقم (مثال: `.حلقة 1`)")
+		}
+	}()
+}
+
+func HandleStardimaEpisode(ctx *BotContext, epNum int) {
+	cartoonMutex.Lock()
+	selSeason, ok := stardimaSelectedSeason[ctx.Sender.User]
+	selectedShow := stardimaSelectedSession[ctx.Sender.User]
+	cartoonMutex.Unlock()
+	
+	if !ok || selSeason.ID == "" {
+		sendMessage(ctx, "يرجى اختيار الجزء أولاً عبر .جزء")
+		return
+	}
+	
+	sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
+	
+	go func() {
+		episodes, err := GetStardimaEpisodes(selSeason.ID)
+		if err != nil || len(episodes) == 0 {
+			sendMessage(ctx, "حدث خطأ أثناء جلب الحلقات.")
+			return
+		}
+		
+		var watchURL string
+		for _, e := range episodes {
+			if e.EpisodeNumber == epNum {
+				watchURL = e.WatchURL
+				break
+			}
+		}
+		
+		if watchURL == "" {
+			sendMessage(ctx, "لم يتم العثور على الحلقة المطلوبة.")
+			return
+		}
+		
+		m3u8URL, err := GetBestM3U8(watchURL)
+		if err != nil {
+			sendMessage(ctx, "عذراً، لم أتمكن من العثور على أي سيرفر يعمل لهذه الحلقة حالياً.")
+			return
+		}
+		
+		data, err := DownloadM3U8(m3u8URL)
+		if err != nil {
+			sendMessage(ctx, "حدث خطأ أثناء التحميل: "+err.Error())
+			return
+		}
+		
+		sendVideoData(ctx, data, selectedShow.Title+" - "+selSeason.Name, strconv.Itoa(epNum))
+	}()
+}
+
+func downloadStardimaMovie(ctx *BotContext, selected StardimaVideo) {
+	hyperURL, err := GetStardimaHyperwatchingURL(selected.URL)
+	if err != nil {
+		sendMessage(ctx, "فشل العثور على رابط المشاهدة.")
+		return
+	}
+	
+	uqloadEmbed, err := GetUqloadEmbedURL(hyperURL)
+	if err != nil {
+		sendMessage(ctx, "السيرفر الأساسي غير متوفر لهذا الفيلم حالياً.")
+		return
+	}
+	
+	m3u8URL, err := GetUqloadM3U8(uqloadEmbed)
+	if err != nil {
+		sendMessage(ctx, "فشل في فك تشفير السيرفر.")
+		return
+	}
+	
+	data, err := DownloadM3U8(m3u8URL)
+	if err != nil {
+		sendMessage(ctx, "حدث خطأ أثناء التحميل: "+err.Error())
+		return
+	}
+	
+	sendVideoData(ctx, data, selected.Title, "فيلم")
+}
+
+func HandleStardimaList(ctx *BotContext, category string) {
+	sendMessage(ctx, "جاري جلب القائمة من ستارديما (قد يستغرق بضع ثوان)...")
+	
+	go func() {
+		titles, err := GetStardimaFullList(category)
+		if err != nil || len(titles) == 0 {
+			sendMessage(ctx, "فشل في جلب القائمة من ستارديما.")
+			return
+		}
+		
+		msg := fmt.Sprintf("*قائمة ستارديما (%d عمل):*\n\n", len(titles))
+		for _, t := range titles {
+			msg += "- " + t + "\n"
+		}
+		
+		msg += "\n*للبحث والمشاهدة استخدم:* .ستارديما اسم العمل"
+		sendMessage(ctx, msg)
+	}()
 }
