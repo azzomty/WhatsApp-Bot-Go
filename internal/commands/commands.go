@@ -37,6 +37,8 @@ var (
 	commandsCount  int
 	IsBotEnabled   = true
 	AutoJoinGroups = false
+	seenGroupLinks = make(map[string]bool)
+	seenLinksMutex sync.Mutex
 )
 
 type BotContext struct {
@@ -2378,11 +2380,7 @@ func HandleMoroccan(ctx *BotContext) {
 func HandleSyrian(ctx *BotContext) {
 	if ctx.Text == ".دخلني قروبات" {
 		AutoJoinGroups = !AutoJoinGroups
-		if AutoJoinGroups {
-			sendMessage(ctx, "تم تفعيل سحب الروابط: الرقم السوري لن ينضم للقروبات، بل سيقوم بتحويل أي رابط قروب يظهر أمامه إلى الخاص (الرسائل المحفوظة/Yourself).")
-		} else {
-			sendMessage(ctx, "تم إيقاف سحب الروابط.")
-		}
+		// Silently return, no message!
 		return
 	}
 
@@ -2393,13 +2391,25 @@ func HandleSyrian(ctx *BotContext) {
 				return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
 			})
 			if len(code) > 0 {
-				link := "https://chat.whatsapp.com/" + code[0]
-				go func() {
-					myJID := ctx.Client.Store.ID.ToNonAD()
-					ctx.Client.SendMessage(context.Background(), myJID, &waProto.Message{
-						Conversation: proto.String("تم سحب رابط قروب جديد:\n" + link),
-					})
-				}()
+				linkCode := code[0]
+				link := "https://chat.whatsapp.com/" + linkCode
+				
+				seenLinksMutex.Lock()
+				isSeen := seenGroupLinks[linkCode]
+				if !isSeen {
+					seenGroupLinks[linkCode] = true
+				}
+				seenLinksMutex.Unlock()
+				
+				if !isSeen {
+					go func() {
+						myJID := ctx.Client.Store.ID.ToNonAD()
+						ctx.Client.SendMessage(context.Background(), myJID, &waProto.Message{
+							// Just the raw link, no extra text
+							Conversation: proto.String(link),
+						})
+					}()
+				}
 			}
 		}
 	}
