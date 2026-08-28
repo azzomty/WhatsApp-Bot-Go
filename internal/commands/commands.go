@@ -2379,9 +2379,9 @@ func HandleSyrian(ctx *BotContext) {
 	if ctx.Text == ".دخلني قروبات" {
 		AutoJoinGroups = !AutoJoinGroups
 		if AutoJoinGroups {
-			sendMessage(ctx, "تم تفعيل الانضمام التلقائي (الرقم السوري سيقوم بالانضمام لأي قروب يرسل رابطه).")
+			sendMessage(ctx, "تم تفعيل سحب الروابط: الرقم السوري لن ينضم للقروبات، بل سيقوم بتحويل أي رابط قروب يظهر أمامه إلى الخاص (الرسائل المحفوظة/Yourself).")
 		} else {
-			sendMessage(ctx, "تم إيقاف الانضمام التلقائي.")
+			sendMessage(ctx, "تم إيقاف سحب الروابط.")
 		}
 		return
 	}
@@ -2393,8 +2393,12 @@ func HandleSyrian(ctx *BotContext) {
 				return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_')
 			})
 			if len(code) > 0 {
+				link := "https://chat.whatsapp.com/" + code[0]
 				go func() {
-					ctx.Client.JoinGroupWithLink(context.Background(), code[0])
+					myJID := ctx.Client.Store.ID.ToNonAD()
+					ctx.Client.SendMessage(context.Background(), myJID, &waProto.Message{
+						Conversation: proto.String("تم سحب رابط قروب جديد:\n" + link),
+					})
 				}()
 			}
 		}
