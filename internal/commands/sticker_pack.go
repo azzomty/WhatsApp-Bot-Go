@@ -49,7 +49,7 @@ func CreateStickerPackCommand(ctx *BotContext) {
 		authorName = rights["author"]
 	}
 
-	limit := 30
+	limit := 250
 	parts := strings.Split(ctx.Text, " ")
 	if len(parts) > 2 {
 		if parsedLimit, err := strconv.Atoi(parts[2]); err == nil && parsedLimit > 0 {

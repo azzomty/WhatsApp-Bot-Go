@@ -17,6 +17,29 @@ import (
 	"strings"
 )
 
+var stardimaBaseURL string
+var stardimaMutex sync.Mutex
+
+func GetStardimaBaseURL() string {
+	stardimaMutex.Lock()
+	defer stardimaMutex.Unlock()
+	if stardimaBaseURL != "" {
+		return stardimaBaseURL
+	}
+	resp, err := http.Get("https://stardima.com")
+	if err == nil {
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		re := regexp.MustCompile(`https://(stardima[a-zA-Z0-9-]*\.cartoon\.com\.im)`)
+		m := re.FindStringSubmatch(string(body))
+		if len(m) > 1 {
+			stardimaBaseURL = "https://" + m[1]
+			return stardimaBaseURL
+		}
+	}
+	return "https://stardima-x3.cartoon.com.im"
+}
+
 type StardimaVideo struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
@@ -32,7 +55,7 @@ type StardimaSearchResponse struct {
 }
 
 func SearchStardima(query string) ([]StardimaVideo, error) {
-	reqURL := "https://stardima-37.cartoon.com.im/search?query=" + url.QueryEscape(query)
+	reqURL := GetStardimaBaseURL() + "/search?query=" + url.QueryEscape(query)
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 	req.Header.Set("Accept", "application/json")
@@ -100,7 +123,7 @@ type StardimaEpisode struct {
 }
 
 func GetStardimaEpisodes(seasonID string) ([]StardimaEpisode, error) {
-	req, _ := http.NewRequest("GET", "https://stardima-37.cartoon.com.im/series/season/"+seasonID, nil)
+	req, _ := http.NewRequest("GET", GetStardimaBaseURL() + "/series/season/"+seasonID, nil)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -431,7 +454,7 @@ func DownloadM3U8(m3u8URL string) ([]byte, error) {
 
 func GetStardimaFullList(category string) ([]string, error) {
 	// First fetch page 1 to get total pages
-	reqURL := fmt.Sprintf("https://stardima-37.cartoon.com.im/%s?page=1", category)
+	reqURL := fmt.Sprintf(GetStardimaBaseURL() + "/%s?page=1", category)
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 
@@ -471,7 +494,7 @@ func GetStardimaFullList(category string) ([]string, error) {
 		wg.Add(1)
 		go func(page int) {
 			defer wg.Done()
-			r, _ := http.NewRequest("GET", fmt.Sprintf("https://stardima-37.cartoon.com.im/%s?page=%d", category, page), nil)
+			r, _ := http.NewRequest("GET", fmt.Sprintf(GetStardimaBaseURL() + "/%s?page=%d", category, page), nil)
 			r.Header.Set("X-Requested-With", "XMLHttpRequest")
 			res, e := http.DefaultClient.Do(r)
 			if e == nil {
