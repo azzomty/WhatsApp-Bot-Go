@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"context"
-	"net"
 	"sync"
 	"os"
 	"os/exec"
@@ -170,7 +168,12 @@ func GetStardimaHyperwatchingURL(movieURL string) (string, error) {
 
 
 func GetBestM3U8(hyperURL string) (string, error) {
-	resp, err := http.Get(hyperURL)
+	fmt.Println("DEBUG: GetBestM3U8 called with hyperURL:", hyperURL)
+
+	req, _ := http.NewRequest("GET", hyperURL, nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -220,18 +223,23 @@ func GetBestM3U8(hyperURL string) (string, error) {
 		json.NewDecoder(resp2.Body).Decode(&apiData)
 		resp2.Body.Close()
 		
+		// Some servers wrap it in an iframe, some don't.
+		// If there is an 'id' param, it might be the real embed URL.
+		var embedURL string
 		parsed, err := url.Parse(apiData.WatchURL)
-		if err != nil {
-			continue
-		}
-		
-		idParam := parsed.Query().Get("id")
-		if idParam == "" {
-			continue
+		if err == nil {
+			idParam := parsed.Query().Get("id")
+			if idParam != "" {
+				embedURL = idParam
+			} else {
+				embedURL = apiData.WatchURL
+			}
+		} else {
+			embedURL = apiData.WatchURL
 		}
 		
 		// Try to extract M3U8 from this embed URL
-		m3u8, err := ExtractM3U8(idParam)
+		m3u8, err := ExtractM3U8(embedURL)
 		if err == nil && m3u8 != "" {
 			return m3u8, nil
 		}
@@ -242,17 +250,7 @@ func GetBestM3U8(hyperURL string) (string, error) {
 
 func ExtractM3U8(embedURL string) (string, error) {
 	// Custom dialer to bypass DNS issues for Lulustream/Luluvdo
-	dialer := &net.Dialer{}
-	client := &http.Client{
-		Transport: &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				if strings.HasPrefix(addr, "luluvdo.com:") || strings.HasPrefix(addr, "lulustream.com:") {
-					return dialer.DialContext(ctx, network, "104.26.6.79:443")
-				}
-				return dialer.DialContext(ctx, network, addr)
-			},
-		},
-	}
+	client := &http.Client{}
 	
 	req, _ := http.NewRequest("GET", embedURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
@@ -440,9 +438,10 @@ func DownloadM3U8(m3u8URL string) ([]byte, error) {
 	defer os.Remove(tmpFile)
 
 	// Use yt-dlp to download m3u8
-	cmd := exec.Command("yt-dlp", m3u8URL, "-o", tmpFile)
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("yt-dlp failed: %v", err)
+	cmd := exec.Command("yt-dlp", "-N", "16", "--no-check-certificate", "-f", "best[height<=480]/best", m3u8URL, "-o", tmpFile)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("yt-dlp failed: %v\nOutput: %s", err, string(out))
 	}
 
 	data, err := os.ReadFile(tmpFile)
@@ -515,4 +514,22 @@ func GetStardimaFullList(category string) ([]string, error) {
 	wg.Wait()
 
 	return allTitles, nil
+}
+
+
+func DownloadM3U8WithQuality(m3u8URL, quality string) ([]byte, error) {
+	tmpFile := "/tmp/stardima_" + strconv.FormatInt(time.Now().UnixNano(), 10) + ".mp4"
+	defer os.Remove(tmpFile)
+
+	cmd := exec.Command("yt-dlp", "-N", "16", "--no-check-certificate", "-f", quality, m3u8URL, "-o", tmpFile)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("yt-dlp failed: %v\nOutput: %s", err, string(out))
+	}
+
+	data, err := os.ReadFile(tmpFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read output file: %v", err)
+	}
+	return data, nil
 }

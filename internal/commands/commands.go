@@ -327,6 +327,7 @@ func Handle(ctx *BotContext) {
 		} else {
 			HandleEpisodeCommand(ctx)
 		}
+
 	case ".قفل":
 		closeGroup(ctx)
 	case ".فتح":
@@ -458,6 +459,7 @@ func Handle(ctx *BotContext) {
 }
 
 func sendMessage(ctx *BotContext, text string) {
+	fmt.Println("SENT:", text)
 	text = strings.ReplaceAll(text, "...", "")
 	text = strings.ReplaceAll(text, "..", "")
 	text = strings.ReplaceAll(text, ",,,", "")
