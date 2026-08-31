@@ -32,9 +32,9 @@ type AnslayerAnime struct {
 }
 
 type AnslayerEpisode struct {
-	EpisodeID     int `json:"episode_id"`
+	EpisodeID     string `json:"episode_id"`
 	EpisodeName   string `json:"episode_name"`
-	EpisodeNumber float64 `json:"episode_number"`
+	EpisodeNumber string `json:"episode_number"`
 }
 
 type AnslayerSession struct {
@@ -232,27 +232,25 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 		return false
 	}
 	
-	var epID int
+	epNumStr := strconv.Itoa(epNumInt)
+	var epIDStr string
 	for _, e := range session.Episodes {
-		if int(e.EpisodeNumber) == epNumInt {
-			epID = e.EpisodeID
+		if e.EpisodeNumber == epNumStr {
+			epIDStr = e.EpisodeID
 			break
 		}
 	}
 	
-	if epID == 0 {
+	if epIDStr == "" {
 		if epNumInt > 0 && epNumInt <= len(session.Episodes) {
-			epID = session.Episodes[epNumInt-1].EpisodeID
+			epIDStr = session.Episodes[epNumInt-1].EpisodeID
 		}
 	}
 	
-	if epID == 0 {
+	if epIDStr == "" {
 		sendMessage(ctx, "لم يتم العثور على الحلقة.")
 		return true
 	}
-	
-	epNumStr := strconv.Itoa(epNumInt)
-	epIDStr := strconv.Itoa(epID)
 	
 	if session.Mode == "watch" {
 		sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
