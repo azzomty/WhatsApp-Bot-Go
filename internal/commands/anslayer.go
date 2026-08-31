@@ -480,20 +480,30 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 		return
 	}
 	
-	// Choose first fembed or ok.ru link, or just first link
-	targetLink := links[0]
-	
-	if strings.Contains(targetLink, "mediafire.com") {
-		// Replace file_premium with file
-		targetLink = strings.Replace(targetLink, "file_premium", "file", 1)
-		targetLink = resolveMediaFire(targetLink)
+	var data []byte
+	var success bool
+
+	for i, targetLink := range links {
+		if strings.Contains(targetLink, "mediafire.com") {
+			targetLink = strings.Replace(targetLink, "file_premium", "file", 1)
+			targetLink = resolveMediaFire(targetLink)
+		}
+		
+		if i > 0 {
+			sendMessage(ctx, fmt.Sprintf("السيرفر السابق محذوف، جاري تجربة سيرفر بديل (%d/%d)...", i+1, len(links)))
+		}
+		
+		data, err = DownloadM3U8WithQuality(targetLink, "bestvideo[height<=720]+bestaudio/best[height<=720]")
+		if err == nil {
+			success = true
+			break
+		}
 	}
 	
-	// Download using yt-dlp via existing function DownloadM3U8WithQuality (works for any url yt-dlp supports)
-	data, err := DownloadM3U8WithQuality(targetLink, "bestvideo[height<=720]+bestaudio/best[height<=720]")
-	if err != nil {
-		sendMessage(ctx, "حدث خطأ أثناء التحميل: " + err.Error())
+	if !success {
+		sendMessage(ctx, "فشلت جميع السيرفرات في التحميل. (ربما تم حذف الحلقة من جميع المصادر بسبب حقوق النشر)")
 		return
 	}
+	
 	sendVideoDataWithSplit(ctx, data, anime.AnimeName, epNum, false)
 }
