@@ -53,7 +53,7 @@ func init() {
 
 func loadAnslayerUsers() {
 	ansUsersMutex.Lock()
-	defer ansUsersMutex.Lock()
+	defer ansUsersMutex.Unlock()
 	data, err := os.ReadFile(anslayerUsersFile)
 	if err == nil {
 		json.Unmarshal(data, &anslayerUsers)
