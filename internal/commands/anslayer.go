@@ -32,9 +32,9 @@ type AnslayerAnime struct {
 }
 
 type AnslayerEpisode struct {
-	EpisodeID     string `json:"episode_id"`
+	EpisodeID     int `json:"episode_id"`
 	EpisodeName   string `json:"episode_name"`
-	EpisodeNumber string `json:"episode_number"`
+	EpisodeNumber float64 `json:"episode_number"`
 }
 
 type AnslayerSession struct {
@@ -84,29 +84,42 @@ func reqHeaders(req *http.Request) {
 
 // HandleAnslayerCommand processes .انمي سلاير ...
 func HandleAnslayerCommand(ctx *BotContext, mode string) {
-	parts := strings.SplitN(ctx.Text, " ", 3)
-	
-	if mode == "marketing" && len(parts) >= 3 && parts[1] == "نشر" {
-		anslayerMutex.Lock()
-		anslayerReplyMsg = parts[2]
-		anslayerMutex.Unlock()
-		sendMessage(ctx, "✅ تم حفظ قالب الرد بنجاح!\nالرسالة:\n"+anslayerReplyMsg)
-		return
-	}
+	fullParts := strings.SplitN(ctx.Text, " ", 2)
 	
 	var query string
 	if mode == "marketing" {
-		if len(parts) < 2 {
-			sendMessage(ctx, "يرجى كتابة اسم الأنمي بعد الأمر، مثلا:\n.انمي سلاير ون بيس\nأو لحفظ رسالة النشر:\n.انمي سلاير نشر رسالتي هنا")
+		if len(fullParts) < 2 {
+			sendMessage(ctx, "يرجى كتابة اسم الأنمي، مثلا:\n.انمي سلاير ون بيس\nأو لحفظ رسالة النشر:\n.انمي سلاير نشر رسالتي هنا")
 			return
 		}
-		query = strings.Join(parts[1:], " ")
+		afterAnmi := strings.TrimSpace(fullParts[1])
+		if !strings.HasPrefix(afterAnmi, "سلاير") {
+			return
+		}
+		afterSlayer := strings.TrimSpace(strings.TrimPrefix(afterAnmi, "سلاير"))
+		if afterSlayer == "" {
+			sendMessage(ctx, "يرجى كتابة اسم الأنمي، مثلا:\n.انمي سلاير ون بيس")
+			return
+		}
+		if strings.HasPrefix(afterSlayer, "نشر") {
+			replyMsg := strings.TrimSpace(strings.TrimPrefix(afterSlayer, "نشر"))
+			if replyMsg == "" {
+				sendMessage(ctx, "يرجى كتابة الرسالة بعد كلمة نشر.")
+				return
+			}
+			anslayerMutex.Lock()
+			anslayerReplyMsg = replyMsg
+			anslayerMutex.Unlock()
+			sendMessage(ctx, "✅ تم حفظ قالب الرد بنجاح!\nالرسالة:\n"+anslayerReplyMsg)
+			return
+		}
+		query = afterSlayer
 	} else {
-		if len(parts) < 2 {
-			sendMessage(ctx, "يرجى كتابة اسم الأنمي بعد الأمر، مثلا:\n.انمي ون بيس")
+		if len(fullParts) < 2 {
+			sendMessage(ctx, "يرجى كتابة اسم الأنمي، مثلا:\n.انمي ون بيس")
 			return
 		}
-		query = strings.Join(parts[1:], " ")
+		query = fullParts[1]
 	}
 	searchParams := map[string]interface{}{
 		"_offset":   0,
@@ -219,31 +232,31 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 		return false
 	}
 	
-	epNumStr := strconv.Itoa(epNumInt)
-	var epID string
+	var epID int
 	for _, e := range session.Episodes {
-		if e.EpisodeNumber == epNumStr {
+		if int(e.EpisodeNumber) == epNumInt {
 			epID = e.EpisodeID
 			break
 		}
 	}
 	
-	if epID == "" {
-		// fallback to index if episode number not exactly matching?
-		// some movies are '1'
+	if epID == 0 {
 		if epNumInt > 0 && epNumInt <= len(session.Episodes) {
 			epID = session.Episodes[epNumInt-1].EpisodeID
 		}
 	}
 	
-	if epID == "" {
+	if epID == 0 {
 		sendMessage(ctx, "لم يتم العثور على الحلقة.")
 		return true
 	}
 	
+	epNumStr := strconv.Itoa(epNumInt)
+	epIDStr := strconv.Itoa(epID)
+	
 	if session.Mode == "watch" {
 		sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
-		go downloadAnslayerEpisode(ctx, session.SelectedAnime, epNumStr, epID)
+		go downloadAnslayerEpisode(ctx, session.SelectedAnime, epNumStr, epIDStr)
 		delete(ansSessions, ctx.Sender.User)
 		return true
 	}
@@ -259,18 +272,17 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 		close(anslayerStopChan)
 	}
 	anslayerStopChan = make(chan struct{})
-	anslayerMonitored = epID
+	anslayerMonitored = epIDStr
 	ch := anslayerStopChan
 	anslayerMutex.Unlock()
 	
 	sendMessage(ctx, "✅ تم بدء مراقبة التعليقات للحلقة!\nسيقوم البوت بالرد فوراً على أي تعليق جديد (ولن يرد على شخص مرتين).\nلإيقاف المراقبة، اطلب حلقة أخرى أو أعد تشغيل البوت.")
 	
-	go monitorComments(epID, ch)
+	go monitorComments(epIDStr, ch)
 	
 	delete(ansSessions, ctx.Sender.User)
 	return true
 }
-
 func monitorComments(epID string, stopCh chan struct{}) {
 	epIDFloat, _ := strconv.ParseFloat(epID, 64)
 	oldOffset := 30
