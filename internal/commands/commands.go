@@ -370,7 +370,13 @@ func Handle(ctx *BotContext) {
 	case ".اسم pdf":
 		HandleRenamePDF(ctx)
 	case ".فلم", ".فيلم", ".مسلسل", ".انمي", ".أنمي", ".مانجا", ".مانهاوا", ".كرتون", ".انمي_مدبلج":
-		HandleMediaCommand(ctx, cmdName)
+		if len(parts) > 1 && parts[1] == "سلاير" {
+			HandleAnslayerCommand(ctx, "marketing")
+		} else if cmdName == ".انمي" || cmdName == ".أنمي" {
+			HandleAnslayerCommand(ctx, "watch")
+		} else {
+			HandleMediaCommand(ctx, cmdName)
+		}
 	case ".الجزء", ".جزء":
 		if activeSource[ctx.Sender.User] == "stardima" {
 			parts := strings.Split(ctx.Text, " ")
