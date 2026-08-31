@@ -27,7 +27,7 @@ var (
 )
 
 type AnslayerAnime struct {
-	AnimeID   int    `json:"anime_id"`
+	AnimeID   string `json:"anime_id"`
 	AnimeName string `json:"anime_name"`
 }
 
@@ -190,7 +190,7 @@ func HandleAnslayerNumberSelect(ctx *BotContext, number int) bool {
 		
 		sendMessage(ctx, fmt.Sprintf("تم اختيار الأنمي: *%s*\nجاري جلب الحلقات...", selected.AnimeName))
 		
-		u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%d&fetch_episodes=Yes&more_info=No", selected.AnimeID)
+		u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%s&fetch_episodes=Yes&more_info=No", selected.AnimeID)
 		req, _ := http.NewRequest("GET", u, nil)
 		reqHeaders(req)
 		resp, err := http.DefaultClient.Do(req)
@@ -385,7 +385,7 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
 }
 func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string, epID string) {
 	// First get the episode details to find episode_urls
-	u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%d&fetch_episodes=Yes&more_info=No", anime.AnimeID)
+	u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%s&fetch_episodes=Yes&more_info=No", anime.AnimeID)
 	req, _ := http.NewRequest("GET", u, nil)
 	reqHeaders(req)
 	resp, err := http.DefaultClient.Do(req)
