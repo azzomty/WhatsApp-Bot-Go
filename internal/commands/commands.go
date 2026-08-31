@@ -314,8 +314,20 @@ func Handle(ctx *BotContext) {
 	case ".ستارديما":
 		HandleStardimaCommand(ctx)
 	case ".رقم":
+		if len(parts) > 1 {
+			idx, _ := strconv.Atoi(parts[1])
+			if HandleAnslayerNumberSelect(ctx, idx) {
+				return
+			}
+		}
 		HandleNumberSelect(ctx)
 				case ".حلقة":
+		if len(parts) > 1 {
+			idx, _ := strconv.Atoi(parts[1])
+			if HandleAnslayerEpisodeSelect(ctx, idx) {
+				return
+			}
+		}
 		if activeSource[ctx.Sender.User] == "stardima" {
 			parts := strings.Split(ctx.Text, " ")
 			if len(parts) > 1 {
