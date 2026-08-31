@@ -38,6 +38,7 @@ type AnslayerEpisode struct {
 }
 
 type AnslayerSession struct {
+	Mode          string
 	State         string
 	Animes        []AnslayerAnime
 	SelectedAnime AnslayerAnime
@@ -83,10 +84,10 @@ func reqHeaders(req *http.Request) {
 }
 
 // HandleAnslayerCommand processes .انمي سلاير ...
-func HandleAnslayerCommand(ctx *BotContext) {
+func HandleAnslayerCommand(ctx *BotContext, mode string) {
 	parts := strings.SplitN(ctx.Text, " ", 3)
 	
-	if len(parts) >= 3 && parts[1] == "نشر" {
+	if mode == "marketing" && len(parts) >= 3 && parts[1] == "نشر" {
 		anslayerMutex.Lock()
 		anslayerReplyMsg = parts[2]
 		anslayerMutex.Unlock()
@@ -94,12 +95,20 @@ func HandleAnslayerCommand(ctx *BotContext) {
 		return
 	}
 	
-	if len(parts) < 2 {
-		sendMessage(ctx, "يرجى كتابة اسم الأنمي بعد الأمر، مثلا:\n.انمي سلاير ون بيس\nأو لحفظ رسالة النشر:\n.انمي سلاير نشر رسالتي هنا")
-		return
+	var query string
+	if mode == "marketing" {
+		if len(parts) < 2 {
+			sendMessage(ctx, "يرجى كتابة اسم الأنمي بعد الأمر، مثلا:\n.انمي سلاير ون بيس\nأو لحفظ رسالة النشر:\n.انمي سلاير نشر رسالتي هنا")
+			return
+		}
+		query = strings.Join(parts[1:], " ")
+	} else {
+		if len(parts) < 2 {
+			sendMessage(ctx, "يرجى كتابة اسم الأنمي بعد الأمر، مثلا:\n.انمي ون بيس")
+			return
+		}
+		query = strings.Join(parts[1:], " ")
 	}
-	
-	query := strings.Join(parts[1:], " ")
 	searchParams := map[string]interface{}{
 		"_offset":   0,
 		"_limit":    30,
@@ -138,6 +147,7 @@ func HandleAnslayerCommand(ctx *BotContext) {
 	msg.WriteString("*نتائج البحث في انمي سلاير:*\n\n")
 	
 	session := &AnslayerSession{
+		Mode: mode,
 		State: "select_anime",
 		Animes: res.Response.Data,
 	}
@@ -232,6 +242,13 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 		return true
 	}
 	
+	if session.Mode == "watch" {
+		sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
+		go downloadAnslayerEpisode(ctx, session.SelectedAnime, epNumStr, epID)
+		delete(ansSessions, ctx.Sender.User)
+		return true
+	}
+	
 	anslayerMutex.Lock()
 	if anslayerReplyMsg == "" {
 		anslayerMutex.Unlock()
@@ -256,76 +273,178 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 }
 
 func monitorComments(epID string, stopCh chan struct{}) {
-	ticker := time.NewTicker(10 * time.Second)
-	defer ticker.Stop()
-	
 	epIDFloat, _ := strconv.ParseFloat(epID, 64)
-	
+	oldOffset := 30
+
 	for {
 		select {
 		case <-stopCh:
 			return
-		case <-ticker.C:
+		default:
 			anslayerMutex.Lock()
 			msg := anslayerReplyMsg
 			anslayerMutex.Unlock()
-			if msg == "" { continue }
-			
-			params := map[string]interface{}{
-				"_order_by": "latest_first",
-				"hide_irrelevant": "Yes",
-				"episode_id": epIDFloat,
-				"_limit": 10,
-				"myfirst": "Yes",
-				"_offset": 0,
-			}
-			b, _ := json.Marshal(params)
-			u := "https://anslayer.com/anime/public/episode-comments/get-episode-comments?json=" + url.QueryEscape(string(b))
-			
-			req, _ := http.NewRequest("GET", u, nil)
-			reqHeaders(req)
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
+
+			if msg == "" {
+				time.Sleep(10 * time.Second)
 				continue
 			}
-			
-			var res struct {
-				Response struct {
-					Data []struct {
-						CommentID string `json:"episode_comment_id"`
-						UserID    string `json:"user_id"`
-					} `json:"data"`
-				} `json:"response"`
+
+			// Check newest first
+			if replied := checkAndReplyBatch(epIDFloat, msg, 0, 30); replied {
+				time.Sleep(65 * time.Second)
+				continue
 			}
-			json.NewDecoder(resp.Body).Decode(&res)
-			resp.Body.Close()
-			
-			// iterate in reverse to reply to older comments first? or just top 10
-			for _, c := range res.Response.Data {
-				if c.UserID == "" || c.CommentID == "" { continue }
-				if hasAnslayerUser(c.UserID) { continue }
-				
-				// Reply!
-				payload := url.Values{}
-				payload.Set("episode_comment_id", c.CommentID)
-				payload.Set("reply_text", msg)
-				payload.Set("spoiler", "No")
-				payload.Set("recipient_id", "")
-				payload.Set("notification_type", "reply")
-				
-				reqR, _ := http.NewRequest("POST", "https://anslayer.com/anime/public/episode-comments/create-episode-comment-reply", strings.NewReader(payload.Encode()))
-				reqHeaders(reqR)
-				reqR.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-				
-				respR, errR := http.DefaultClient.Do(reqR)
-				if errR == nil {
-					respR.Body.Close()
-					if respR.StatusCode == 200 {
-						saveAnslayerUser(c.UserID)
-						fmt.Println("Replied to user:", c.UserID)
-					}
-				}
+
+			// If no new comments to reply to, check older comments
+			if replied := checkAndReplyBatch(epIDFloat, msg, oldOffset, 30); replied {
+				oldOffset += 1 // Next time we can fetch from the same offset or advance slightly. Since we replied to one, the list shifted. We'll just advance oldOffset when the whole page is exhausted.
+				time.Sleep(65 * time.Second)
+				continue
+			}
+
+			// If we didn't reply to anything in oldOffset, advance it
+			oldOffset += 30
+			time.Sleep(10 * time.Second)
+		}
+	}
+}
+
+func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
+	params := map[string]interface{}{
+		"_order_by": "latest_first",
+		"hide_irrelevant": "Yes",
+		"episode_id": epIDFloat,
+		"_limit": limit,
+		"myfirst": "Yes",
+		"_offset": offset,
+	}
+	b, _ := json.Marshal(params)
+	u := "https://anslayer.com/anime/public/episode-comments/get-episode-comments?json=" + url.QueryEscape(string(b))
+	
+	req, _ := http.NewRequest("GET", u, nil)
+	reqHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	
+	var res struct {
+		Response struct {
+			Data []struct {
+				CommentID string `json:"episode_comment_id"`
+				UserID    string `json:"user_id"`
+			} `json:"data"`
+		} `json:"response"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+		return false
+	}
+	
+	if len(res.Response.Data) == 0 {
+		return false // No comments in this batch
+	}
+	
+	for _, c := range res.Response.Data {
+		if c.UserID == "" || c.CommentID == "" { continue }
+		if hasAnslayerUser(c.UserID) { continue }
+		
+		// Found one to reply to
+		payload := url.Values{}
+		payload.Set("episode_comment_id", c.CommentID)
+		payload.Set("reply_text", msg)
+		payload.Set("spoiler", "No")
+		payload.Set("recipient_id", "")
+		payload.Set("notification_type", "reply")
+		
+		reqR, _ := http.NewRequest("POST", "https://anslayer.com/anime/public/episode-comments/create-episode-comment-reply", strings.NewReader(payload.Encode()))
+		reqHeaders(reqR)
+		reqR.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		
+		respR, errR := http.DefaultClient.Do(reqR)
+		if errR == nil {
+			respR.Body.Close()
+			if respR.StatusCode == 200 {
+				saveAnslayerUser(c.UserID)
+				fmt.Println("Replied to user:", c.UserID)
+				return true
 			}
 		}
 	}
+	return false
+}
+func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string, epID string) {
+	// First get the episode details to find episode_urls
+	u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%d&fetch_episodes=Yes&more_info=No", anime.AnimeID)
+	req, _ := http.NewRequest("GET", u, nil)
+	reqHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		sendMessage(ctx, "خطأ في الاتصال.")
+		return
+	}
+	
+	var res struct {
+		Response struct {
+			Episodes struct {
+				Data []struct {
+					EpisodeID string `json:"episode_id"`
+					EpisodeUrls []struct {
+						ServerName string `json:"episode_server_name"`
+						Url        string `json:"episode_url"`
+					} `json:"episode_urls"`
+				} `json:"data"`
+			} `json:"episodes"`
+		} `json:"response"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+	resp.Body.Close()
+	
+	var vidUrl string
+	for _, e := range res.Response.Episodes.Data {
+		if e.EpisodeID == epID {
+			for _, u := range e.EpisodeUrls {
+				if u.ServerName == "muilt" {
+					vidUrl = u.Url
+					break
+				}
+			}
+			break
+		}
+	}
+	
+	if vidUrl == "" {
+		sendMessage(ctx, "عذرا، لم أجد سيرفر صالح لهذه الحلقة.")
+		return
+	}
+	
+	// Fetch muilt links
+	req2, _ := http.NewRequest("GET", vidUrl, nil)
+	reqHeaders(req2)
+	resp2, err := http.DefaultClient.Do(req2)
+	if err != nil {
+		sendMessage(ctx, "فشل جلب سيرفرات المشاهدة.")
+		return
+	}
+	defer resp2.Body.Close()
+	
+	var links []string
+	json.NewDecoder(resp2.Body).Decode(&links)
+	
+	if len(links) == 0 {
+		sendMessage(ctx, "لا توجد روابط لهذه الحلقة.")
+		return
+	}
+	
+	// Choose first fembed or ok.ru link, or just first link
+	targetLink := links[0]
+	
+	// Download using yt-dlp via existing function DownloadM3U8WithQuality (works for any url yt-dlp supports)
+	data, err := DownloadM3U8WithQuality(targetLink, "bestvideo[height<=720]+bestaudio/best[height<=720]")
+	if err != nil {
+		sendMessage(ctx, "حدث خطأ أثناء التحميل: " + err.Error())
+		return
+	}
+	sendVideoDataWithSplit(ctx, data, anime.AnimeName, epNum, false)
 }
