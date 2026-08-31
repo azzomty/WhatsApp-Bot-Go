@@ -323,22 +323,26 @@ func Handle(ctx *BotContext) {
 		}
 	case ".baymax", ".buymax":
 		baymax(ctx)
-	case ".القروبات الي مب داخلها":
-		var codes []string
-		linksMutex.Lock()
-		for code := range allSavedLinks {
-			codes = append(codes, code)
+	case ".القروبات":
+		if strings.Contains(ctx.Text, "مب داخلها") {
+			var codes []string
+			linksMutex.Lock()
+			for code := range allSavedLinks {
+				codes = append(codes, code)
+			}
+			linksMutex.Unlock()
+			if len(codes) > 0 {
+				go filterAndSendLinks(ctx, codes)
+			} else {
+				sendMessage(ctx, "لا توجد روابط محفوظة حالياً.")
+			}
 		}
-		linksMutex.Unlock()
-		if len(codes) > 0 {
-			go filterAndSendLinks(ctx, codes)
-		} else {
-			sendMessage(ctx, "لا توجد روابط محفوظة حالياً.")
+	case ".فحص":
+		if strings.Contains(ctx.Text, "الروابط") {
+			interactiveChecking[ctx.Sender.User] = true
+			interactiveSessionLinks[ctx.Sender.User] = []string{}
+			sendMessage(ctx, "قم بإرسال الروابط الآن، وعند الانتهاء اكتب `.انتهيت`")
 		}
-	case ".فحص الروابط":
-		interactiveChecking[ctx.Sender.User] = true
-		interactiveSessionLinks[ctx.Sender.User] = []string{}
-		sendMessage(ctx, "قم بإرسال الروابط الآن، وعند الانتهاء اكتب `.انتهيت`")
 	case ".كل الاوامر", ".الاوامر":
 		showCommands(ctx)
 	case ".حوم":
