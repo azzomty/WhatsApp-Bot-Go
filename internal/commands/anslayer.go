@@ -76,7 +76,6 @@ func hasAnslayerUser(uid string) bool {
 
 func reqHeaders(req *http.Request) {
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("Authorization", "Bearer "+anslayerToken)
 	req.Header.Set("Client-Id", anslayerClientID)
 	req.Header.Set("Client-Secret", anslayerClientSec)
