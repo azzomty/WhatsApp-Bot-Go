@@ -89,7 +89,7 @@ func filterAndSendLinks(ctx *BotContext, codes []string) {
 				unjoined = append(unjoined, "https://chat.whatsapp.com/"+code)
 			}
 		}
-		time.Sleep(500 * time.Millisecond) // limit API calls
+		time.Sleep(100 * time.Millisecond) // limit API calls
 	}
 	
 	if len(unjoined) == 0 {
@@ -576,7 +576,7 @@ func sendMessage(ctx *BotContext, text string) {
 	text = strings.ReplaceAll(text, "..", "")
 	text = strings.ReplaceAll(text, ",,,", "")
 	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresenceComposing, types.ChatPresenceMediaText)
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	ctx.Client.SendChatPresence(context.Background(), ctx.ChatID, types.ChatPresencePaused, types.ChatPresenceMediaText)
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{
@@ -2494,6 +2494,26 @@ func HandleMoroccan(ctx *BotContext) {
 func HandleSyrian(ctx *BotContext) {
 	if ctx.Text == ".دخلني قروبات" {
 		AutoJoinGroups = !AutoJoinGroups
+		return
+	}
+	if strings.Contains(ctx.Text, ".القروبات") && strings.Contains(ctx.Text, "مب داخلها") {
+		var codes []string
+		linksMutex.Lock()
+		for code := range allSavedLinks {
+			codes = append(codes, code)
+		}
+		linksMutex.Unlock()
+		if len(codes) > 0 {
+			go filterAndSendLinks(ctx, codes)
+		} else {
+			sendMessage(ctx, "لا توجد روابط محفوظة حالياً.")
+		}
+		return
+	}
+	if strings.Contains(ctx.Text, ".فحص") && strings.Contains(ctx.Text, "الروابط") {
+		interactiveChecking[ctx.Sender.User] = true
+		interactiveSessionLinks[ctx.Sender.User] = []string{}
+		sendMessage(ctx, "قم بإرسال الروابط الآن، وعند الانتهاء اكتب `.انتهيت`")
 		return
 	}
 

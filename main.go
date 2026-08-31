@@ -115,6 +115,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		}
 		if strings.HasPrefix(myNumber, "963") {
 			commands.HandleSyrian(ctx)
+			return
 		}
 
 		// Saudi logic continues down below
