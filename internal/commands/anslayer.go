@@ -276,14 +276,15 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 	
 	sendMessage(ctx, "✅ تم بدء مراقبة التعليقات للحلقة!\nسيقوم البوت بالرد فوراً على أي تعليق جديد (ولن يرد على شخص مرتين).\nلإيقاف المراقبة، اطلب حلقة أخرى أو أعد تشغيل البوت.")
 	
-	go monitorComments(epIDStr, ch)
+	go monitorComments(ctx, epIDStr, ch)
 	
 	delete(ansSessions, ctx.Sender.User)
 	return true
 }
-func monitorComments(epID string, stopCh chan struct{}) {
+func monitorComments(ctx *BotContext, epID string, stopCh chan struct{}) {
 	epIDFloat, _ := strconv.ParseFloat(epID, 64)
 	oldOffset := 30
+	finishedNotified := false
 
 	for {
 		select {
@@ -300,26 +301,37 @@ func monitorComments(epID string, stopCh chan struct{}) {
 			}
 
 			// Check newest first
-			if replied := checkAndReplyBatch(epIDFloat, msg, 0, 30); replied {
+			replied, hasComments := checkAndReplyBatch(epIDFloat, msg, 0, 30)
+			if replied {
 				time.Sleep(65 * time.Second)
 				continue
 			}
 
 			// If no new comments to reply to, check older comments
-			if replied := checkAndReplyBatch(epIDFloat, msg, oldOffset, 30); replied {
-				oldOffset += 1 // Next time we can fetch from the same offset or advance slightly. Since we replied to one, the list shifted. We'll just advance oldOffset when the whole page is exhausted.
+			replied, hasComments = checkAndReplyBatch(epIDFloat, msg, oldOffset, 30)
+			if replied {
+				oldOffset += 1 
 				time.Sleep(65 * time.Second)
 				continue
 			}
 
-			// If we didn't reply to anything in oldOffset, advance it
-			oldOffset += 30
+			if !hasComments {
+				if !finishedNotified {
+					sendMessage(ctx, "✅ تم الرد على جميع التعليقات القديمة في هذه الحلقة! البوت الآن في وضع الاستعداد للتعليقات الجديدة فقط، يمكنك اختيار حلقة أخرى إذا أردت.")
+					finishedNotified = true
+				}
+				// reset to 0 to only monitor new ones
+				oldOffset = 0
+			} else {
+				// advance to older
+				oldOffset += 30
+			}
 			time.Sleep(10 * time.Second)
 		}
 	}
 }
 
-func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
+func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) (bool, bool) {
 	params := map[string]interface{}{
 		"_order_by": "latest_first",
 		"hide_irrelevant": "Yes",
@@ -335,7 +347,7 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
 	reqHeaders(req)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return false
+		return false, false
 	}
 	defer resp.Body.Close()
 	
@@ -348,11 +360,11 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
 		} `json:"response"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return false
+		return false, false
 	}
 	
 	if len(res.Response.Data) == 0 {
-		return false // No comments in this batch
+		return false, false // No comments in this batch
 	}
 	
 	for _, c := range res.Response.Data {
@@ -377,11 +389,11 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) bool {
 			if respR.StatusCode == 200 {
 				saveAnslayerUser(c.UserID)
 				fmt.Println("Replied to user:", c.UserID)
-				return true
+				return true, true
 			}
 		}
 	}
-	return false
+	return false, true
 }
 func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string, epID string) {
 	// First get the episode details to find episode_urls
