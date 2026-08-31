@@ -398,7 +398,14 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) (bool,
 }
 
 func resolveMediaFire(u string) string {
-	resp, err := http.Get(u)
+	req, _ := http.NewRequest("GET", u, nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return u
 	}
@@ -444,36 +451,30 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 	json.NewDecoder(resp.Body).Decode(&res)
 	resp.Body.Close()
 	
-	var vidUrl string
+	var links []string
+	
 	for _, e := range res.Response.Episodes.Data {
 		if e.EpisodeID == epID {
 			for _, u := range e.EpisodeUrls {
 				if u.ServerName == "muilt" {
-					vidUrl = u.Url
-					break
+					// Fetch muilt links
+					req2, _ := http.NewRequest("GET", u.Url, nil)
+					reqHeaders(req2)
+					resp2, err := http.DefaultClient.Do(req2)
+					if err == nil {
+						var mLinks []string
+						json.NewDecoder(resp2.Body).Decode(&mLinks)
+						links = append(links, mLinks...)
+						resp2.Body.Close()
+					}
+				} else {
+					// Add backup servers
+					links = append(links, u.Url)
 				}
 			}
 			break
 		}
 	}
-	
-	if vidUrl == "" {
-		sendMessage(ctx, "عذرا، لم أجد سيرفر صالح لهذه الحلقة.")
-		return
-	}
-	
-	// Fetch muilt links
-	req2, _ := http.NewRequest("GET", vidUrl, nil)
-	reqHeaders(req2)
-	resp2, err := http.DefaultClient.Do(req2)
-	if err != nil {
-		sendMessage(ctx, "فشل جلب سيرفرات المشاهدة.")
-		return
-	}
-	defer resp2.Body.Close()
-	
-	var links []string
-	json.NewDecoder(resp2.Body).Decode(&links)
 	
 	if len(links) == 0 {
 		sendMessage(ctx, "لا توجد روابط لهذه الحلقة.")
