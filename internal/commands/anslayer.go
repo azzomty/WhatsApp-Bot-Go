@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -395,6 +396,27 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int) (bool,
 	}
 	return false, true
 }
+
+func resolveMediaFire(u string) string {
+	resp, err := http.Get(u)
+	if err != nil {
+		return u
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	html := string(body)
+	
+	idx := strings.Index(html, "href=\"https://download")
+	if idx != -1 {
+		start := idx + 6
+		end := strings.Index(html[start:], "\"")
+		if end != -1 {
+			return html[start : start+end]
+		}
+	}
+	return u
+}
+
 func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string, epID string) {
 	// First get the episode details to find episode_urls
 	u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%s&fetch_episodes=Yes&more_info=No", anime.AnimeID)
@@ -460,6 +482,12 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 	
 	// Choose first fembed or ok.ru link, or just first link
 	targetLink := links[0]
+	
+	if strings.Contains(targetLink, "mediafire.com") {
+		// Replace file_premium with file
+		targetLink = strings.Replace(targetLink, "file_premium", "file", 1)
+		targetLink = resolveMediaFire(targetLink)
+	}
 	
 	// Download using yt-dlp via existing function DownloadM3U8WithQuality (works for any url yt-dlp supports)
 	data, err := DownloadM3U8WithQuality(targetLink, "bestvideo[height<=720]+bestaudio/best[height<=720]")
