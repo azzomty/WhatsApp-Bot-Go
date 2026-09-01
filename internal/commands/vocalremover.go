@@ -48,7 +48,7 @@ func HandleRemoveMusic(ctx *BotContext) {
 
 	outputFile := filepath.Join(tmpDir, "output_muted"+ext)
 
-	ffmpegPath := "/home/lennox/Desktop/اهها/Go_Bot/node_modules/ffmpeg-static/ffmpeg"
+	ffmpegPath := "./ffmpeg"
 	
 	// Remove audio completely using -an
 	cmd := exec.Command(ffmpegPath, "-y", "-i", inputFile, "-c:v", "copy", "-an", outputFile)

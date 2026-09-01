@@ -438,7 +438,7 @@ func DownloadM3U8(m3u8URL string) ([]byte, error) {
 	defer os.Remove(tmpFile)
 
 	// Use yt-dlp to download m3u8
-	cmd := exec.Command("./yt-dlp", "-N", "16", "--no-check-certificate", "-f", "best[height<=480]/best", m3u8URL, "-o", tmpFile)
+	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "./ffmpeg", "-N", "16", "--no-check-certificate", "-f", "best[height<=480]/best", m3u8URL, "-o", tmpFile)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("yt-dlp failed: %v\nOutput: %s", err, string(out))
@@ -521,7 +521,7 @@ func DownloadM3U8WithQuality(m3u8URL, quality string) ([]byte, error) {
 	tmpFile := "/tmp/stardima_" + strconv.FormatInt(time.Now().UnixNano(), 10) + ".mp4"
 	defer os.Remove(tmpFile)
 
-	cmd := exec.Command("./yt-dlp", "-N", "16", "--no-check-certificate", "-f", quality, m3u8URL, "-o", tmpFile)
+	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "./ffmpeg", "-N", "16", "--no-check-certificate", "-f", quality, m3u8URL, "-o", tmpFile)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf("yt-dlp failed: %v\nOutput: %s", err, string(out))

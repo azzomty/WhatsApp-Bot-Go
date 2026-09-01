@@ -200,7 +200,7 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	
 	ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
 	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
-		ffmpegPath = "ffmpeg" // fallback to system ffmpeg
+		ffmpegPath = "./ffmpeg" // fallback to system ffmpeg
 	}
 	if runtime.GOOS == "windows" && ffmpegPath == "node_modules/ffmpeg-static/ffmpeg" {
 		if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg.exe"); err == nil {
@@ -273,7 +273,7 @@ func DownloadDirectURL(url string) (string, error) {
 	}
 	ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
 	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
-		ffmpegPath = "ffmpeg" // fallback to system ffmpeg
+		ffmpegPath = "./ffmpeg" // fallback to system ffmpeg
 	}
 	if runtime.GOOS == "windows" && ffmpegPath == "node_modules/ffmpeg-static/ffmpeg" {
 		if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg.exe"); err == nil {

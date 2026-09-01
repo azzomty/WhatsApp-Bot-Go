@@ -102,6 +102,18 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 			sendMessage(ctx, "يرجى كتابة اسم الأنمي، مثلا:\n.انمي سلاير ون بيس")
 			return
 		}
+		if strings.HasPrefix(afterSlayer, "مفضلة") {
+			anslayerMutex.Lock()
+			msg := anslayerReplyMsg
+			anslayerMutex.Unlock()
+			if msg == "" {
+				sendMessage(ctx, "يرجى أولاً حفظ قالب الرد باستخدام أمر:\n.انمي سلاير نشر <رسالتك>")
+				return
+			}
+			startFavMarketing(ctx, msg)
+			return
+		}
+
 		if strings.HasPrefix(afterSlayer, "نشر") {
 			replyMsg := strings.TrimSpace(strings.TrimPrefix(afterSlayer, "نشر"))
 			if replyMsg == "" {
@@ -507,4 +519,193 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 	}
 	
 	sendVideoDataWithSplit(ctx, data, anime.AnimeName, epNum, false)
+}
+
+
+var favStopChan chan struct{}
+
+func startFavMarketing(ctx *BotContext, msg string) {
+	if favStopChan != nil {
+		close(favStopChan) // Stop previous
+	}
+	favStopChan = make(chan struct{})
+	
+	// Fetch favorites
+	u := "https://anslayer.com/anime/public/animes/get-published-animes?json=%7B%22_offset%22%3A0%2C%22_limit%22%3A100%2C%22_order_by%22%3A%22latest_first%22%2C%22list_type%22%3A%22favorites%22%2C%22just_info%22%3A%22Yes%22%2C%22user_id%22%3A9174886%7D"
+	req, _ := http.NewRequest("GET", u, nil)
+	reqHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		sendMessage(ctx, "فشل جلب المفضلة.")
+		return
+	}
+	defer resp.Body.Close()
+	
+	var res struct {
+		Response struct {
+			Data []AnslayerAnime `json:"data"`
+		} `json:"response"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+	
+	if len(res.Response.Data) == 0 {
+		sendMessage(ctx, "قائمة المفضلة فارغة.")
+		return
+	}
+	
+	animeIDs := make([]string, 0)
+	for _, a := range res.Response.Data {
+		animeIDs = append(animeIDs, a.AnimeID)
+	}
+	
+	sendMessage(ctx, fmt.Sprintf("✅ تم جلب %d أنمي من المفضلة، سيبدأ البوت الآن بنشر التعليقات عليها جميعاً بشكل دوري!", len(animeIDs)))
+	
+	go monitorFavComments(ctx, animeIDs, msg, favStopChan)
+}
+
+func checkAndReplyAnimeBatch(animeIDFloat float64, msg string, offset, limit int) (bool, bool) {
+	params := map[string]interface{}{
+		"_order_by": "latest_first",
+		"hide_irrelevant": "Yes",
+		"anime_id": animeIDFloat,
+		"_limit": limit,
+		"myfirst": "Yes",
+		"_offset": offset,
+	}
+	b, _ := json.Marshal(params)
+	u := "https://anslayer.com/anime/public/anime-comments/get-anime-comments?json=" + url.QueryEscape(string(b))
+	
+	req, _ := http.NewRequest("GET", u, nil)
+	reqHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false, false
+	}
+	defer resp.Body.Close()
+	
+	var res struct {
+		Response struct {
+			Data []struct {
+				CommentID string `json:"anime_comment_id"`
+				UserID    string `json:"user_id"`
+			} `json:"data"`
+		} `json:"response"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+	
+	if len(res.Response.Data) == 0 {
+		return false, false
+	}
+	
+	for _, c := range res.Response.Data {
+		if c.UserID == "" || c.CommentID == "" { continue }
+		if hasAnslayerUser(c.UserID) { continue }
+		
+		payload := url.Values{}
+		payload.Set("anime_comment_id", c.CommentID)
+		payload.Set("reply_text", msg)
+		payload.Set("spoiler", "No")
+		payload.Set("recipient_id", "")
+		payload.Set("notification_type", "reply")
+		
+		reqR, _ := http.NewRequest("POST", "https://anslayer.com/anime/public/anime-comments/create-anime-comment-reply", strings.NewReader(payload.Encode()))
+		reqHeaders(reqR)
+		reqR.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		
+		respR, errR := http.DefaultClient.Do(reqR)
+		if errR == nil {
+			respR.Body.Close()
+			if respR.StatusCode == 200 {
+				ansUsersMutex.Lock()
+				anslayerUsers[c.UserID] = true
+				ansUsersMutex.Unlock()
+				
+				f, _ := os.OpenFile("anslayer_users.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+				f.WriteString(c.UserID + "\n")
+				f.Close()
+				
+				fmt.Println("Replied to user:", c.UserID, "on anime comment:", c.CommentID)
+				return true, true
+			}
+		}
+	}
+	return false, true
+}
+
+func getLatestEpisodeID(animeID string) string {
+	u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%s&fetch_episodes=Yes&more_info=No", animeID)
+	req, _ := http.NewRequest("GET", u, nil)
+	reqHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	
+	var res struct {
+		Response struct {
+			Episodes struct {
+				Data []AnslayerEpisode `json:"data"`
+			} `json:"episodes"`
+		} `json:"response"`
+	}
+	json.NewDecoder(resp.Body).Decode(&res)
+	
+	if len(res.Response.Episodes.Data) > 0 {
+		// Usually the first item is the newest episode if ordered by latest
+		return res.Response.Episodes.Data[0].EpisodeID
+	}
+	return ""
+}
+
+func monitorFavComments(ctx *BotContext, animeIDs []string, msg string, stopCh chan struct{}) {
+	oldOffsets := make(map[string]int)
+	for _, id := range animeIDs {
+		oldOffsets[id] = 30 // Start looking back from 30 for episode comments
+	}
+	
+	for {
+		select {
+		case <-stopCh:
+			return
+		default:
+			repliedInThisLoop := false
+			
+			for _, animeID := range animeIDs {
+				// Fetch the latest episode ID for this anime dynamically
+				latestEpID := getLatestEpisodeID(animeID)
+				if latestEpID == "" {
+					continue
+				}
+				
+				epIDFloat, _ := strconv.ParseFloat(latestEpID, 64)
+				
+				// 1. Check Newest first (offset 0)
+				replied, _ := checkAndReplyBatch(epIDFloat, msg, 0, 30) // Use existing episode batch func
+				if replied {
+					repliedInThisLoop = true
+					time.Sleep(65 * time.Second)
+					break
+				}
+				
+				// 2. If no new comment, check older comments
+				offset := oldOffsets[animeID]
+				replied, hasComments := checkAndReplyBatch(epIDFloat, msg, offset, 30)
+				if replied {
+					oldOffsets[animeID] += 1
+					repliedInThisLoop = true
+					time.Sleep(65 * time.Second)
+					break
+				} else {
+					if hasComments {
+						oldOffsets[animeID] += 30
+					}
+				}
+			}
+			
+			if !repliedInThisLoop {
+				time.Sleep(10 * time.Second)
+			}
+		}
+	}
 }

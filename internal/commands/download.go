@@ -95,7 +95,7 @@ func downloadTikTok(ctx *BotContext, link string) {
 func downloadWithYtDlp(ctx *BotContext, link string, silentFail bool) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("dl_%d.mp4", time.Now().UnixNano()))
 	
-	cmd := exec.Command("./yt-dlp", "-N", "16", "--no-check-certificate", "--cookies", "cookies.txt", "-f", "b", "-o", tmpFile, link)
+	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "./ffmpeg", "-N", "16", "--no-check-certificate", "--cookies", "cookies.txt", "-f", "b", "-o", tmpFile, link)
 	err := cmd.Run()
 	if err != nil {
 		if !silentFail {

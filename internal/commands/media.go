@@ -1226,7 +1226,7 @@ func sendVideoDataWithSplit(ctx *BotContext, data []byte, animeName, epNum strin
 	os.WriteFile(inputPath, data, 0644)
 	outPattern := tempDir + "/part_%03d.mp4"
 	
-	ffmpegPath := "ffmpeg"
+	ffmpegPath := "./ffmpeg"
 	if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg"); err == nil {
 		ffmpegPath = "node_modules/ffmpeg-static/ffmpeg"
 	}
