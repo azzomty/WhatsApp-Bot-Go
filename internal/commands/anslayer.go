@@ -652,8 +652,9 @@ func getLatestEpisodeID(animeID string) string {
 	json.NewDecoder(resp.Body).Decode(&res)
 	
 	if len(res.Response.Episodes.Data) > 0 {
-		// Usually the first item is the newest episode if ordered by latest
-		return res.Response.Episodes.Data[0].EpisodeID
+		// The last item in the array is the newest episode
+		lastIdx := len(res.Response.Episodes.Data) - 1
+		return res.Response.Episodes.Data[lastIdx].EpisodeID
 	}
 	return ""
 }

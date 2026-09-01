@@ -1,37 +1,65 @@
 package stickers
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 )
 
-// GenerateSticker converts an input file (image or video) to a WebP sticker with EXIF
 func GenerateSticker(inputData []byte, isVideo bool, pack string, author string) ([]byte, error) {
-	req, err := http.NewRequest("POST", "http://127.0.0.1:4321/sticker", bytes.NewBuffer(inputData))
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("x-pack", url.QueryEscape(pack))
-	req.Header.Set("x-author", url.QueryEscape(author))
+	tmpDir := os.TempDir()
+	inputExt := ".jpg"
 	if isVideo {
-		req.Header.Set("x-is-video", "true")
+		inputExt = ".mp4"
 	}
-
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Do(req)
+	
+	timestamp := time.Now().UnixNano()
+	inputPath := filepath.Join(tmpDir, fmt.Sprintf("in_%d%s", timestamp, inputExt))
+	outputPath := filepath.Join(tmpDir, fmt.Sprintf("out_%d.webp", timestamp))
+	
+	err := ioutil.WriteFile(inputPath, inputData, 0644)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer os.Remove(inputPath)
+	defer os.Remove(outputPath)
 
-	if resp.StatusCode != 200 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("sticker server error: %s", string(body))
+	var cmd *exec.Cmd
+	if isVideo {
+		cmd = exec.Command("./ffmpeg", "-y", "-i", inputPath,
+			"-vcodec", "libwebp",
+			"-vf", "scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:-1:-1:color=#00000000",
+			"-r", "10",
+			"-lossless", "0",
+			"-compression_level", "6",
+			"-qscale", "10",
+			"-loop", "0",
+			"-preset", "picture",
+			"-threads", "4",
+			"-an",
+			"-t", "00:00:05.000",
+			outputPath,
+		)
+	} else {
+		cmd = exec.Command("./ffmpeg", "-y", "-i", inputPath,
+			"-vcodec", "libwebp",
+			"-vf", "scale=512:512:force_original_aspect_ratio=decrease,format=rgba,pad=512:512:-1:-1:color=#00000000",
+			outputPath,
+		)
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	err = cmd.Run()
+	if err != nil {
+		return nil, fmt.Errorf("ffmpeg failed: %v", err)
+	}
+
+	webpData, err := ioutil.ReadFile(outputPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return webpData, nil
 }
