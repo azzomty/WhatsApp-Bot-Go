@@ -1,12 +1,11 @@
 package main
 
 import (
-	"archive/zip"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
+	"os/exec"
 )
 
 func downloadFile(url, filepath string) error {
@@ -26,42 +25,6 @@ func downloadFile(url, filepath string) error {
 	return err
 }
 
-func extractZip(zipFile, destDir string) error {
-	r, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		path := filepath.Join(destDir, f.Name)
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, os.ModePerm)
-			continue
-		}
-		
-		os.MkdirAll(filepath.Dir(path), os.ModePerm)
-		out, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return err
-		}
-		
-		rc, err := f.Open()
-		if err != nil {
-			out.Close()
-			return err
-		}
-		
-		_, err = io.Copy(out, rc)
-		out.Close()
-		rc.Close()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func initDeps() {
 	// Check yt-dlp
 	info, err := os.Stat("yt-dlp")
@@ -78,12 +41,26 @@ func initDeps() {
 	info2, err2 := os.Stat("ffmpeg")
 	if os.IsNotExist(err2) || (err2 == nil && info2.Size() < 1000000) {
 		fmt.Println("Downloading ffmpeg...")
-		err := downloadFile("https://github.com/vot/ffbinaries-precompiled/releases/download/v4.4.1/ffmpeg-4.4.1-linux-64.zip", "ffmpeg.zip")
+		err := downloadFile("https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz", "ffmpeg.tar.xz")
 		if err == nil {
-			extractZip("ffmpeg.zip", ".")
-			os.Remove("ffmpeg.zip")
+			fmt.Println("Extracting ffmpeg...")
+			cmd := exec.Command("tar", "-xf", "ffmpeg.tar.xz")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			errTar := cmd.Run()
+			if errTar != nil {
+				fmt.Println("tar extraction failed:", errTar)
+				return
+			}
+			
+			// Move the files to root
+			// Folder name usually ffmpeg-*-amd64-static
+			cmdMv := exec.Command("sh", "-c", "mv ffmpeg-*-amd64-static/ffmpeg ffmpeg && mv ffmpeg-*-amd64-static/ffprobe ffprobe && rm -rf ffmpeg-*-amd64-static ffmpeg.tar.xz")
+			cmdMv.Run()
+			
 			os.Chmod("ffmpeg", 0755)
-			fmt.Println("ffmpeg downloaded.")
+			os.Chmod("ffprobe", 0755)
+			fmt.Println("ffmpeg downloaded and extracted.")
 		}
 	}
 }
