@@ -102,7 +102,7 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 			sendMessage(ctx, "يرجى كتابة اسم الأنمي، مثلا:\n.انمي سلاير ون بيس")
 			return
 		}
-		if strings.HasPrefix(afterSlayer, "مفضلة") {
+		if strings.HasPrefix(afterSlayer, "مفضلة") || strings.HasPrefix(afterSlayer, "مفضله") || strings.HasPrefix(afterSlayer, "المفضلة") || strings.HasPrefix(afterSlayer, "المفضله") {
 			anslayerMutex.Lock()
 			msg := anslayerReplyMsg
 			anslayerMutex.Unlock()

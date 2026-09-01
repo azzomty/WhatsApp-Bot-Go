@@ -899,6 +899,7 @@ func startRenderServer() {
 }
 
 func main() {
+	initDeps()
 	api.StartServer()
 	go startRenderServer()
 
