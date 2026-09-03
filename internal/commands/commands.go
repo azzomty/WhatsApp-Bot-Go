@@ -198,6 +198,9 @@ func Handle(ctx *BotContext) {
 
 
 
+	if HandleDownloadCommand(ctx) {
+		return
+	}
 	if handleInteractiveReply(ctx) {
 		return
 	}
