@@ -141,14 +141,14 @@ func processDownload(ctx *BotContext, url string, mode string) {
 	
 	if mode == "video" {
 		finalFile = tmpFile + ".mp4"
-				args := []string{"--ffmpeg-location", "./ffmpeg", "-N", "4", "--no-check-certificate", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best", "--merge-output-format", "mp4", "--extractor-args", "youtube:player_client=android,ios", url, "-o", finalFile}
+				args := []string{"--ffmpeg-location", "./ffmpeg", "-N", "4", "--no-check-certificate", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best", "--merge-output-format", "mp4", url, "-o", finalFile}
 		if _, err := os.Stat("cookies.txt"); err == nil {
 			args = append([]string{"--cookies", "cookies.txt"}, args...)
 		}
 		cmd = exec.Command("./yt-dlp", args...)
 	} else {
 		finalFile = tmpFile + ".mp3"
-				args := []string{"--ffmpeg-location", "./ffmpeg", "-N", "4", "--no-check-certificate", "-f", "bestaudio/best", "-x", "--audio-format", "mp3", "--extractor-args", "youtube:player_client=android,ios", url, "-o", finalFile}
+				args := []string{"--ffmpeg-location", "./ffmpeg", "-N", "4", "--no-check-certificate", "-f", "bestaudio/best", "-x", "--audio-format", "mp3", url, "-o", finalFile}
 		if _, err := os.Stat("cookies.txt"); err == nil {
 			args = append([]string{"--cookies", "cookies.txt"}, args...)
 		}
