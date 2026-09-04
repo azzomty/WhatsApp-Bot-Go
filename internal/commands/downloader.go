@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 "net/http"
+"net/url"
+	"regexp"
 	"io"
 	"os"
 	"os/exec"
@@ -34,10 +36,30 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 		sendMessage(ctx, "جاري البحث...")
 		
 		go func() {
-			cmd := exec.Command("./yt-dlp", "ytsearch1:" + query, "--no-warnings", "--print", "%(id)s|%(title)s|%(uploader)s|%(view_count)s|%(like_count)s|%(duration_string)s|%(upload_date)s|%(thumbnail)s")
+			searchUrl := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
+			reqS, _ := http.NewRequest("GET", searchUrl, nil)
+			reqS.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+			respS, errS := http.DefaultClient.Do(reqS)
+			if errS != nil {
+				sendMessage(ctx, "حدث خطأ أثناء البحث في يوتيوب.")
+				return
+			}
+			defer respS.Body.Close()
+			bodyS, _ := io.ReadAll(respS.Body)
+			
+			re := regexp.MustCompile(`"videoId":"([^"]+)"`)
+			matches := re.FindStringSubmatch(string(bodyS))
+			if len(matches) < 2 {
+				sendMessage(ctx, "لم يتم العثور على نتائج.")
+				return
+			}
+			videoID := matches[1]
+			videoURL := "https://www.youtube.com/watch?v=" + videoID
+			
+			cmd := exec.Command("./yt-dlp", videoURL, "--no-warnings", "--print", "%(id)s|%(title)s|%(uploader)s|%(view_count)s|%(like_count)s|%(duration_string)s|%(upload_date)s|%(thumbnail)s")
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				sendMessage(ctx, "حدث خطأ أثناء البحث.")
+				sendMessage(ctx, "حدث خطأ أثناء جلب بيانات الأغنية:\n" + string(out)[:min(len(string(out)), 300)])
 				return
 			}
 			
