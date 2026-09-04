@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 "net/http"
-"net/url"
-	"regexp"
-	"io"
+"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -36,63 +34,43 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 		sendMessage(ctx, "جاري البحث...")
 		
 		go func() {
-			searchUrl := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
-			reqS, _ := http.NewRequest("GET", searchUrl, nil)
-			reqS.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-			respS, errS := http.DefaultClient.Do(reqS)
-			if errS != nil {
-				sendMessage(ctx, "حدث خطأ أثناء البحث في يوتيوب.")
+			cmd := exec.Command("./yt-dlp", "scsearch1:" + query, "--no-warnings", "--print", "%(webpage_url)s|%(title)s|%(uploader)s|%(view_count)s|%(like_count)s|%(duration_string)s|%(upload_date)s|%(thumbnail)s")
+			out, err := cmd.CombinedOutput()
+			if err != nil {
+				sendMessage(ctx, "حدث خطأ أثناء البحث في ساوند كلاود.\nقد لا توجد نتائج.")
 				return
 			}
-			defer respS.Body.Close()
-			bodyS, _ := io.ReadAll(respS.Body)
 			
-			re := regexp.MustCompile(`"videoId":"([^"]+)"`)
-			matches := re.FindStringSubmatch(string(bodyS))
-			if len(matches) < 2 {
+			lines := strings.Split(string(out), "\n")
+			var dataLine string
+			for _, line := range lines {
+				if strings.Contains(line, "|") && !strings.Contains(line, "Deprecated") && !strings.Contains(line, "WARNING") {
+					dataLine = line
+					break
+				}
+			}
+			
+			if dataLine == "" {
 				sendMessage(ctx, "لم يتم العثور على نتائج.")
 				return
 			}
-			videoID := matches[1]
-			videoURL := "https://www.youtube.com/watch?v=" + videoID
 			
-						reqM, _ := http.NewRequest("GET", videoURL, nil)
-			reqM.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-		reqM.Header.Set("Cookie", "CONSENT=YES+cb.20210328-17-p0.en+FX+433;")
-			respM, errM := http.DefaultClient.Do(reqM)
-			if errM != nil {
-				sendMessage(ctx, "حدث خطأ أثناء جلب بيانات الصفحة.")
+			d := strings.Split(dataLine, "|")
+			if len(d) < 8 {
+				sendMessage(ctx, "خطأ في قراءة بيانات الأغنية.")
 				return
 			}
-			defer respM.Body.Close()
-			bodyM, _ := io.ReadAll(respM.Body)
-			bodyStr := string(bodyM)
 			
-			titleRe := regexp.MustCompile(`"title":"(.*?)"`)
-			authorRe := regexp.MustCompile(`"author":"(.*?)"`)
-			viewsRe := regexp.MustCompile(`"viewCount":"(.*?)"`)
+			scURL, title, uploader, views, likes, duration, date, thumb := d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]
 			
-			title := "غير معروف"
-			if m := titleRe.FindStringSubmatch(bodyStr); len(m) > 1 { title = m[1] }
-			uploader := "غير معروف"
-			if m := authorRe.FindStringSubmatch(bodyStr); len(m) > 1 { uploader = m[1] }
-			views := "غير معروف"
-			if m := viewsRe.FindStringSubmatch(bodyStr); len(m) > 1 { views = m[1] }
+			caption := fmt.Sprintf("*%s*\n\nالفنان: %s\nاستماعات: %s\nإعجابات: %s\nالمدة: %s\nتاريخ الرفع: %s", title, uploader, views, likes, duration, date)
 			
-			thumb := "https://i.ytimg.com/vi/" + videoID + "/hqdefault.jpg"
-			
-			caption := fmt.Sprintf("*%s*\n\nالقناة: %s\nالمشاهدات: %s", title, uploader, views)
-			id := videoID
-			
-			// Send thumbnail
 			errThumb := sendImageFromURL(ctx, thumb, caption)
 			if errThumb != nil {
-				sendMessage(ctx, caption) // Fallback if image fails
+				sendMessage(ctx, caption)
 			}
 			
-			// Now download audio
-			url := "https://www.youtube.com/watch?v=" + id
-			processDownload(ctx, url, "audio")
+			processDownload(ctx, scURL, "audio")
 		}()
 		
 		return true
