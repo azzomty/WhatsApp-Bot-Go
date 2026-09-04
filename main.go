@@ -900,7 +900,8 @@ func startRenderServer() {
 
 func main() {
 	// Generate cookies.txt from Render Environment Variable
-	ytCookies := os.Getenv("YOUTUBE_COOKIES")
+	ytCookies := os.Getenv("COOKIES_TXT")
+	if ytCookies == "" { ytCookies = os.Getenv("YOUTUBE_COOKIES") }
 	if ytCookies != "" {
 		err := os.WriteFile("cookies.txt", []byte(ytCookies), 0644)
 		if err == nil {
