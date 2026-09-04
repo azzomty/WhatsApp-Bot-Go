@@ -58,6 +58,7 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 			
 						reqM, _ := http.NewRequest("GET", videoURL, nil)
 			reqM.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+		reqM.Header.Set("Cookie", "CONSENT=YES+cb.20210328-17-p0.en+FX+433;")
 			respM, errM := http.DefaultClient.Do(reqM)
 			if errM != nil {
 				sendMessage(ctx, "حدث خطأ أثناء جلب بيانات الصفحة.")
