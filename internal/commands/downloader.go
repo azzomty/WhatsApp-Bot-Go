@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 "net/http"
+	"net/url"
+	"regexp"
 "io"
 	"os"
 	"os/exec"
@@ -34,43 +36,121 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 		sendMessage(ctx, "جاري البحث...")
 		
 		go func() {
-			cmd := exec.Command("./yt-dlp", "scsearch1:" + query, "--no-warnings", "--print", "%(webpage_url)s|%(title)s|%(uploader)s|%(view_count)s|%(like_count)s|%(duration_string)s|%(upload_date)s|%(thumbnail)s")
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				sendMessage(ctx, "حدث خطأ أثناء البحث في ساوند كلاود.\nقد لا توجد نتائج.")
-				return
-			}
-			
-			lines := strings.Split(string(out), "\n")
-			var dataLine string
-			for _, line := range lines {
-				if strings.Contains(line, "|") && !strings.Contains(line, "Deprecated") && !strings.Contains(line, "WARNING") {
-					dataLine = line
-					break
+			// 1. Search YouTube natively
+				searchUrl := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
+				reqS, _ := http.NewRequest("GET", searchUrl, nil)
+				reqS.Header.Set("User-Agent", "Mozilla/5.0")
+				reqS.Header.Set("Cookie", "CONSENT=YES+cb.20210328-17-p0.en+FX+433;")
+				respS, errS := http.DefaultClient.Do(reqS)
+				if errS != nil {
+					sendMessage(ctx, "حدث خطأ أثناء البحث في يوتيوب.")
+					return
 				}
-			}
-			
-			if dataLine == "" {
-				sendMessage(ctx, "لم يتم العثور على نتائج.")
-				return
-			}
-			
-			d := strings.Split(dataLine, "|")
-			if len(d) < 8 {
-				sendMessage(ctx, "خطأ في قراءة بيانات الأغنية.")
-				return
-			}
-			
-			scURL, title, uploader, views, likes, duration, date, thumb := d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]
-			
-			caption := fmt.Sprintf("*%s*\n\nالفنان: %s\nاستماعات: %s\nإعجابات: %s\nالمدة: %s\nتاريخ الرفع: %s", title, uploader, views, likes, duration, date)
-			
-			errThumb := sendImageFromURL(ctx, thumb, caption)
-			if errThumb != nil {
-				sendMessage(ctx, caption)
-			}
-			
-			processDownload(ctx, scURL, "audio")
+				defer respS.Body.Close()
+				bodyS, _ := io.ReadAll(respS.Body)
+				
+				reSearch := regexp.MustCompile(`"videoId":"([^"]+)"`)
+				matches := reSearch.FindStringSubmatch(string(bodyS))
+				if len(matches) < 2 {
+					sendMessage(ctx, "لم يتم العثور على نتائج.")
+					return
+				}
+				videoURL := "https://www.youtube.com/watch?v=" + matches[1]
+				
+				// 2. Call loader.to API
+				loaderAPI := "https://loader.to/ajax/download.php?format=mp3&url=" + url.QueryEscape(videoURL)
+				reqL, _ := http.NewRequest("GET", loaderAPI, nil)
+				reqL.Header.Set("User-Agent", "Mozilla/5.0")
+				respL, errL := http.DefaultClient.Do(reqL)
+				if errL != nil {
+					sendMessage(ctx, "حدث خطأ في خدمة التحميل.")
+					return
+				}
+				defer respL.Body.Close()
+				bodyL, _ := io.ReadAll(respL.Body)
+				
+				progressUrlRe := regexp.MustCompile(`"progress_url":"([^"]+)"`)
+				titleRe := regexp.MustCompile(`"title":"([^"]+)"`)
+				imgRe := regexp.MustCompile(`"image":"([^"]+)"`)
+				
+				pMatches := progressUrlRe.FindStringSubmatch(string(bodyL))
+				if len(pMatches) < 2 {
+					sendMessage(ctx, "فشل في تجهيز الأغنية من السيرفر.")
+					return
+				}
+				progressURL := strings.ReplaceAll(pMatches[1], "\\/", "/")
+				
+				title := "مقطع صوتي"
+				if tM := titleRe.FindStringSubmatch(string(bodyL)); len(tM) > 1 {
+					title = tM[1]
+				}
+				
+				thumb := ""
+				if imgM := imgRe.FindStringSubmatch(string(bodyL)); len(imgM) > 1 {
+					thumb = strings.ReplaceAll(imgM[1], "\\/", "/")
+				}
+				
+				caption := fmt.Sprintf("*%s*\n\nجاري تجهيز المقطع الصوتي... ⏳", title)
+				if thumb != "" {
+					sendImageFromURL(ctx, thumb, caption)
+				} else {
+					sendMessage(ctx, caption)
+				}
+				
+				// 4. Poll progress API
+				downloadURL := ""
+				dlRe := regexp.MustCompile(`"download_url":"([^"]+)"`)
+				for i := 0; i < 20; i++ {
+					time.Sleep(3 * time.Second)
+					reqP, _ := http.NewRequest("GET", progressURL, nil)
+					reqP.Header.Set("User-Agent", "Mozilla/5.0")
+					respP, errP := http.DefaultClient.Do(reqP)
+					if errP == nil {
+						bodyP, _ := io.ReadAll(respP.Body)
+						respP.Body.Close()
+						if dMatches := dlRe.FindStringSubmatch(string(bodyP)); len(dMatches) > 1 {
+							downloadURL = strings.ReplaceAll(dMatches[1], "\\/", "/")
+							break
+						}
+					}
+				}
+				
+				if downloadURL == "" {
+					sendMessage(ctx, "❌ استغرق التجهيز وقتاً طويلاً. جرب مجدداً.")
+					return
+				}
+				
+				// 5. Download the final MP3
+				respDL, errDL := http.Get(downloadURL)
+				if errDL != nil {
+					sendMessage(ctx, "❌ حدث خطأ أثناء تحميل الملف الصوتي.")
+					return
+				}
+				defer respDL.Body.Close()
+				
+				audioData, _ := io.ReadAll(respDL.Body)
+				
+				// 6. Send the Audio!
+				respUL, errUL := ctx.Client.Upload(context.Background(), audioData, whatsmeow.MediaAudio)
+				if errUL != nil {
+					sendMessage(ctx, "❌ فشل رفع المقطع إلى واتساب.")
+					return
+				}
+				
+				msg := &waProto.Message{
+					AudioMessage: &waProto.AudioMessage{
+						URL:           proto.String(respUL.URL),
+						DirectPath:    proto.String(respUL.DirectPath),
+						MediaKey:      respUL.MediaKey,
+						Mimetype:      proto.String("audio/mpeg"),
+						FileEncSHA256: respUL.FileEncSHA256,
+						FileSHA256:    respUL.FileSHA256,
+						FileLength:    proto.Uint64(uint64(len(audioData))),
+						PTT:           proto.Bool(false),
+					},
+				}
+				
+				_, _ = ctx.Client.SendMessage(context.Background(), ctx.Event.Info.Chat, msg)
 		}()
 		
 		return true
