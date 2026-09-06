@@ -36,104 +36,125 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 		sendMessage(ctx, "جاري البحث...")
 		
 		go func() {
-			// 1. Search YouTube natively
-				searchUrl := "https://www.youtube.com/results?search_query=" + url.QueryEscape(query)
-				reqS, _ := http.NewRequest("GET", searchUrl, nil)
+			// 1. Fetch Soundcloud Client ID
+				reqC, _ := http.NewRequest("GET", "https://soundcloud.com", nil)
+				reqC.Header.Set("User-Agent", "Mozilla/5.0")
+				respC, errC := http.DefaultClient.Do(reqC)
+				if errC != nil {
+					sendMessage(ctx, "حدث خطأ في الاتصال.")
+					return
+				}
+				bodyC, _ := io.ReadAll(respC.Body)
+				respC.Body.Close()
+				
+				jsRe := regexp.MustCompile(`https://a-v2\.sndcdn\.com/assets/[a-zA-Z0-9-]+\.js`)
+				jsMatches := jsRe.FindAllString(string(bodyC), 5)
+				clientID := "Pb72ranhoyt6gw7hM7TkzUItXlMWSNSo" // fallback
+				for _, jsUrl := range jsMatches {
+					reqJ, _ := http.NewRequest("GET", jsUrl, nil)
+					reqJ.Header.Set("User-Agent", "Mozilla/5.0")
+					respJ, errJ := http.DefaultClient.Do(reqJ)
+					if errJ == nil {
+						bodyJ, _ := io.ReadAll(respJ.Body)
+						respJ.Body.Close()
+						cRe := regexp.MustCompile(`client_id:"([^"]+)"`)
+						if m := cRe.FindStringSubmatch(string(bodyJ)); len(m) > 1 {
+							clientID = m[1]
+							break
+						}
+					}
+				}
+				
+				// 2. Search Soundcloud
+				searchURL := "https://api-v2.soundcloud.com/search/tracks?q=" + url.QueryEscape(query) + "&client_id=" + clientID + "&limit=1"
+				reqS, _ := http.NewRequest("GET", searchURL, nil)
 				reqS.Header.Set("User-Agent", "Mozilla/5.0")
-				reqS.Header.Set("Cookie", "CONSENT=YES+cb.20210328-17-p0.en+FX+433;")
 				respS, errS := http.DefaultClient.Do(reqS)
 				if errS != nil {
-					sendMessage(ctx, "حدث خطأ أثناء البحث في يوتيوب.")
+					sendMessage(ctx, "فشل البحث.")
 					return
 				}
-				defer respS.Body.Close()
 				bodyS, _ := io.ReadAll(respS.Body)
+				respS.Body.Close()
 				
-				reSearch := regexp.MustCompile(`"videoId":"([^"]+)"`)
-				matches := reSearch.FindStringSubmatch(string(bodyS))
-				if len(matches) < 2 {
-					sendMessage(ctx, "لم يتم العثور على نتائج.")
-					return
-				}
-				videoURL := "https://www.youtube.com/watch?v=" + matches[1]
-				
-				// 2. Call loader.to API
-				loaderAPI := "https://loader.to/ajax/download.php?format=mp3&url=" + url.QueryEscape(videoURL)
-				reqL, _ := http.NewRequest("GET", loaderAPI, nil)
-				reqL.Header.Set("User-Agent", "Mozilla/5.0")
-				respL, errL := http.DefaultClient.Do(reqL)
-				if errL != nil {
-					sendMessage(ctx, "حدث خطأ في خدمة التحميل.")
-					return
-				}
-				defer respL.Body.Close()
-				bodyL, _ := io.ReadAll(respL.Body)
-				
-				progressUrlRe := regexp.MustCompile(`"progress_url":"([^"]+)"`)
+				// Parse JSON manually using regex to avoid structs
 				titleRe := regexp.MustCompile(`"title":"([^"]+)"`)
-				imgRe := regexp.MustCompile(`"image":"([^"]+)"`)
+				likesRe := regexp.MustCompile(`"likes_count":([0-9]+)`)
+				viewsRe := regexp.MustCompile(`"playback_count":([0-9]+)`)
+				dateRe := regexp.MustCompile(`"created_at":"([^"]+)"`)
+				artRe := regexp.MustCompile(`"artwork_url":"([^"]+)"`)
+				progRe := regexp.MustCompile(`"url":"([^"]+)","preset":"[^"]+","duration":[0-9]+,"snipped":false,"format":{"protocol":"progressive"`)
 				
-				pMatches := progressUrlRe.FindStringSubmatch(string(bodyL))
-				if len(pMatches) < 2 {
-					sendMessage(ctx, "فشل في تجهيز الأغنية من السيرفر.")
+				bodyStr := string(bodyS)
+				titleM := titleRe.FindStringSubmatch(bodyStr)
+				if len(titleM) < 2 {
+					sendMessage(ctx, "لم يتم العثور على الأغنية.")
 					return
 				}
-				progressURL := strings.ReplaceAll(pMatches[1], "\\/", "/")
+				title := titleM[1]
 				
-				title := "مقطع صوتي"
-				if tM := titleRe.FindStringSubmatch(string(bodyL)); len(tM) > 1 {
-					title = tM[1]
+				likes := "غير معروف"
+				if m := likesRe.FindStringSubmatch(bodyStr); len(m) > 1 { likes = m[1] }
+				views := "غير معروف"
+				if m := viewsRe.FindStringSubmatch(bodyStr); len(m) > 1 { views = m[1] }
+				date := "غير معروف"
+				if m := dateRe.FindStringSubmatch(bodyStr); len(m) > 1 { 
+					dateParts := strings.Split(m[1], "T")
+					if len(dateParts) > 0 { date = dateParts[0] }
 				}
-				
 				thumb := ""
-				if imgM := imgRe.FindStringSubmatch(string(bodyL)); len(imgM) > 1 {
-					thumb = strings.ReplaceAll(imgM[1], "\\/", "/")
+				if m := artRe.FindStringSubmatch(bodyStr); len(m) > 1 { 
+					thumb = strings.ReplaceAll(m[1], "-large.jpg", "-t500x500.jpg")
 				}
 				
-				caption := fmt.Sprintf("*%s*\n\nجاري تجهيز المقطع الصوتي... ⏳", title)
+				progUrl := ""
+				if m := progRe.FindStringSubmatch(bodyStr); len(m) > 1 {
+					progUrl = m[1]
+				}
+				
+				if progUrl == "" {
+					sendMessage(ctx, "المقطع محمي أو غير متوفر للتحميل.")
+					return
+				}
+				
+				// 3. Get MP3 Direct URL
+				reqP, _ := http.NewRequest("GET", progUrl + "?client_id=" + clientID, nil)
+				reqP.Header.Set("User-Agent", "Mozilla/5.0")
+				respP, errP := http.DefaultClient.Do(reqP)
+				if errP != nil {
+					sendMessage(ctx, "فشل تجهيز المقطع.")
+					return
+				}
+				bodyP, _ := io.ReadAll(respP.Body)
+				respP.Body.Close()
+				
+				dlUrlRe := regexp.MustCompile(`"url":"([^"]+)"`)
+				dlM := dlUrlRe.FindStringSubmatch(string(bodyP))
+				if len(dlM) < 2 {
+					sendMessage(ctx, "فشل استخراج رابط التحميل.")
+					return
+				}
+				dlUrl := dlM[1]
+				
+				caption := fmt.Sprintf("*%s*\n\nاستماعات: %s\nإعجابات: %s\nتاريخ الرفع: %s", title, views, likes, date)
 				if thumb != "" {
 					sendImageFromURL(ctx, thumb, caption)
 				} else {
 					sendMessage(ctx, caption)
 				}
 				
-				// 4. Poll progress API
-				downloadURL := ""
-				dlRe := regexp.MustCompile(`"download_url":"([^"]+)"`)
-				for i := 0; i < 20; i++ {
-					time.Sleep(3 * time.Second)
-					reqP, _ := http.NewRequest("GET", progressURL, nil)
-					reqP.Header.Set("User-Agent", "Mozilla/5.0")
-					respP, errP := http.DefaultClient.Do(reqP)
-					if errP == nil {
-						bodyP, _ := io.ReadAll(respP.Body)
-						respP.Body.Close()
-						if dMatches := dlRe.FindStringSubmatch(string(bodyP)); len(dMatches) > 1 {
-							downloadURL = strings.ReplaceAll(dMatches[1], "\\/", "/")
-							break
-						}
-					}
-				}
-				
-				if downloadURL == "" {
-					sendMessage(ctx, "❌ استغرق التجهيز وقتاً طويلاً. جرب مجدداً.")
-					return
-				}
-				
-				// 5. Download the final MP3
-				respDL, errDL := http.Get(downloadURL)
+				// 4. Download & Send MP3
+				respDL, errDL := http.Get(dlUrl)
 				if errDL != nil {
-					sendMessage(ctx, "❌ حدث خطأ أثناء تحميل الملف الصوتي.")
+					sendMessage(ctx, "فشل تحميل الملف.")
 					return
 				}
 				defer respDL.Body.Close()
-				
 				audioData, _ := io.ReadAll(respDL.Body)
 				
-				// 6. Send the Audio!
 				respUL, errUL := ctx.Client.Upload(context.Background(), audioData, whatsmeow.MediaAudio)
 				if errUL != nil {
-					sendMessage(ctx, "❌ فشل رفع المقطع إلى واتساب.")
+					sendMessage(ctx, "فشل رفع المقطع إلى واتساب.")
 					return
 				}
 				

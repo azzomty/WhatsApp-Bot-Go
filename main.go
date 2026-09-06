@@ -610,7 +610,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					if aspect == "foryou" {
 						results = pinterest.ForYouPinterest("all")
 					} else if aspect == "matching" {
-						results = pinterest.SearchPinterestMatchingIcons(req.Query)
+						results = pinterest.SearchPinterestMatchingIcons(req.Query, 20)
 						overrideCount = 2 // Match pairs always return 2
 					} else if req.IsVisual && req.Base64Image != "" {
 						results = pinterest.SearchPinterestLens(req.Base64Image, aspect, overrideCount)

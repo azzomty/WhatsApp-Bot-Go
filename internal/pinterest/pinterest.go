@@ -475,9 +475,9 @@ func ForYouPinterest(aspect string) []PinResult {
 	return parsePinterestData(data, aspect)
 }
 
-func SearchPinterestMatchingIcons(query string) []PinResult {
+func SearchPinterestMatchingIcons(query string, count int) []PinResult {
 	// First get search results normally
-	pins, _ := SearchPinterest("matching icons "+query, "all", 10, "")
+	pins, _ := SearchPinterest("matching icons "+query, "all", count, "")
 	if len(pins) == 0 {
 		return nil
 	}

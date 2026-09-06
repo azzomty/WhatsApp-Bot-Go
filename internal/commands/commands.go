@@ -201,6 +201,13 @@ func Handle(ctx *BotContext) {
 	if HandleDownloadCommand(ctx) {
 		return
 	}
+	if HandleFontsCommand(ctx) {
+		return
+	}
+	if strings.HasPrefix(strings.TrimSpace(ctx.Text), ".baymax") || strings.HasPrefix(strings.TrimSpace(ctx.Text), ".buymax") {
+		baymax(ctx)
+		return
+	}
 	if handleInteractiveReply(ctx) {
 		return
 	}
@@ -936,8 +943,8 @@ func pinterestSearch(ctx *BotContext) {
 			query = strings.Join(parts[:len(parts)-1], " ")
 		}
 	}
-	if count > 100 {
-		count = 100
+	if count > 500 {
+		count = 500
 	}
 
 	isVisual := false
@@ -1298,22 +1305,60 @@ func preventUser(ctx *BotContext) {
 }
 
 func baymax(ctx *BotContext) {
+	text := strings.TrimSpace(ctx.Text)
+	if text == ".baymax sticker" || text == ".buymax sticker" {
+		uMsg := UnwrapMessage(ctx.Event.Message)
+		if uMsg != nil {
+			quotedMsg := ctx.Event.Message.GetExtendedTextMessage().GetContextInfo().GetQuotedMessage()
+			if quotedMsg != nil && quotedMsg.GetStickerMessage() != nil {
+				data, err := ctx.Client.Download(context.Background(), quotedMsg.GetStickerMessage())
+				if err == nil {
+					os.WriteFile("baymax_sticker.webp", data, 0644)
+					sendMessage(ctx, "تم حفظ ملصق بايماكس بنجاح!")
+					return
+				}
+			}
+		}
+		sendMessage(ctx, "يرجى الرد على ملصق لكتابة الأمر: .baymax sticker")
+		return
+	}
+
 	out := store.GetCustomOutput(getLID(ctx, ctx.Sender), ".baymax", "")
 	if out == "" {
 		out = store.GetCustomOutput(getLID(ctx, ctx.Sender), ".buymax", "")
 	}
 	if out != "" {
 		sendMessage(ctx, out)
-		return
-	}
-
-	name := store.GetBaymaxName(getLID(ctx, ctx.Sender))
-	if name != "" {
-		sendMessage(ctx, name)
-	} else if ctx.Sender.User == "966508364121" || ctx.Event.Info.IsFromMe {
-		sendMessage(ctx, "هاي هبهب ")
 	} else {
-		sendMessage(ctx, "هاي عزام سينباي ")
+		name := store.GetBaymaxName(getLID(ctx, ctx.Sender))
+		if name != "" {
+			sendMessage(ctx, name)
+		} else if ctx.Sender.User == "966508364121" || ctx.Event.Info.IsFromMe {
+			sendMessage(ctx, "هاي هبهب")
+		} else {
+			sendMessage(ctx, "هاي عزام سينباي")
+		}
+	}
+	
+	// Send sticker if exists
+	webpData, err := os.ReadFile("baymax_sticker.webp")
+	if err == nil && len(webpData) > 0 {
+		resp, err := ctx.Client.Upload(context.Background(), webpData, whatsmeow.MediaImage)
+		if err == nil {
+			stickerMsg := &waProto.StickerMessage{
+				URL:           proto.String(resp.URL),
+				DirectPath:    proto.String(resp.DirectPath),
+				MediaKey:      resp.MediaKey,
+				Mimetype:      proto.String("image/webp"),
+				FileEncSHA256: resp.FileEncSHA256,
+				FileSHA256:    resp.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(webpData))),
+				IsAnimated:    proto.Bool(false),
+			}
+			ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
+				StickerMessage: stickerMsg,
+			})
+		}
 	}
 }
 
@@ -2164,7 +2209,7 @@ func refreshPinterest(ctx *BotContext) {
 			if last.Aspect == "foryou" {
 				results = pinterest.ForYouPinterest("all")
 			} else if last.Aspect == "matching" {
-				results = pinterest.SearchPinterestMatchingIcons(last.Query)
+				results = pinterest.SearchPinterestMatchingIcons(last.Query, last.Count)
 			} else if last.IsVisual && last.Base64Image != "" {
 				results = pinterest.SearchPinterestLens(last.Base64Image, last.Aspect, last.Count)
 			} else {
@@ -2249,8 +2294,8 @@ func pinterestForYou(ctx *BotContext) {
 			count = parsedCount
 		}
 	}
-	if count > 20 {
-		count = 20
+	if count > 200 {
+		count = 200
 	}
 	
 	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "", "")
@@ -2298,10 +2343,10 @@ func pinterestForYou(ctx *BotContext) {
 
 func pinterestMatchingIcons(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(ctx.Text, ".تطقيم", "", 1))
-	
+	count := 20
 	sendMessage(ctx, "جاري البحث عن تطقيمات")
 	go func() {
-		results := pinterest.SearchPinterestMatchingIcons(query)
+		results := pinterest.SearchPinterestMatchingIcons(query, count)
 		pairs := pinterest.GetMatchingPairs(results, 1)
 		
 		if len(pairs) >= 2 {
@@ -2571,4 +2616,66 @@ func HandleSyrian(ctx *BotContext) {
 	}
 	
 	HandleExchangeMessage(ctx)
+}
+
+func HandleFontsCommand(ctx *BotContext) bool {
+	text := strings.TrimSpace(ctx.Text)
+	if text == ".قائمة الخطوط" || text == ".fonts list" {
+		sampleTextEn := "Abc 123"
+		sampleTextAr := "تجربة"
+		
+		var msgs []string
+		var currentMsg strings.Builder
+		currentMsg.WriteString("📜 *قائمة الخطوط المتوفرة:*\n\n")
+		
+		for i, font := range FontStyles {
+			sampleEn := ApplyFont(sampleTextEn, i)
+			sampleAr := ApplyFont(sampleTextAr, i)
+			
+			line := fmt.Sprintf("*%d.* %s | %s - %s\n", i+1, sampleEn, sampleAr, font.Name)
+			if currentMsg.Len() + len(line) > 3000 {
+				msgs = append(msgs, currentMsg.String())
+				currentMsg.Reset()
+			}
+			currentMsg.WriteString(line)
+		}
+		if currentMsg.Len() > 0 {
+			msgs = append(msgs, currentMsg.String())
+		}
+		
+		for _, m := range msgs {
+			sendMessage(ctx, m)
+			time.Sleep(500 * time.Millisecond) // avoid spam
+		}
+		sendMessage(ctx, "✍️ للاستخدام: اكتب `.خط رقم_الخط` ثم انزل سطر واكتب نصك.\nمثال:\n.خط 5\nمرحبا بك")
+		return true
+	}
+	
+	if strings.HasPrefix(text, ".خط ") {
+		parts := strings.SplitN(text, "\n", 2)
+		if len(parts) < 2 {
+			sendMessage(ctx, "يرجى كتابة رقم الخط ثم النزول سطر جديد وكتابة النص.\nمثال:\n.خط 5\nhello")
+			return true
+		}
+		
+		firstLine := strings.TrimSpace(parts[0])
+		numStr := strings.TrimSpace(strings.TrimPrefix(firstLine, ".خط"))
+		numStr = strings.TrimSpace(strings.TrimPrefix(numStr, "رقم"))
+		numStr = strings.TrimSpace(numStr)
+		
+		num, err := strconv.Atoi(numStr)
+		if err != nil || num < 1 || num > len(FontStyles) {
+			sendMessage(ctx, fmt.Sprintf("رقم الخط غير صحيح. يرجى اختيار رقم من 1 إلى %d.", len(FontStyles)))
+			return true
+		}
+		
+		fontIdx := num - 1
+		textToFormat := parts[1]
+		
+		formatted := ApplyFont(textToFormat, fontIdx)
+		sendMessage(ctx, formatted)
+		return true
+	}
+	
+	return false
 }
