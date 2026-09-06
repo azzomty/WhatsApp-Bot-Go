@@ -1,6 +1,7 @@
 package stickers
 
 import (
+t"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,7 +11,11 @@ import (
 )
 
 func createExif(pack, author string) []byte {
-	jsonStr := fmt.Sprintf(`{"sticker-pack-id":"com.snowcorp.stickerly.android.stickercontentprovider b5e7275f-f1de-4137-961f-57becfad34f2","sticker-pack-name":"%s","sticker-pack-publisher":"%s","emojis":["🤖"]}`, pack, author)
+	packBytes, _ := json.Marshal(pack)
+	authorBytes, _ := json.Marshal(author)
+	
+	jsonStr := fmt.Sprintf(`{"sticker-pack-id":"com.snowcorp.stickerly.android.stickercontentprovider b5e7275f-f1de-4137-961f-57becfad34f2","sticker-pack-name":%s,"sticker-pack-publisher":%s,"emojis":["🤖"]}`, string(packBytes), string(authorBytes))
+	
 	exifData := []byte{
 		0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57,
 		0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00,
@@ -97,7 +102,11 @@ func GenerateSticker(inputData []byte, isVideo bool, pack string, author string)
 		}
 
 		// Inject EXIF using webpmux
-		exec.Command("./webpmux", "-set", "exif", exifPath, outputPath, "-o", outputPath).Run()
+		exifOut := outputPath + ".exif.webp"
+		err = exec.Command("./webpmux", "-set", "exif", exifPath, outputPath, "-o", exifOut).Run()
+		if err == nil {
+			os.Rename(exifOut, outputPath)
+		}
 	}
 
 	webpData, err := ioutil.ReadFile(outputPath)

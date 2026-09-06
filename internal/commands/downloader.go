@@ -107,6 +107,11 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 					thumb = strings.ReplaceAll(m[1], "-large.jpg", "-t500x500.jpg")
 				}
 				
+								authRe := regexp.MustCompile(`"track_authorization":"([^"]+)"`)
+				auth := ""
+				if m := authRe.FindStringSubmatch(bodyStr); len(m) > 1 {
+					auth = m[1]
+				}
 				progUrl := ""
 				if m := progRe.FindStringSubmatch(bodyStr); len(m) > 1 {
 					progUrl = m[1]
@@ -118,7 +123,7 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 				}
 				
 				// 3. Get MP3 Direct URL
-				reqP, _ := http.NewRequest("GET", progUrl + "?client_id=" + clientID, nil)
+				reqP, _ := http.NewRequest("GET", progUrl + "?client_id=" + clientID + "&track_authorization=" + auth, nil)
 				reqP.Header.Set("User-Agent", "Mozilla/5.0")
 				respP, errP := http.DefaultClient.Do(reqP)
 				if errP != nil {
@@ -131,7 +136,9 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 				dlUrlRe := regexp.MustCompile(`"url":"([^"]+)"`)
 				dlM := dlUrlRe.FindStringSubmatch(string(bodyP))
 				if len(dlM) < 2 {
-					sendMessage(ctx, "فشل استخراج رابط التحميل.")
+					snippet := string(bodyP)
+					if len(snippet) > 50 { snippet = snippet[:50] }
+					sendMessage(ctx, "فشل استخراج رابط التحميل. السبب: " + snippet)
 					return
 				}
 				dlUrl := dlM[1]
