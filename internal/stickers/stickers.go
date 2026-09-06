@@ -1,7 +1,7 @@
 package stickers
 
 import (
-t"encoding/json"
+"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
