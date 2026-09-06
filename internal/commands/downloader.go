@@ -8,6 +8,8 @@ import (
 	"regexp"
 "io"
 	"os"
+"path/filepath"
+"io/ioutil"
 	"os/exec"
 	"strings"
 	"time"
@@ -113,8 +115,15 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 					auth = m[1]
 				}
 				progUrl := ""
+				isHLS := false
 				if m := progRe.FindStringSubmatch(bodyStr); len(m) > 1 {
 					progUrl = m[1]
+				} else {
+					hlsRe := regexp.MustCompile(`"url":"([^"]+)","preset":"[^"]+","duration":[0-9]+,"snipped":false,"format":{"protocol":"hls"`)
+					if m := hlsRe.FindStringSubmatch(bodyStr); len(m) > 1 {
+						progUrl = m[1]
+						isHLS = true
+					}
 				}
 				
 				if progUrl == "" {
@@ -151,13 +160,26 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 				}
 				
 				// 4. Download & Send MP3
-				respDL, errDL := http.Get(dlUrl)
-				if errDL != nil {
-					sendMessage(ctx, "فشل تحميل الملف.")
-					return
-				}
-				defer respDL.Body.Close()
-				audioData, _ := io.ReadAll(respDL.Body)
+					var audioData []byte
+					if isHLS {
+						tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("sc_%d.mp3", time.Now().UnixNano()))
+						cmd := exec.Command("./ffmpeg", "-y", "-i", dlUrl, "-c:a", "libmp3lame", "-q:a", "2", tmpFile)
+						err := cmd.Run()
+						if err != nil {
+							sendMessage(ctx, "حدث خطأ أثناء تحويل الملف الصوتي.")
+							return
+						}
+						audioData, _ = ioutil.ReadFile(tmpFile)
+						os.Remove(tmpFile)
+					} else {
+						respDL, errDL := http.Get(dlUrl)
+						if errDL != nil {
+							sendMessage(ctx, "فشل تحميل الملف.")
+							return
+						}
+						defer respDL.Body.Close()
+						audioData, _ = io.ReadAll(respDL.Body)
+					}
 				
 				respUL, errUL := ctx.Client.Upload(context.Background(), audioData, whatsmeow.MediaAudio)
 				if errUL != nil {
