@@ -158,58 +158,7 @@ func HandleDownloadCommand(ctx *BotContext) bool {
 		return true
 	}
 
-	if strings.HasPrefix(text, ".ساوند") || strings.HasPrefix(text, ".ساوند كلاود") {
-		parts := strings.SplitN(text, " ", 2)
-		if len(parts) < 2 {
-			sendMessage(ctx, "يرجى كتابة اسم الأغنية للبحث عنها.\nمثال: .ساوند hello adele")
-			return true
-		}
-		query := parts[1]
-		sendMessage(ctx, "جاري البحث...")
-		
-		go func() {
-			cmd := exec.Command("./yt-dlp", "scsearch1:" + query, "--no-warnings", "--print", "%(webpage_url)s|%(title)s|%(uploader)s|%(view_count)s|%(like_count)s|%(duration_string)s|%(upload_date)s|%(thumbnail)s")
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				sendMessage(ctx, "حدث خطأ أثناء البحث في ساوند كلاود.\nقد لا توجد نتائج.")
-				return
-			}
-			
-			lines := strings.Split(string(out), "\n")
-			var dataLine string
-			for _, line := range lines {
-				if strings.Contains(line, "|") && !strings.Contains(line, "Deprecated") && !strings.Contains(line, "WARNING") {
-					dataLine = line
-					break
-				}
-			}
-			
-			if dataLine == "" {
-				sendMessage(ctx, "لم يتم العثور على نتائج.")
-				return
-			}
-			
-			d := strings.Split(dataLine, "|")
-			if len(d) < 8 {
-				sendMessage(ctx, "خطأ في قراءة بيانات الأغنية.")
-				return
-			}
-			
-			scURL, title, uploader, views, likes, duration, date, thumb := d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]
-			
-			caption := fmt.Sprintf("*%s*\n\nالفنان: %s\nاستماعات: %s\nإعجابات: %s\nالمدة: %s\nتاريخ الرفع: %s", title, uploader, views, likes, duration, date)
-			
-			errThumb := sendImageFromURL(ctx, thumb, caption)
-			if errThumb != nil {
-				sendMessage(ctx, caption)
-			}
-			
-			processDownload(ctx, scURL, "audio")
-		}()
-		
-		return true
-	}
-
+	
 
 	if strings.HasPrefix(text, ".اغنية") || strings.HasPrefix(text, ".أغنية") {
 		parts := strings.SplitN(text, " ", 2)
