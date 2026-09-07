@@ -198,6 +198,9 @@ func Handle(ctx *BotContext) {
 
 
 
+	if HandleMDMCommand(ctx) {
+		return
+	}
 	if HandleDownloadCommand(ctx) {
 		return
 	}
@@ -2388,57 +2391,7 @@ func pinterestMatchingIcons(ctx *BotContext) {
 }
 
 func HandleReaction(client *whatsmeow.Client, v *events.Message, imgData []byte) {
-	fmt.Println("HandleReaction TRIGGERED!")
-	
-	if imgData == nil {
-		fmt.Println("imgData is nil, cannot do visual search")
-		return
-	}
-	base64Image := base64.StdEncoding.EncodeToString(imgData)
-	results := pinterest.SearchPinterestLens(base64Image, "all", 10)
-
-	if len(results) > 0 {
-		count := 0
-		chatID := v.Info.Chat
-		for _, res := range results {
-			if count >= 3 {
-				break
-			}
-			data, err := pinterest.DownloadImage(res.URL)
-			if err == nil && len(data) > 5000 {
-				resp, err := client.Upload(context.Background(), data, whatsmeow.MediaImage)
-				if err == nil {
-					imgMsg := &waProto.ImageMessage{
-						URL:           proto.String(resp.URL),
-						DirectPath:    proto.String(resp.DirectPath),
-						MediaKey:      resp.MediaKey,
-						Mimetype:      proto.String("image/jpeg"),
-						FileEncSHA256: resp.FileEncSHA256,
-						FileSHA256:    resp.FileSHA256,
-						FileLength:    proto.Uint64(uint64(len(data))),
-						ContextInfo: &waProto.ContextInfo{
-							StanzaID:      proto.String(v.Message.GetReactionMessage().GetKey().GetID()),
-							Participant:   v.Message.GetReactionMessage().GetKey().Participant,
-							QuotedMessage: &waProto.Message{ImageMessage: &waProto.ImageMessage{}}, // Dummy just to make it a reply
-						},
-					}
-					msg := &waProto.Message{ImageMessage: imgMsg}
-					sendResp, err := client.SendMessage(context.Background(), chatID, msg)
-					if err == nil {
-						dummy := &events.Message{
-							Info: types.MessageInfo{ID: sendResp.ID, MessageSource: types.MessageSource{Chat: chatID, IsFromMe: true}, Timestamp: sendResp.Timestamp},
-							Message: msg,
-						}
-						AddMessage(chatID.String(), dummy)
-					}
-					if err == nil && res.ID != "" {
-						pinterest.SaveMessagePin(sendResp.ID, res.ID)
-					}
-					count++
-				}
-			}
-		}
-	}
+	// Feature disabled by user request
 }
 
 func disableCommand(ctx *BotContext, parts []string) {
