@@ -242,17 +242,10 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 		}
 		if dbgErr == nil {
 			for _, d := range data {
-				deckName := ""
-				switch v := d.DeckType.(type) {
-				case string:
-					deckName = v
-				case map[string]interface{}:
-					if n, ok := v["name"].(string); ok { deckName = n }
-				}
 				
-				// API usually already filters by deck, but we keep check just in case.
-				// Since we query ?deck=Name, we can also accept empty deckName (if API format changes)
-				if deckName == "" || strings.EqualFold(deckName, session.TargetDeck.Name) {
+				
+				// Always accept since the API already filters it!
+				if true {
 					authorName := "Unknown"
 					switch v := d.Author.(type) {
 					case string:
