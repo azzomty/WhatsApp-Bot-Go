@@ -213,17 +213,11 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 		body, _ := io.ReadAll(res.Body)
 
 		var data []struct {
-			Author struct {
-				Username string `json:"username"`
-			} `json:"author"`
-			DeckType struct {
-				Name string `json:"name"`
-			} `json:"deckType"`
-			RankedType struct {
-				ShortName string `json:"shortName"`
-			} `json:"rankedType"`
-			TournamentNumber string `json:"tournamentNumber"`
-			Main             []struct {
+			Author     interface{} `json:"author"`
+			DeckType   interface{} `json:"deckType"`
+			RankedType interface{} `json:"rankedType"`
+			TournamentNumber interface{} `json:"tournamentNumber"`
+			Main       []struct {
 				Card struct {
 					Name string `json:"name"`
 				} `json:"card"`
@@ -239,12 +233,44 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 
 		if json.Unmarshal(body, &data) == nil {
 			for _, d := range data {
-				if strings.EqualFold(d.DeckType.Name, session.TargetDeck.Name) {
-					sd := SubDeck{Author: d.Author.Username}
-					if d.TournamentNumber != "" {
-						sd.Info = "Tournament " + d.TournamentNumber
-					} else if d.RankedType.ShortName != "" {
-						sd.Info = d.RankedType.ShortName
+				deckName := ""
+				switch v := d.DeckType.(type) {
+				case string:
+					deckName = v
+				case map[string]interface{}:
+					if n, ok := v["name"].(string); ok { deckName = n }
+				}
+				
+				// API usually already filters by deck, but we keep check just in case.
+				// Since we query ?deck=Name, we can also accept empty deckName (if API format changes)
+				if deckName == "" || strings.EqualFold(deckName, session.TargetDeck.Name) {
+					authorName := "Unknown"
+					switch v := d.Author.(type) {
+					case string:
+						authorName = v
+					case map[string]interface{}:
+						if u, ok := v["username"].(string); ok { authorName = u }
+					}
+					
+					sd := SubDeck{Author: authorName}
+					
+					tNum := ""
+					switch v := d.TournamentNumber.(type) {
+					case string: tNum = v
+					case float64: tNum = fmt.Sprintf("%.0f", v)
+					}
+					
+					rType := ""
+					switch v := d.RankedType.(type) {
+					case string: rType = v
+					case map[string]interface{}:
+						if n, ok := v["shortName"].(string); ok { rType = n }
+					}
+					
+					if tNum != "" {
+						sd.Info = "Tournament " + tNum
+					} else if rType != "" {
+						sd.Info = rType
 					}
 
 					for _, c := range d.Main {
