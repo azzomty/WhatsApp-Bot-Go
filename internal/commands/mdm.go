@@ -201,7 +201,7 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 	session := mdmSessions[sessionKey]
 
 	// Fetch from Top Decks API (last 30 days)
-	apiURL := "https://www.masterduelmeta.com/api/v1/top-decks?created[$gte]=(days-30)&limit=0"
+	apiURL := "https://www.masterduelmeta.com/api/v1/top-decks?deck=" + url.QueryEscape(session.TargetDeck.Name)
 	req, _ := http.NewRequest("GET", apiURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 	res, err := http.DefaultClient.Do(req)
