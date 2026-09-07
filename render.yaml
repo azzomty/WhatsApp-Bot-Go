@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: whatsapp-bot
+    env: go
+    buildCommand: go build -o bot .
+    startCommand: ./bot
+    envVars:
+      - key: GO_VERSION
+        value: 1.23.0
