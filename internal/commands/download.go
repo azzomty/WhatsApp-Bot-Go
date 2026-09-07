@@ -14,14 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"whatsapp-bot/internal/youtube"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
+	"whatsapp-bot/internal/youtube"
 )
 
 type TikwmResponse struct {
-	Code int `json:"code"`
+	Code int    `json:"code"`
 	Msg  string `json:"msg"`
 	Data struct {
 		Play string `json:"play"`
@@ -94,7 +94,7 @@ func downloadTikTok(ctx *BotContext, link string) {
 
 func downloadWithYtDlp(ctx *BotContext, link string, silentFail bool) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("dl_%d.mp4", time.Now().UnixNano()))
-	
+
 	cmd := exec.Command("./yt-dlp", "--ffmpeg-location", "./ffmpeg", "-N", "16", "--no-check-certificate", "--cookies", "cookies.txt", "-f", "b", "-o", tmpFile, link)
 	err := cmd.Run()
 	if err != nil {

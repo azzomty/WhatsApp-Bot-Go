@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,21 +12,20 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"context"
-	
+
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
 )
 
 type AkiSession struct {
-	SessionID string
-	Step      int
-	ChatID    string
-	Player    string
-	IsActive  bool
+	SessionID  string
+	Step       int
+	ChatID     string
+	Player     string
+	IsActive   bool
 	LastUpdate time.Time
-	Guessing bool
+	Guessing   bool
 }
 
 var activeAkiSessions = struct {
@@ -83,7 +83,7 @@ func HandleAkinator(ctx *BotContext) {
 			} `json:"stepInformation"`
 		} `json:"result"`
 	}
-	
+
 	if err := json.Unmarshal(body, &result); err != nil || result.Result.SessionID == "" {
 		fmt.Println("Aki New Session Body:", string(body))
 		sendMessage(ctx, "فشل إنشاء جلسة مع أكيناتور. السيرفر معطل مؤقتاً.")
@@ -91,11 +91,11 @@ func HandleAkinator(ctx *BotContext) {
 	}
 
 	activeAkiSessions.m[chat] = &AkiSession{
-		SessionID: result.Result.SessionID,
-		Step:      1,
-		ChatID:    chat,
-		Player:    ctx.Sender.String(),
-		IsActive:  true,
+		SessionID:  result.Result.SessionID,
+		Step:       1,
+		ChatID:     chat,
+		Player:     ctx.Sender.String(),
+		IsActive:   true,
 		LastUpdate: time.Now(),
 	}
 
@@ -253,11 +253,11 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 
 	var result struct {
 		Result struct {
-			SessionId       string `json:"sessionId"`
-			HasQuestion     int    `json:"hasQuestion"`
-			Question        string `json:"question"`
-			Progression     string `json:"progression"`
-			Trouvitude      float64 `json:"trouvitude"`
+			SessionId   string  `json:"sessionId"`
+			HasQuestion int     `json:"hasQuestion"`
+			Question    string  `json:"question"`
+			Progression string  `json:"progression"`
+			Trouvitude  float64 `json:"trouvitude"`
 		} `json:"result"`
 	}
 
@@ -265,7 +265,7 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 		fmt.Println("Aki Answer Body:", string(body))
 		sendMessage(ctx, "حدث خطأ غير متوقع في سيرفر أكيناتور.")
 		sess.IsActive = true
-				sess.Guessing = true
+		sess.Guessing = true
 		return true
 	}
 
@@ -293,8 +293,8 @@ func HandleAkinatorAnswer(ctx *BotContext) bool {
 			var gResult struct {
 				Result struct {
 					Objects []struct {
-						Name string `json:"name"`
-						Description string `json:"description"`
+						Name                string `json:"name"`
+						Description         string `json:"description"`
 						AbsolutePicturePath string `json:"absolutePicturePath"`
 					} `json:"objects"`
 				} `json:"result"`

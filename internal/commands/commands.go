@@ -8,9 +8,9 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 	"sync"
 	"time"
 
@@ -41,9 +41,9 @@ var (
 )
 
 var (
-	allSavedLinks = make(map[string]bool)
-	linksMutex sync.Mutex
-	interactiveChecking = make(map[string]bool)
+	allSavedLinks           = make(map[string]bool)
+	linksMutex              sync.Mutex
+	interactiveChecking     = make(map[string]bool)
 	interactiveSessionLinks = make(map[string][]string)
 )
 
@@ -69,18 +69,18 @@ func appendLinkToFile(code string) {
 
 func filterAndSendLinks(ctx *BotContext, codes []string) {
 	sendMessage(ctx, "جاري فحص الروابط... (قد يستغرق بعض الوقت)")
-	
+
 	joinedGroups, err := ctx.Client.GetJoinedGroups(context.Background())
 	if err != nil {
 		sendMessage(ctx, "فشل في جلب قائمة القروبات الحالية.")
 		return
 	}
-	
+
 	joinedMap := make(map[string]bool)
 	for _, g := range joinedGroups {
 		joinedMap[g.JID.String()] = true
 	}
-	
+
 	var unjoined []string
 	for _, code := range codes {
 		info, err := ctx.Client.GetGroupInfoFromLink(context.Background(), code)
@@ -91,12 +91,12 @@ func filterAndSendLinks(ctx *BotContext, codes []string) {
 		}
 		time.Sleep(100 * time.Millisecond) // limit API calls
 	}
-	
+
 	if len(unjoined) == 0 {
 		sendMessage(ctx, "أنت متواجد في جميع هذه القروبات بالفعل (أو الروابط غير صالحة).")
 		return
 	}
-	
+
 	// Send in batches of 50
 	batchSize := 50
 	for i := 0; i < len(unjoined); i += batchSize {
@@ -156,7 +156,7 @@ func AddMessage(chatID string, msg *events.Message) {
 var lastValidCommand = make(map[string]string)
 
 func Handle(ctx *BotContext) {
-	
+
 	if ctx.Text == ".bot off" {
 		IsBotEnabled = false
 		sendMessage(ctx, "تم إيقاف البوت بالكامل!")
@@ -168,7 +168,6 @@ func Handle(ctx *BotContext) {
 		return
 	}
 
-
 	if !IsBotEnabled {
 		return
 	}
@@ -179,7 +178,7 @@ func Handle(ctx *BotContext) {
 		if qMsg != nil {
 			participant := ctx.Event.Message.ExtendedTextMessage.ContextInfo.GetParticipant()
 			myJid := ctx.Client.Store.ID.ToNonAD().String()
-			
+
 			if participant == myJid {
 				qText := ""
 				if qMsg.ExtendedTextMessage != nil {
@@ -195,8 +194,6 @@ func Handle(ctx *BotContext) {
 			}
 		}
 	}
-
-
 
 	if HandleMDMCommand(ctx) {
 		return
@@ -223,7 +220,7 @@ func Handle(ctx *BotContext) {
 	if ctx.Text == "" {
 		return
 	}
-	
+
 	if !store.IsAllowed(getLID(ctx, ctx.Sender)) && !ctx.Event.Info.IsFromMe {
 		return
 	}
@@ -434,7 +431,7 @@ func Handle(ctx *BotContext) {
 			}
 		}
 		HandleNumberSelect(ctx)
-				case ".حلقة":
+	case ".حلقة":
 		if len(parts) > 1 {
 			idx, _ := strconv.Atoi(parts[1])
 			if HandleAnslayerEpisodeSelect(ctx, idx) {
@@ -700,16 +697,16 @@ func editAlias(ctx *BotContext) {
 					quotedText = qm.GetExtendedTextMessage().GetText()
 				}
 				defaultMap := map[string]string{
-					"تم طرده":        ".طرد",
-					"تم كتمه":        ".ميوت",
-					"تم فك الكتم":    ".فك ميوت",
-					"تم زرف":         ".زرف",
-					"BANG!":          ".random",
-					"نجوت":           ".نجوت",
-					"تم منعه":        ".منع",
-					"تم سحب الإشراف": ".سحب اشراف",
-					"تم منع الأمر":   ".منع امر",
-					"تم فك منع":      ".منع منع",
+					"تم طرده":         ".طرد",
+					"تم كتمه":         ".ميوت",
+					"تم فك الكتم":     ".فك ميوت",
+					"تم زرف":          ".زرف",
+					"BANG!":           ".random",
+					"نجوت":            ".نجوت",
+					"تم منعه":         ".منع",
+					"تم سحب الإشراف":  ".سحب اشراف",
+					"تم منع الأمر":    ".منع امر",
+					"تم فك منع":       ".منع منع",
 					"جاري صنع الملصق": ".ملصق",
 					"يتم التعديل":     ".تعديل ملصق",
 				}
@@ -769,16 +766,16 @@ func editOutput(ctx *BotContext) {
 				quotedText = qm.GetExtendedTextMessage().GetText()
 			}
 			defaultMap := map[string]string{
-				"تم طرده":        ".طرد",
-				"تم كتمه":        ".ميوت",
-				"تم فك الكتم":    ".فك ميوت",
-				"تم زرف":         ".زرف",
-				"BANG!":          ".random",
-				"نجوت":           ".نجوت",
-				"تم منعه":        ".منع",
-				"تم سحب الإشراف": ".سحب اشراف",
-				"تم منع الأمر":   ".منع امر",
-				"تم فك منع":      ".منع منع",
+				"تم طرده":         ".طرد",
+				"تم كتمه":         ".ميوت",
+				"تم فك الكتم":     ".فك ميوت",
+				"تم زرف":          ".زرف",
+				"BANG!":           ".random",
+				"نجوت":            ".نجوت",
+				"تم منعه":         ".منع",
+				"تم سحب الإشراف":  ".سحب اشراف",
+				"تم منع الأمر":    ".منع امر",
+				"تم فك منع":       ".منع منع",
 				"جاري صنع الملصق": ".ملصق",
 				"يتم التعديل":     ".تعديل ملصق",
 			}
@@ -911,9 +908,9 @@ func sendAndCacheImage(ctx *BotContext, chatID types.JID, imgMsg *waProto.ImageM
 	if err == nil {
 		dummy := &events.Message{
 			Info: types.MessageInfo{
-				ID:        sendResp.ID,
+				ID:            sendResp.ID,
 				MessageSource: types.MessageSource{Chat: chatID, IsFromMe: true},
-				
+
 				Timestamp: sendResp.Timestamp,
 			},
 			Message: msg,
@@ -925,7 +922,7 @@ func sendAndCacheImage(ctx *BotContext, chatID types.JID, imgMsg *waProto.ImageM
 
 func pinterestSearch(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(strings.Replace(ctx.Text, ".بينتريست", "", 1), ".بحث", "", 1))
-	
+
 	count := 4
 	parts := strings.Split(query, " ")
 	if len(parts) > 1 {
@@ -958,7 +955,7 @@ func pinterestSearch(ctx *BotContext) {
 		if qMsg != nil {
 			var imgData []byte
 			var err error
-			
+
 			if qMsg.GetImageMessage() != nil {
 				imgData, err = ctx.Client.Download(context.Background(), qMsg.GetImageMessage())
 			} else if qMsg.GetStickerMessage() != nil {
@@ -1089,7 +1086,7 @@ func makeSticker(ctx *BotContext) {
 				defer wg.Done()
 				sem <- struct{}{}
 				defer func() { <-sem }()
-				
+
 				data, err := ctx.Client.Download(context.Background(), mediaMsgs[idx])
 				if err != nil {
 					return
@@ -1156,10 +1153,13 @@ func makeSticker(ctx *BotContext) {
 			} else if qDoc := quoted.GetDocumentMessage(); qDoc != nil && (strings.HasPrefix(qDoc.GetMimetype(), "image/") || strings.HasPrefix(qDoc.GetMimetype(), "video/")) {
 				mediaMsg = qDoc
 				isVideo = strings.HasPrefix(qDoc.GetMimetype(), "video/")
+			} else if qSticker := quoted.GetStickerMessage(); qSticker != nil {
+				mediaMsg = qSticker
+				isVideo = qSticker.GetIsAnimated()
 			}
 		}
 		if mediaMsg == nil {
-			sendMessage(ctx, "أرسل صورة أو فيديو مع الأمر، أو رد على صورة/فيديو.")
+			sendMessage(ctx, "أرسل صورة أو فيديو مع الأمر، أو رد على صورة/فيديو/ملصق.")
 			return
 		}
 	}
@@ -1342,7 +1342,7 @@ func baymax(ctx *BotContext) {
 			sendMessage(ctx, "هاي عزام سينباي")
 		}
 	}
-	
+
 	// Send sticker if exists
 	webpData, err := os.ReadFile("baymax_sticker.webp")
 	if err == nil && len(webpData) > 0 {
@@ -1444,7 +1444,7 @@ func showCommands(ctx *BotContext) {
 
 ====================
 ملاحظة: البوت الآن مبرمج للعمل بهدوء بدون أي علامات ترقيم مزعجة.`
-	
+
 	sendMessage(ctx, cmds)
 }
 
@@ -2090,7 +2090,7 @@ func reactMessage(ctx *BotContext) {
 	// Must be replying to a message
 	var targetStanzaID string
 	var targetParticipant string
-	
+
 	unwrappedMsg := UnwrapMessage(ctx.Event.Message)
 	if ext := unwrappedMsg.GetExtendedTextMessage(); ext != nil {
 		if ctxInfo := ext.GetContextInfo(); ctxInfo != nil {
@@ -2107,7 +2107,7 @@ func reactMessage(ctx *BotContext) {
 	}
 
 	targetJID, _ := types.ParseJID(targetParticipant)
-	
+
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, ctx.Client.BuildReaction(ctx.ChatID, targetJID, targetStanzaID, emoji))
 }
 
@@ -2291,7 +2291,7 @@ func protectUser(ctx *BotContext) {
 func pinterestForYou(ctx *BotContext) {
 	query := strings.TrimSpace(strings.Replace(ctx.Text, ".فوريو", "", 1))
 	count := 5
-	
+
 	if query != "" {
 		if parsedCount, err := strconv.Atoi(query); err == nil && parsedCount > 0 {
 			count = parsedCount
@@ -2300,7 +2300,7 @@ func pinterestForYou(ctx *BotContext) {
 	if count > 200 {
 		count = 200
 	}
-	
+
 	pinterest.SetLastSearch(ctx.ChatID.String(), "", "foryou", count, false, "", "")
 
 	sendMessage(ctx, "جاري جلب صور للفوريو")
@@ -2311,7 +2311,7 @@ func pinterestForYou(ctx *BotContext) {
 				results[i], results[j] = results[j], results[i]
 			})
 		}
-		
+
 		sentCount := 0
 		for _, res := range results {
 			if sentCount >= count {
@@ -2351,7 +2351,7 @@ func pinterestMatchingIcons(ctx *BotContext) {
 	go func() {
 		results := pinterest.SearchPinterestMatchingIcons(query, count)
 		pairs := pinterest.GetMatchingPairs(results, 1)
-		
+
 		if len(pairs) >= 2 {
 			count := 0
 			for _, imgUrl := range pairs {
@@ -2425,17 +2425,17 @@ func setAutoReact(ctx *BotContext, parts []string) {
 		sendMessage(ctx, "الصيغة: .رياكت <ايموجي> (مع منشن أو ريبلاي)\nأو .رياكت مسح (للإلغاء)")
 		return
 	}
-	
+
 	emoji := parts[1]
-	
+
 	targets := getTargets(ctx)
 	if len(targets) == 0 {
 		sendMessage(ctx, "لازم تسوي منشن أو ريبلاي على الشخص!")
 		return
 	}
-	
+
 	targetID := getLID(ctx, targets[0])
-	
+
 	if emoji == "مسح" {
 		store.SetAutoReact(targetID, "", ".")
 		sendMessage(ctx, "تم إزالة التفاعل التلقائي عن هذا الشخص.")
@@ -2451,10 +2451,10 @@ func setWelcomeFeature(ctx *BotContext) {
 		sendMessage(ctx, "هذا الأمر للقروبات فقط!")
 		return
 	}
-	
+
 	// text can be just ".استقبال" or ".استقبال كلام طويل..."
 	text := strings.TrimSpace(strings.TrimPrefix(ctx.Text, strings.Split(ctx.Text, " ")[0]))
-	
+
 	if text == "مسح" || text == "ايقاف" || text == "إيقاف" {
 		store.SetWelcomeGroup(ctx.ChatID.String(), "", ".")
 		sendMessage(ctx, "تم إيقاف الاستقبال التلقائي في هذا القروب.")
@@ -2464,7 +2464,7 @@ func setWelcomeFeature(ctx *BotContext) {
 	if text == "" {
 		text = "مرحبا بك في الحصن"
 	}
-	
+
 	store.SetWelcomeGroup(ctx.ChatID.String(), text, ".")
 	sendMessage(ctx, "تم تفعيل الاستقبال في هذا القروب بنجاح! أي شخص بيدخل راح تترسل صورته مع الكابشن اللي اخترته.")
 }
@@ -2475,7 +2475,7 @@ func HandleMoroccan(ctx *BotContext) {
 		if qMsg != nil {
 			participant := ctx.Event.Message.ExtendedTextMessage.ContextInfo.GetParticipant()
 			myJid := ctx.Client.Store.ID.ToNonAD().String()
-			
+
 			if participant == myJid {
 				qText := ""
 				if qMsg.ExtendedTextMessage != nil {
@@ -2567,7 +2567,7 @@ func HandleSyrian(ctx *BotContext) {
 			}
 		}()
 	}
-	
+
 	HandleExchangeMessage(ctx)
 }
 
@@ -2576,17 +2576,17 @@ func HandleFontsCommand(ctx *BotContext) bool {
 	if text == ".قائمة الخطوط" || text == ".fonts list" {
 		sampleTextEn := "Abc 123"
 		sampleTextAr := "تجربة"
-		
+
 		var msgs []string
 		var currentMsg strings.Builder
 		currentMsg.WriteString("📜 *قائمة الخطوط المتوفرة:*\n\n")
-		
+
 		for i, font := range FontStyles {
 			sampleEn := ApplyFont(sampleTextEn, i)
 			sampleAr := ApplyFont(sampleTextAr, i)
-			
+
 			line := fmt.Sprintf("*%d.* %s | %s - %s\n", i+1, sampleEn, sampleAr, font.Name)
-			if currentMsg.Len() + len(line) > 3000 {
+			if currentMsg.Len()+len(line) > 3000 {
 				msgs = append(msgs, currentMsg.String())
 				currentMsg.Reset()
 			}
@@ -2595,7 +2595,7 @@ func HandleFontsCommand(ctx *BotContext) bool {
 		if currentMsg.Len() > 0 {
 			msgs = append(msgs, currentMsg.String())
 		}
-		
+
 		for _, m := range msgs {
 			sendMessage(ctx, m)
 			time.Sleep(500 * time.Millisecond) // avoid spam
@@ -2603,32 +2603,32 @@ func HandleFontsCommand(ctx *BotContext) bool {
 		sendMessage(ctx, "✍️ للاستخدام: اكتب `.خط رقم_الخط` ثم انزل سطر واكتب نصك.\nمثال:\n.خط 5\nمرحبا بك")
 		return true
 	}
-	
+
 	if strings.HasPrefix(text, ".خط ") {
 		parts := strings.SplitN(text, "\n", 2)
 		if len(parts) < 2 {
 			sendMessage(ctx, "يرجى كتابة رقم الخط ثم النزول سطر جديد وكتابة النص.\nمثال:\n.خط 5\nhello")
 			return true
 		}
-		
+
 		firstLine := strings.TrimSpace(parts[0])
 		numStr := strings.TrimSpace(strings.TrimPrefix(firstLine, ".خط"))
 		numStr = strings.TrimSpace(strings.TrimPrefix(numStr, "رقم"))
 		numStr = strings.TrimSpace(numStr)
-		
+
 		num, err := strconv.Atoi(numStr)
 		if err != nil || num < 1 || num > len(FontStyles) {
 			sendMessage(ctx, fmt.Sprintf("رقم الخط غير صحيح. يرجى اختيار رقم من 1 إلى %d.", len(FontStyles)))
 			return true
 		}
-		
+
 		fontIdx := num - 1
 		textToFormat := parts[1]
-		
+
 		formatted := ApplyFont(textToFormat, fontIdx)
 		sendMessage(ctx, formatted)
 		return true
 	}
-	
+
 	return false
 }

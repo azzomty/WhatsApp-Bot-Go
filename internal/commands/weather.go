@@ -9,12 +9,12 @@ import (
 
 type OpenMeteoResponse struct {
 	Current struct {
-		Temperature2m           float64 `json:"temperature_2m"`
-		ApparentTemperature     float64 `json:"apparent_temperature"`
-		WindSpeed10m            float64 `json:"wind_speed_10m"`
-		RelativeHumidity2m      float64 `json:"relative_humidity_2m"`
+		Temperature2m            float64 `json:"temperature_2m"`
+		ApparentTemperature      float64 `json:"apparent_temperature"`
+		WindSpeed10m             float64 `json:"wind_speed_10m"`
+		RelativeHumidity2m       float64 `json:"relative_humidity_2m"`
 		PrecipitationProbability float64 `json:"precipitation_probability"` // wait, precipitation_probability is usually only in hourly/daily. Let's not use it if it's missing, or we can just omit it. Wait, the curl output had precipitation_probability! Actually let's assume it has it.
-		WeatherCode             int     `json:"weather_code"`
+		WeatherCode              int     `json:"weather_code"`
 	} `json:"current"`
 }
 

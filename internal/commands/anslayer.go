@@ -3,8 +3,8 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -54,9 +54,9 @@ func init() {
 }
 
 type AnslayerAccount struct {
-	Email    string `json:"email"`
-	Token    string `json:"token"`
-	UserID   string `json:"user_id"`
+	Email  string `json:"email"`
+	Token  string `json:"token"`
+	UserID string `json:"user_id"`
 }
 
 var (
@@ -127,7 +127,7 @@ func reqHeaders(req *http.Request, token string) {
 // HandleAnslayerCommand processes .انمي سلاير ...
 func HandleAnslayerCommand(ctx *BotContext, mode string) {
 	fullParts := strings.SplitN(ctx.Text, " ", 2)
-	
+
 	var query string
 	if mode == "marketing" {
 		if len(fullParts) < 2 {
@@ -151,16 +151,16 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 				sendMessage(ctx, "يرجى أولاً حفظ قالب الرد باستخدام أمر:\n.انمي سلاير نشر <رسالتك>")
 				return
 			}
-			
+
 			ansAccountsMutex.RLock()
 			count := len(ansAccounts)
 			ansAccountsMutex.RUnlock()
-			
+
 			if count == 0 {
 				sendMessage(ctx, "لا توجد حسابات مسجلة! يرجى إضافة حساب أولاً:\n.انمي سلاير تسجيل <الايميل> <الباسورد>")
 				return
 			}
-			
+
 			var m strings.Builder
 			m.WriteString("اختر الحساب الذي تريد بدء المراقبة به:\n")
 			ansAccountsMutex.RLock()
@@ -169,13 +169,13 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 			}
 			ansAccountsMutex.RUnlock()
 			m.WriteString("0. 🚀 تشغيل كل الحسابات معاً!\n\nللاختيار أرسل .رقم")
-			
+
 			session := &AnslayerSession{
-				Mode: "marketing",
+				Mode:  "marketing",
 				State: "select_account",
 			}
 			ansSessions[ctx.Sender.User] = session
-			
+
 			sendMessage(ctx, m.String())
 			return
 		}
@@ -201,19 +201,19 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 		query = fullParts[1]
 	}
 	searchParams := map[string]interface{}{
-		"_offset":   0,
-		"_limit":    30,
-		"_order_by": "latest_first",
-		"list_type": "filter",
+		"_offset":    0,
+		"_limit":     30,
+		"_order_by":  "latest_first",
+		"list_type":  "filter",
 		"anime_name": query,
-		"just_info": "Yes",
+		"just_info":  "Yes",
 	}
 	b, _ := json.Marshal(searchParams)
 	u := "https://anslayer.com/anime/public/animes/get-published-animes?json=" + url.QueryEscape(string(b))
-	
+
 	req, _ := http.NewRequest("GET", u, nil)
 	reqHeaders(req, "")
-	
+
 	sendMessage(ctx, "جاري البحث في انمي سلاير...")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -221,32 +221,34 @@ func HandleAnslayerCommand(ctx *BotContext, mode string) {
 		return
 	}
 	defer resp.Body.Close()
-	
+
 	var res struct {
 		Response struct {
 			Data []AnslayerAnime `json:"data"`
 		} `json:"response"`
 	}
 	json.NewDecoder(resp.Body).Decode(&res)
-	
+
 	if len(res.Response.Data) == 0 {
 		sendMessage(ctx, "لم يتم العثور على أنمي بهذا الاسم.")
 		return
 	}
-	
+
 	var msg strings.Builder
 	msg.WriteString("*نتائج البحث في انمي سلاير:*\n\n")
-	
+
 	session := &AnslayerSession{
-		Mode: mode,
-		State: "select_anime",
+		Mode:   mode,
+		State:  "select_anime",
 		Animes: res.Response.Data,
 	}
 	ansSessions[ctx.Sender.User] = session
-	
+
 	for i, a := range res.Response.Data {
 		msg.WriteString(fmt.Sprintf("%d. %s\n", i+1, a.AnimeName))
-		if i == 9 { break } // show max 10
+		if i == 9 {
+			break
+		} // show max 10
 	}
 	msg.WriteString("\n*للاختيار اكتب:* `.رقم` متبوعاً بالرقم (مثال: `.رقم 1`)")
 	sendMessage(ctx, msg.String())
@@ -257,18 +259,18 @@ func HandleAnslayerNumberSelect(ctx *BotContext, number int) bool {
 	if !ok {
 		return false
 	}
-	
+
 	if session.State == "select_anime" {
 		if number < 1 || number > len(session.Animes) {
 			sendMessage(ctx, "رقم غير صحيح.")
 			return true
 		}
-		
+
 		selected := session.Animes[number-1]
 		session.SelectedAnime = selected
-		
+
 		sendMessage(ctx, fmt.Sprintf("تم اختيار الأنمي: *%s*\nجاري جلب الحلقات...", selected.AnimeName))
-		
+
 		u := fmt.Sprintf("https://anslayer.com/anime/public/anime/get-anime-details?anime_id=%s&fetch_episodes=Yes&more_info=No", selected.AnimeID)
 		req, _ := http.NewRequest("GET", u, nil)
 		reqHeaders(req, "")
@@ -278,7 +280,7 @@ func HandleAnslayerNumberSelect(ctx *BotContext, number int) bool {
 			return true
 		}
 		defer resp.Body.Close()
-		
+
 		var res struct {
 			Response struct {
 				Episodes struct {
@@ -287,18 +289,18 @@ func HandleAnslayerNumberSelect(ctx *BotContext, number int) bool {
 			} `json:"response"`
 		}
 		json.NewDecoder(resp.Body).Decode(&res)
-		
+
 		eps := res.Response.Episodes.Data
 		if len(eps) == 0 {
 			sendMessage(ctx, "لا توجد حلقات متاحة.")
 			return true
 		}
-		
+
 		// reverse to show newest first? actually just store them
 		session.Episodes = eps
 		session.State = "select_episode"
 		ansSessions[ctx.Sender.User] = session
-		
+
 		sendMessage(ctx, fmt.Sprintf("يوجد %d حلقة متاحة.\n*للاختيار اكتب:* `.حلقة` متبوعاً بالرقم الفعلي للحلقة (مثال: `.حلقة 1`)", len(eps)))
 		return true
 	}
@@ -310,7 +312,7 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 	if !ok || session.State != "select_episode" {
 		return false
 	}
-	
+
 	epNumStr := strconv.Itoa(epNumInt)
 	var epIDStr string
 	for _, e := range session.Episodes {
@@ -319,32 +321,32 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 			break
 		}
 	}
-	
+
 	if epIDStr == "" {
 		if epNumInt > 0 && epNumInt <= len(session.Episodes) {
 			epIDStr = session.Episodes[epNumInt-1].EpisodeID
 		}
 	}
-	
+
 	if epIDStr == "" {
 		sendMessage(ctx, "لم يتم العثور على الحلقة.")
 		return true
 	}
-	
+
 	if session.Mode == "watch" {
 		sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
 		go downloadAnslayerEpisode(ctx, session.SelectedAnime, epNumStr, epIDStr)
 		delete(ansSessions, ctx.Sender.User)
 		return true
 	}
-	
+
 	anslayerMutex.Lock()
 	if anslayerReplyMsg == "" {
 		anslayerMutex.Unlock()
 		sendMessage(ctx, "⚠️ لم تقم بضبط رسالة النشر!\nيرجى كتابة:\n.انمي سلاير نشر رسالتي\nقبل بدء المراقبة.")
 		return true
 	}
-	
+
 	if anslayerStopChan != nil {
 		close(anslayerStopChan)
 	}
@@ -352,11 +354,11 @@ func HandleAnslayerEpisodeSelect(ctx *BotContext, epNumInt int) bool {
 	anslayerMonitored = epIDStr
 	ch := anslayerStopChan
 	anslayerMutex.Unlock()
-	
+
 	sendMessage(ctx, "✅ تم بدء مراقبة التعليقات للحلقة!\nسيقوم البوت بالرد فوراً على أي تعليق جديد (ولن يرد على شخص مرتين).\nلإيقاف المراقبة، اطلب حلقة أخرى أو أعد تشغيل البوت.")
-	
+
 	go monitorComments(ctx, epIDStr, ch)
-	
+
 	delete(ansSessions, ctx.Sender.User)
 	return true
 }
@@ -389,7 +391,7 @@ func monitorComments(ctx *BotContext, epID string, stopCh chan struct{}) {
 			// If no new comments to reply to, check older comments
 			replied, hasComments = checkAndReplyBatch(epIDFloat, msg, oldOffset, 30, AnslayerAccount{})
 			if replied {
-				oldOffset += 1 
+				oldOffset += 1
 				time.Sleep(65 * time.Second)
 				continue
 			}
@@ -412,16 +414,16 @@ func monitorComments(ctx *BotContext, epID string, stopCh chan struct{}) {
 
 func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int, acc AnslayerAccount) (bool, bool) {
 	params := map[string]interface{}{
-		"_order_by": "latest_first",
+		"_order_by":       "latest_first",
 		"hide_irrelevant": "Yes",
-		"episode_id": epIDFloat,
-		"_limit": limit,
-		"myfirst": "Yes",
-		"_offset": offset,
+		"episode_id":      epIDFloat,
+		"_limit":          limit,
+		"myfirst":         "Yes",
+		"_offset":         offset,
 	}
 	b, _ := json.Marshal(params)
 	u := "https://anslayer.com/anime/public/episode-comments/get-episode-comments?json=" + url.QueryEscape(string(b))
-	
+
 	req, _ := http.NewRequest("GET", u, nil)
 	reqHeaders(req, "")
 	resp, err := http.DefaultClient.Do(req)
@@ -429,7 +431,7 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int, acc An
 		return false, false
 	}
 	defer resp.Body.Close()
-	
+
 	var res struct {
 		Response struct {
 			Data []struct {
@@ -441,15 +443,19 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int, acc An
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return false, false
 	}
-	
+
 	if len(res.Response.Data) == 0 {
 		return false, false // No comments in this batch
 	}
-	
+
 	for _, c := range res.Response.Data {
-		if c.UserID == "" || c.CommentID == "" { continue }
-		if hasAnslayerUser(c.UserID) { continue }
-		
+		if c.UserID == "" || c.CommentID == "" {
+			continue
+		}
+		if hasAnslayerUser(c.UserID) {
+			continue
+		}
+
 		// Found one to reply to
 		payload := url.Values{}
 		payload.Set("episode_comment_id", c.CommentID)
@@ -457,11 +463,11 @@ func checkAndReplyBatch(epIDFloat float64, msg string, offset, limit int, acc An
 		payload.Set("spoiler", "No")
 		payload.Set("recipient_id", "")
 		payload.Set("notification_type", "reply")
-		
+
 		reqR, _ := http.NewRequest("POST", "https://anslayer.com/anime/public/episode-comments/create-episode-comment-reply", strings.NewReader(payload.Encode()))
 		reqHeaders(reqR, acc.Token)
 		reqR.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		
+
 		respR, errR := http.DefaultClient.Do(reqR)
 		if errR == nil {
 			respR.Body.Close()
@@ -482,7 +488,7 @@ func resolveMediaFire(u string) string {
 	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
-	
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return u
@@ -490,7 +496,7 @@ func resolveMediaFire(u string) string {
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 	html := string(body)
-	
+
 	idx := strings.Index(html, "href=\"https://download")
 	if idx != -1 {
 		start := idx + 6
@@ -512,12 +518,12 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 		sendMessage(ctx, "خطأ في الاتصال.")
 		return
 	}
-	
+
 	var res struct {
 		Response struct {
 			Episodes struct {
 				Data []struct {
-					EpisodeID string `json:"episode_id"`
+					EpisodeID   string `json:"episode_id"`
 					EpisodeUrls []struct {
 						ServerName string `json:"episode_server_name"`
 						Url        string `json:"episode_url"`
@@ -528,9 +534,9 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 	}
 	json.NewDecoder(resp.Body).Decode(&res)
 	resp.Body.Close()
-	
+
 	var links []string
-	
+
 	for _, e := range res.Response.Episodes.Data {
 		if e.EpisodeID == epID {
 			for _, u := range e.EpisodeUrls {
@@ -553,12 +559,12 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 			break
 		}
 	}
-	
+
 	if len(links) == 0 {
 		sendMessage(ctx, "لا توجد روابط لهذه الحلقة.")
 		return
 	}
-	
+
 	var data []byte
 	var success bool
 
@@ -567,26 +573,25 @@ func downloadAnslayerEpisode(ctx *BotContext, anime AnslayerAnime, epNum string,
 			targetLink = strings.Replace(targetLink, "file_premium", "file", 1)
 			targetLink = resolveMediaFire(targetLink)
 		}
-		
+
 		if i > 0 {
 			sendMessage(ctx, fmt.Sprintf("السيرفر السابق محذوف، جاري تجربة سيرفر بديل (%d/%d)...", i+1, len(links)))
 		}
-		
+
 		data, err = DownloadM3U8WithQuality(targetLink, "bestvideo[height<=720]+bestaudio/best[height<=720]")
 		if err == nil {
 			success = true
 			break
 		}
 	}
-	
+
 	if !success {
 		sendMessage(ctx, "فشلت جميع السيرفرات في التحميل. (ربما تم حذف الحلقة من جميع المصادر بسبب حقوق النشر)")
 		return
 	}
-	
+
 	sendVideoDataWithSplit(ctx, data, anime.AnimeName, epNum, false)
 }
-
 
 var favStopChan chan struct{}
 
@@ -601,7 +606,7 @@ func startFavMarketingSingle(ctx *BotContext, msg string, acc AnslayerAccount) {
 		close(favStopChan) // Stop previous
 	}
 	favStopChan = make(chan struct{})
-	
+
 	// Fetch favorites
 	u := "https://anslayer.com/anime/public/animes/get-published-animes?json=%7B%22_offset%22%3A0%2C%22_limit%22%3A100%2C%22_order_by%22%3A%22latest_first%22%2C%22list_type%22%3A%22favorites%22%2C%22just_info%22%3A%22Yes%22%2C%22user_id%22%3A" + acc.UserID + "%7D"
 	req, _ := http.NewRequest("GET", u, nil)
@@ -612,41 +617,41 @@ func startFavMarketingSingle(ctx *BotContext, msg string, acc AnslayerAccount) {
 		return
 	}
 	defer resp.Body.Close()
-	
+
 	var res struct {
 		Response struct {
 			Data []AnslayerAnime `json:"data"`
 		} `json:"response"`
 	}
 	json.NewDecoder(resp.Body).Decode(&res)
-	
+
 	if len(res.Response.Data) == 0 {
 		sendMessage(ctx, "قائمة المفضلة فارغة.")
 		return
 	}
-	
+
 	animeIDs := make([]string, 0)
 	for _, a := range res.Response.Data {
 		animeIDs = append(animeIDs, a.AnimeID)
 	}
-	
+
 	sendMessage(ctx, fmt.Sprintf("✅ تم جلب %d أنمي من المفضلة، سيبدأ البوت الآن بنشر التعليقات عليها جميعاً بشكل دوري!", len(animeIDs)))
-	
+
 	go monitorFavComments(ctx, animeIDs, msg, favStopChan, acc)
 }
 
 func checkAndReplyAnimeBatch(animeIDFloat float64, msg string, offset, limit int) (bool, bool) {
 	params := map[string]interface{}{
-		"_order_by": "latest_first",
+		"_order_by":       "latest_first",
 		"hide_irrelevant": "Yes",
-		"anime_id": animeIDFloat,
-		"_limit": limit,
-		"myfirst": "Yes",
-		"_offset": offset,
+		"anime_id":        animeIDFloat,
+		"_limit":          limit,
+		"myfirst":         "Yes",
+		"_offset":         offset,
 	}
 	b, _ := json.Marshal(params)
 	u := "https://anslayer.com/anime/public/anime-comments/get-anime-comments?json=" + url.QueryEscape(string(b))
-	
+
 	req, _ := http.NewRequest("GET", u, nil)
 	reqHeaders(req, "")
 	resp, err := http.DefaultClient.Do(req)
@@ -654,7 +659,7 @@ func checkAndReplyAnimeBatch(animeIDFloat float64, msg string, offset, limit int
 		return false, false
 	}
 	defer resp.Body.Close()
-	
+
 	var res struct {
 		Response struct {
 			Data []struct {
@@ -664,26 +669,30 @@ func checkAndReplyAnimeBatch(animeIDFloat float64, msg string, offset, limit int
 		} `json:"response"`
 	}
 	json.NewDecoder(resp.Body).Decode(&res)
-	
+
 	if len(res.Response.Data) == 0 {
 		return false, false
 	}
-	
+
 	for _, c := range res.Response.Data {
-		if c.UserID == "" || c.CommentID == "" { continue }
-		if hasAnslayerUser(c.UserID) { continue }
-		
+		if c.UserID == "" || c.CommentID == "" {
+			continue
+		}
+		if hasAnslayerUser(c.UserID) {
+			continue
+		}
+
 		payload := url.Values{}
 		payload.Set("anime_comment_id", c.CommentID)
 		payload.Set("reply_text", msg)
 		payload.Set("spoiler", "No")
 		payload.Set("recipient_id", "")
 		payload.Set("notification_type", "reply")
-		
+
 		reqR, _ := http.NewRequest("POST", "https://anslayer.com/anime/public/anime-comments/create-anime-comment-reply", strings.NewReader(payload.Encode()))
 		reqHeaders(reqR, "")
 		reqR.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		
+
 		respR, errR := http.DefaultClient.Do(reqR)
 		if errR == nil {
 			respR.Body.Close()
@@ -691,11 +700,11 @@ func checkAndReplyAnimeBatch(animeIDFloat float64, msg string, offset, limit int
 				ansUsersMutex.Lock()
 				anslayerUsers[c.UserID] = true
 				ansUsersMutex.Unlock()
-				
+
 				f, _ := os.OpenFile("anslayer_users.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 				f.WriteString(c.UserID + "\n")
 				f.Close()
-				
+
 				fmt.Println("Replied to user:", c.UserID, "on anime comment:", c.CommentID)
 				return true, true
 			}
@@ -713,7 +722,7 @@ func getLatestEpisodeID(animeID string, token string) string {
 		return ""
 	}
 	defer resp.Body.Close()
-	
+
 	var res struct {
 		Response struct {
 			Episodes struct {
@@ -722,7 +731,7 @@ func getLatestEpisodeID(animeID string, token string) string {
 		} `json:"response"`
 	}
 	json.NewDecoder(resp.Body).Decode(&res)
-	
+
 	if len(res.Response.Episodes.Data) > 0 {
 		// The last item in the array is the newest episode
 		lastIdx := len(res.Response.Episodes.Data) - 1
@@ -736,23 +745,23 @@ func monitorFavComments(ctx *BotContext, animeIDs []string, msg string, stopCh c
 	for _, id := range animeIDs {
 		oldOffsets[id] = 30 // Start looking back from 30 for episode comments
 	}
-	
+
 	for {
 		select {
 		case <-stopCh:
 			return
 		default:
 			repliedInThisLoop := false
-			
+
 			for _, animeID := range animeIDs {
 				// Fetch the latest episode ID for this anime dynamically
 				latestEpID := getLatestEpisodeID(animeID, acc.Token)
 				if latestEpID == "" {
 					continue
 				}
-				
+
 				epIDFloat, _ := strconv.ParseFloat(latestEpID, 64)
-				
+
 				// 1. Check Newest first (offset 0)
 				replied, _ := checkAndReplyBatch(epIDFloat, msg, 0, 30, acc) // Use existing episode batch func
 				if replied {
@@ -760,7 +769,7 @@ func monitorFavComments(ctx *BotContext, animeIDs []string, msg string, stopCh c
 					time.Sleep(65 * time.Second)
 					break
 				}
-				
+
 				// 2. If no new comment, check older comments
 				offset := oldOffsets[animeID]
 				replied, hasComments := checkAndReplyBatch(epIDFloat, msg, offset, 30, acc)
@@ -775,7 +784,7 @@ func monitorFavComments(ctx *BotContext, animeIDs []string, msg string, stopCh c
 					}
 				}
 			}
-			
+
 			if !repliedInThisLoop {
 				time.Sleep(10 * time.Second)
 			}

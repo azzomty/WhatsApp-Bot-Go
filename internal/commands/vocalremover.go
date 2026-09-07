@@ -49,7 +49,7 @@ func HandleRemoveMusic(ctx *BotContext) {
 	outputFile := filepath.Join(tmpDir, "output_muted"+ext)
 
 	ffmpegPath := "./ffmpeg"
-	
+
 	// Remove audio completely using -an
 	cmd := exec.Command(ffmpegPath, "-y", "-i", inputFile, "-c:v", "copy", "-an", outputFile)
 	out, err := cmd.CombinedOutput()
@@ -65,7 +65,7 @@ func HandleRemoveMusic(ctx *BotContext) {
 		return
 	}
 
-	resp, err := ctx.Client.Upload(context.Background(), outData, whatsmeow.MediaVideo) 
+	resp, err := ctx.Client.Upload(context.Background(), outData, whatsmeow.MediaVideo)
 	if err != nil {
 		sendMessage(ctx, "فشل رفع الملف.")
 		return

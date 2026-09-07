@@ -33,14 +33,14 @@ func BroadcastExchange(client *whatsmeow.Client) {
 			if store.GetStrike(favStr) >= 3 {
 				continue // Skip users who ignored 3 times
 			}
-			
+
 			favJid, err := types.ParseJID(favStr)
 			if err != nil {
 				continue
 			}
-			
+
 			store.IncrementStrike(favStr)
-			
+
 			msg := "للتبادل اكتب .تبادل"
 			client.SendMessage(context.Background(), favJid, &waProto.Message{
 				Conversation: proto.String(msg),
@@ -51,7 +51,6 @@ func BroadcastExchange(client *whatsmeow.Client) {
 }
 
 func HandleExchangeMessage(ctx *BotContext) bool {
-
 
 	chatStr := ctx.ChatID.String()
 
@@ -69,11 +68,11 @@ func HandleExchangeMessage(ctx *BotContext) bool {
 		}
 		return true
 	}
-	
+
 	if ctx.Text == ".حذف روابطي" {
-	    store.ClearMyExchangeMsgs()
-	    sendMessage(ctx, "تم حذف جميع روابط التبادل الخاصة بك!")
-	    return true
+		store.ClearMyExchangeMsgs()
+		sendMessage(ctx, "تم حذف جميع روابط التبادل الخاصة بك!")
+		return true
 	}
 
 	// Handle toggling favorite
@@ -115,7 +114,7 @@ func HandleExchangeMessage(ctx *BotContext) bool {
 			ChatID:   ctx.ChatID,
 			Messages: make([]*events.Message, 0),
 		}
-		
+
 		session.Timer = time.AfterFunc(10*time.Second, func() {
 			finishExchangeSession(ctx.Client, session)
 		})
@@ -169,12 +168,12 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 	if groupJid.User != "" {
 		for _, msgEvent := range session.Messages {
 			msgCopy := proto.Clone(msgEvent.Message).(*waProto.Message)
-			
+
 			// Build forward context
 			ctxInfo := &waProto.ContextInfo{
 				IsForwarded: proto.Bool(true),
 			}
-			
+
 			// Attach to the right message type
 			if msgCopy.ExtendedTextMessage != nil {
 				msgCopy.ExtendedTextMessage.ContextInfo = ctxInfo
@@ -185,7 +184,7 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 				}
 				msgCopy.Conversation = nil
 			}
-			
+
 			client.SendMessage(context.Background(), groupJid, msgCopy)
 			forwardedCount++
 			time.Sleep(1 * time.Second) // Sleep to avoid ban
@@ -209,7 +208,7 @@ func finishExchangeSession(client *whatsmeow.Client, session *ExchangeSession) {
 			} else if msgCopy.VideoMessage != nil {
 				msgCopy.VideoMessage.ContextInfo = ctxInfo
 			} else if msgCopy.DocumentMessage != nil {
-			    msgCopy.DocumentMessage.ContextInfo = ctxInfo
+				msgCopy.DocumentMessage.ContextInfo = ctxInfo
 			} else if msgCopy.Conversation != nil {
 				msgCopy.ExtendedTextMessage = &waProto.ExtendedTextMessage{
 					Text:        msgCopy.Conversation,

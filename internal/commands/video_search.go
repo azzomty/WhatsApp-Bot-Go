@@ -10,10 +10,10 @@ import (
 	"strings"
 	"sync"
 
-	"whatsapp-bot/internal/youtube"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
+	"whatsapp-bot/internal/youtube"
 )
 
 type MultiVideoSession struct {
@@ -47,7 +47,7 @@ func fetchShortVideoLinks(query string, count int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	uniqueLinks := make([]string, 0)
 	for _, id := range videoIDs {
 		uniqueLinks = append(uniqueLinks, "https://youtu.be/"+id)
@@ -91,7 +91,7 @@ func downloadShortVideoDirect(ctx *BotContext, link string) {
 			Play string `json:"play"`
 		} `json:"data"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return
 	}
@@ -237,7 +237,7 @@ func multiVideoSearchNew(ctx *BotContext) {
 
 func handleNewCommand(ctx *BotContext) {
 	sessionKey := ctx.ChatID.String() + "_" + ctx.Sender.String()
-	
+
 	if getMultiVideoSession(sessionKey) != nil {
 		multiVideoSearchNew(ctx)
 		return
@@ -246,6 +246,6 @@ func handleNewCommand(ctx *BotContext) {
 	if HandleMediaNew(ctx) {
 		return
 	}
-	
+
 	refreshPinterest(ctx)
 }

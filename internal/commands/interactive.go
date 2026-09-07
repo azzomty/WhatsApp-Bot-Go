@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"strings"
 
-	"whatsapp-bot/internal/youtube"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
+	"whatsapp-bot/internal/youtube"
 )
 
 func interactiveYoutube(ctx *BotContext) {

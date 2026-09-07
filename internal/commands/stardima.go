@@ -1,18 +1,18 @@
 package commands
 
 import (
-	"sync"
-	"os"
-	"os/exec"
-	"time"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
 var stardimaBaseURL string
@@ -83,7 +83,7 @@ func GetStardimaSeasons(showURL string) ([]StardimaSeason, error) {
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var body2 []byte
 	if strings.Contains(showURL, "/play/") {
 		body2 = body
@@ -121,7 +121,7 @@ type StardimaEpisode struct {
 }
 
 func GetStardimaEpisodes(seasonID string) ([]StardimaEpisode, error) {
-	req, _ := http.NewRequest("GET", GetStardimaBaseURL() + "/series/season/"+seasonID, nil)
+	req, _ := http.NewRequest("GET", GetStardimaBaseURL()+"/series/season/"+seasonID, nil)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -166,7 +166,6 @@ func GetStardimaHyperwatchingURL(movieURL string) (string, error) {
 	return "", fmt.Errorf("hyperwatching url not found")
 }
 
-
 func GetBestM3U8(hyperURL string) (string, error) {
 	fmt.Println("DEBUG: GetBestM3U8 called with hyperURL:", hyperURL)
 
@@ -210,19 +209,19 @@ func GetBestM3U8(hyperURL string) (string, error) {
 		if srv.ID == 0 {
 			continue
 		}
-		
+
 		apiURL := fmt.Sprintf("https://v2.hyperwatching.com/embed/%s/server/%d/url", pageData.Props.Video.Hashid, srv.ID)
 		resp2, err := http.Get(apiURL)
 		if err != nil {
 			continue
 		}
-		
+
 		var apiData struct {
 			WatchURL string `json:"watch_url"`
 		}
 		json.NewDecoder(resp2.Body).Decode(&apiData)
 		resp2.Body.Close()
-		
+
 		// Some servers wrap it in an iframe, some don't.
 		// If there is an 'id' param, it might be the real embed URL.
 		var embedURL string
@@ -237,7 +236,7 @@ func GetBestM3U8(hyperURL string) (string, error) {
 		} else {
 			embedURL = apiData.WatchURL
 		}
-		
+
 		// Try to extract M3U8 from this embed URL
 		m3u8, err := ExtractM3U8(embedURL)
 		if err == nil && m3u8 != "" {
@@ -251,7 +250,7 @@ func GetBestM3U8(hyperURL string) (string, error) {
 func ExtractM3U8(embedURL string) (string, error) {
 	// Custom dialer to bypass DNS issues for Lulustream/Luluvdo
 	client := &http.Client{}
-	
+
 	req, _ := http.NewRequest("GET", embedURL, nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0")
 	resp, err := client.Do(req)
@@ -281,9 +280,9 @@ func ExtractM3U8(embedURL string) (string, error) {
 		for num > 0 {
 			remainder := num % b
 			if remainder > 35 {
-				res = string(rune(remainder + 29)) + res
+				res = string(rune(remainder+29)) + res
 			} else if remainder > 9 {
-				res = string(rune(remainder + 87)) + res
+				res = string(rune(remainder+87)) + res
 			} else {
 				res = strconv.Itoa(remainder) + res
 			}
@@ -407,9 +406,9 @@ func GetUqloadM3U8(uqloadEmbedURL string) (string, error) {
 		for num > 0 {
 			remainder := num % b
 			if remainder > 35 {
-				res = string(rune(remainder + 29)) + res
+				res = string(rune(remainder+29)) + res
 			} else if remainder > 9 {
-				res = string(rune(remainder + 87)) + res
+				res = string(rune(remainder+87)) + res
 			} else {
 				res = strconv.Itoa(remainder) + res
 			}
@@ -453,7 +452,7 @@ func DownloadM3U8(m3u8URL string) ([]byte, error) {
 
 func GetStardimaFullList(category string) ([]string, error) {
 	// First fetch page 1 to get total pages
-	reqURL := fmt.Sprintf(GetStardimaBaseURL() + "/%s?page=1", category)
+	reqURL := fmt.Sprintf(GetStardimaBaseURL()+"/%s?page=1", category)
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("X-Requested-With", "XMLHttpRequest")
 
@@ -461,14 +460,14 @@ func GetStardimaFullList(category string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var data struct {
 		Pagination struct {
 			LastPage int `json:"last_page"`
 		} `json:"pagination"`
 		Videos []StardimaVideo `json:"videos"`
 	}
-	
+
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	resp.Body.Close()
 	if err != nil {
@@ -493,7 +492,7 @@ func GetStardimaFullList(category string) ([]string, error) {
 		wg.Add(1)
 		go func(page int) {
 			defer wg.Done()
-			r, _ := http.NewRequest("GET", fmt.Sprintf(GetStardimaBaseURL() + "/%s?page=%d", category, page), nil)
+			r, _ := http.NewRequest("GET", fmt.Sprintf(GetStardimaBaseURL()+"/%s?page=%d", category, page), nil)
 			r.Header.Set("X-Requested-With", "XMLHttpRequest")
 			res, e := http.DefaultClient.Do(r)
 			if e == nil {
@@ -515,7 +514,6 @@ func GetStardimaFullList(category string) ([]string, error) {
 
 	return allTitles, nil
 }
-
 
 func DownloadM3U8WithQuality(m3u8URL, quality string) ([]byte, error) {
 	tmpFile := "/tmp/stardima_" + strconv.FormatInt(time.Now().UnixNano(), 10) + ".mp4"

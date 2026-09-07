@@ -13,11 +13,11 @@ import (
 	"strings"
 	"sync"
 
-	"whatsapp-bot/internal/stickers"
-	"whatsapp-bot/internal/store"
 	"go.mau.fi/whatsmeow"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
 	"google.golang.org/protobuf/proto"
+	"whatsapp-bot/internal/stickers"
+	"whatsapp-bot/internal/store"
 )
 
 type StickerPackSession struct {
@@ -38,7 +38,7 @@ func CreateStickerPackCommand(ctx *BotContext) {
 	defer packMu.Unlock()
 
 	sender := ctx.Event.Info.Sender.ToNonAD().String()
-	
+
 	rights := store.GetStickerAuthor(getLID(ctx, ctx.Sender))
 	packName := "My Sticker Pack"
 	authorName := "Antigravity Bot"
@@ -94,9 +94,6 @@ func FinishStickerPackCommand(ctx *BotContext) {
 
 	sendMessage(ctx, "جاري تجميع الحزمة وتجهيزها...")
 
-
-
-
 	// We need to split into multiple packs if > 30 stickers because WhatsApp has a hard limit of 30 per pack
 	numPacks := (len(images) + 29) / 30
 
@@ -106,12 +103,12 @@ func FinishStickerPackCommand(ctx *BotContext) {
 		if endIdx > len(images) {
 			endIdx = len(images)
 		}
-		
+
 		packImages := images[startIdx:endIdx]
-		
+
 		buf := new(bytes.Buffer)
 		zipWriter := zip.NewWriter(buf)
-		
+
 		packTitle := session.Title
 		if numPacks > 1 {
 			packTitle = fmt.Sprintf("%s Part %d", session.Title, packIdx+1)
@@ -197,7 +194,7 @@ func HandleStickerPackSession(ctx *BotContext) bool {
 
 	var imgData []byte
 	var err error
-	
+
 	uMsg := UnwrapMessage(ctx.Event.Message)
 	if uMsg == nil {
 		return false

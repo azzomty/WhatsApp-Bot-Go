@@ -3,12 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-		"time"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
-	waSyncAction "go.mau.fi/whatsmeow/proto/waSyncAction"
 	waProto "go.mau.fi/whatsmeow/binary/proto"
+	waSyncAction "go.mau.fi/whatsmeow/proto/waSyncAction"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -38,7 +38,7 @@ func ClearAllGroups(client *whatsmeow.Client) {
 
 	if len(mutations) > 0 {
 		client.SendAppState(context.Background(), appstate.PatchInfo{
-			Type: appstate.WAPatchRegularHigh,
+			Type:      appstate.WAPatchRegularHigh,
 			Mutations: mutations,
 		})
 	}
@@ -135,7 +135,7 @@ func HandleAdminCover(ctx *BotContext) {
 		}
 
 		result = append(result, selectedAdmin{JID: bestAdmin, Count: bestCoverage})
-		
+
 		for _, g := range bestCoveredGroups {
 			delete(uncoveredGroups, g)
 		}

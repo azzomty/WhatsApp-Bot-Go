@@ -6,10 +6,10 @@ import (
 
 	"context"
 	"encoding/json"
-	"os/exec"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -36,12 +36,12 @@ type MediaResult struct {
 }
 
 var (
-	mediaSessions   = make(map[string][]MediaResult)
-	mediaMutex      sync.Mutex
-	cartoonSessions = make(map[string]string)
+	mediaSessions       = make(map[string][]MediaResult)
+	mediaMutex          sync.Mutex
+	cartoonSessions     = make(map[string]string)
 	cartoonListSessions = make(map[string][]MediaResult)
-	cartoonMutex    sync.Mutex
-	tmdbAPIKey      = "15d2ea6d0dc1d476efbca3eba2b9bbfb"
+	cartoonMutex        sync.Mutex
+	tmdbAPIKey          = "15d2ea6d0dc1d476efbca3eba2b9bbfb"
 )
 
 func HandleMediaCommand(ctx *BotContext, cmd string) {
@@ -65,7 +65,7 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 	case ".مسلسل":
 		results = searchTMDB(query, "tv")
 	case ".كرتون", ".انمي_مدبلج":
-			results = SearchArabicCartoon(query)
+		results = SearchArabicCartoon(query)
 		cartoonMutex.Lock()
 		cartoonListSessions[ctx.Sender.User] = results
 		cartoonMutex.Unlock()
@@ -76,24 +76,24 @@ func HandleMediaCommand(ctx *BotContext, cmd string) {
 		results = searchJikan(query, "manga")
 	}
 
-		if len(results) == 0 {
-			sendMessage(ctx, "للأسف ما لقيت أي نتيجة لطلبك!")
-			return
-		}
+	if len(results) == 0 {
+		sendMessage(ctx, "للأسف ما لقيت أي نتيجة لطلبك!")
+		return
+	}
 
-		if (cmd == ".كرتون" || cmd == ".انمي_مدبلج" || cmd == ".فلم" || cmd == ".فيلم") && len(results) > 1 {
-			msg := "*اختر الجزء أو الكرتون المطلوب بدقة، واكتب اسمه كاملاً:*\n\n"
-			for i, r := range results {
-				if i >= 20 {
-					break
-				}
-				msg += fmt.Sprintf("- %s\n", r.Title)
+	if (cmd == ".كرتون" || cmd == ".انمي_مدبلج" || cmd == ".فلم" || cmd == ".فيلم") && len(results) > 1 {
+		msg := "*اختر الجزء أو الكرتون المطلوب بدقة، واكتب اسمه كاملاً:*\n\n"
+		for i, r := range results {
+			if i >= 20 {
+				break
 			}
-			msg += fmt.Sprintf("\nمثال:\n`.الجزء الأول`")
-			sendMessage(ctx, msg)
-			return
+			msg += fmt.Sprintf("- %s\n", r.Title)
 		}
-		// Save to session for .new
+		msg += fmt.Sprintf("\nمثال:\n`.الجزء الأول`")
+		sendMessage(ctx, msg)
+		return
+	}
+	// Save to session for .new
 	mediaMutex.Lock()
 	mediaSessions[ctx.ChatID.String()] = results[1:] // save the rest
 	mediaMutex.Unlock()
@@ -113,14 +113,14 @@ func HandleMediaNew(ctx *BotContext) bool {
 	mediaMutex.Unlock()
 
 	sendMediaResult(ctx, res, "")
-	
+
 	// If it's a TV show, update cartoon session so .حلقة works on the new result!
 	if res.Episodes != "" || res.MediaType == "tv" {
 		cartoonMutex.Lock()
 		cartoonSessions[ctx.Sender.User] = res.Title
 		cartoonMutex.Unlock()
 	}
-	
+
 	return true
 }
 
@@ -225,7 +225,7 @@ func sendMediaResult(ctx *BotContext, res MediaResult, cmd string) {
 		cartoonMutex.Lock()
 		cartoonSessions[ctx.Sender.User] = res.Title
 		cartoonMutex.Unlock()
-		
+
 		epCount := res.Episodes
 		if epCount == "" || epCount == "غير معروف" {
 			epCount = "غير معروف (ابحث بالحلقة)"
@@ -300,36 +300,66 @@ func getTMDBGenreID(query, mediaType string) string {
 func getJikanGenreID(query string) string {
 	q := strings.ReplaceAll(query, "أ", "ا")
 	switch q {
-	case "اكشن", "حركة": return "1"
-	case "مغامرة", "مغامرات": return "2"
-	case "سيارات": return "3"
-	case "كوميديا", "كوميدي", "مضحك": return "4"
-	case "خرف", "خيال": return "10"
-	case "شياطين", "شيطان": return "6"
-	case "غموض", "لغز": return "7"
-	case "دراما", "حزين": return "8"
-	case "ايتشي": return "9"
-	case "فانتازيا", "سحر": return "16"
-	case "رعب", "مخيف": return "14"
-	case "اطفال", "عائلي": return "15"
-	case "موسيقى", "موسيقي": return "19"
-	case "شريحة من الحياة", "حياة": return "36"
-	case "رياضة", "رياضي": return "30"
-	case "رومنسي", "رومانسية", "رومانسي", "حب": return "22"
-	case "تاريخ", "تاريخي": return "13"
-	case "خيال علمي", "فضاء": return "24"
-	case "شونين": return "27"
-	case "شوجو": return "25"
-	case "سينين": return "42"
-	case "مدرسي", "مدرسة": return "23"
-	case "العاب", "لعبة": return "11"
-	case "نفسي": return "40"
-	case "ايسيكاي", "عالم اخر": return "62"
-	case "مصاص دماء", "مصاصين دماء": return "32"
-	case "عسكري": return "38"
-	case "بوليسي", "شرطة": return "39"
-	case "ساموراي": return "21"
-	default: return ""
+	case "اكشن", "حركة":
+		return "1"
+	case "مغامرة", "مغامرات":
+		return "2"
+	case "سيارات":
+		return "3"
+	case "كوميديا", "كوميدي", "مضحك":
+		return "4"
+	case "خرف", "خيال":
+		return "10"
+	case "شياطين", "شيطان":
+		return "6"
+	case "غموض", "لغز":
+		return "7"
+	case "دراما", "حزين":
+		return "8"
+	case "ايتشي":
+		return "9"
+	case "فانتازيا", "سحر":
+		return "16"
+	case "رعب", "مخيف":
+		return "14"
+	case "اطفال", "عائلي":
+		return "15"
+	case "موسيقى", "موسيقي":
+		return "19"
+	case "شريحة من الحياة", "حياة":
+		return "36"
+	case "رياضة", "رياضي":
+		return "30"
+	case "رومنسي", "رومانسية", "رومانسي", "حب":
+		return "22"
+	case "تاريخ", "تاريخي":
+		return "13"
+	case "خيال علمي", "فضاء":
+		return "24"
+	case "شونين":
+		return "27"
+	case "شوجو":
+		return "25"
+	case "سينين":
+		return "42"
+	case "مدرسي", "مدرسة":
+		return "23"
+	case "العاب", "لعبة":
+		return "11"
+	case "نفسي":
+		return "40"
+	case "ايسيكاي", "عالم اخر":
+		return "62"
+	case "مصاص دماء", "مصاصين دماء":
+		return "32"
+	case "عسكري":
+		return "38"
+	case "بوليسي", "شرطة":
+		return "39"
+	case "ساموراي":
+		return "21"
+	default:
+		return ""
 	}
 }
 
@@ -513,7 +543,6 @@ func downloadImage(url string) ([]byte, error) {
 	return buf, nil
 }
 
-
 func HandleEpisodeCommand(ctx *BotContext) {
 	parts := strings.Split(ctx.Text, " ")
 	if len(parts) < 2 {
@@ -536,7 +565,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 	go func() {
 		epNumInt, _ := strconv.Atoi(epNum)
 		embedLink, err := ScrapeWitanimeEpisode(showName, epNumInt)
-		
+
 		if err != nil || embedLink == "" {
 			sendMessage(ctx, "لم أتمكن من إيجاد سيرفر مباشر، سأحاول جلبها من يوتيوب... ")
 			searchQuery := fmt.Sprintf("%s حلقة %s مدبلج بالعربي", showName, epNum)
@@ -545,7 +574,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 				sendMessage(ctx, "عذراً، الحلقة غير متوفرة.")
 				return
 			}
-			
+
 			data, err := youtube.DownloadMedia(videoID, false)
 			if err != nil {
 				sendMessage(ctx, fmt.Sprintf("حدث خطأ أثناء تحميل الحلقة: %v", err))
@@ -559,7 +588,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 		links := strings.Split(embedLink, ",")
 		var outPath string
 		var dlErr error
-		
+
 		// Try downloading from each link until one works
 		for _, link := range links {
 			if strings.TrimSpace(link) == "" {
@@ -580,7 +609,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 				sendMessage(ctx, "عذراً، الحلقة غير متوفرة.")
 				return
 			}
-			
+
 			data, err := youtube.DownloadMedia(videoID, false)
 			if err != nil {
 				sendMessage(ctx, fmt.Sprintf("حدث خطأ أثناء تحميل الحلقة: %v", err))
@@ -590,7 +619,7 @@ func HandleEpisodeCommand(ctx *BotContext) {
 			return
 		}
 		defer os.Remove(outPath)
-		
+
 		data, err := os.ReadFile(outPath)
 		if err != nil {
 			sendMessage(ctx, "حدث خطأ أثناء قراءة الملف.")
@@ -599,8 +628,6 @@ func HandleEpisodeCommand(ctx *BotContext) {
 		sendVideoData(ctx, data, showName, epNum)
 	}()
 }
-
-
 
 func sendVideoData(ctx *BotContext, data []byte, animeName, epNum string) {
 	// Just send it normally without splitting
@@ -627,7 +654,6 @@ func sendVideoData(ctx *BotContext, data []byte, animeName, epNum string) {
 	})
 }
 
-
 func SearchArabicCartoon(query string) []MediaResult {
 	q := strings.ReplaceAll(query, "ي", "_")
 	q = strings.ReplaceAll(q, "ى", "_")
@@ -637,25 +663,24 @@ func SearchArabicCartoon(query string) []MediaResult {
 	q = strings.ReplaceAll(q, "ا", "_")
 	q = strings.ReplaceAll(q, "ة", "_")
 	q = strings.ReplaceAll(q, "ه", "_")
-	
+
 	// Because url.QueryEscape escapes '_' as well? No, '_' is not escaped.
 	// We want to pass %25 for wildcard, and _ for single char.
 	escapedQ := strings.ReplaceAll(url.QueryEscape(q), "+", "%20")
-	
+
 	reqURL := fmt.Sprintf("https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/series?select=*&title=ilike.*%%25%s%%25*", escapedQ)
 
-	
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
 	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
 	}
 	defer resp.Body.Close()
-	
+
 	var data []struct {
 		Title         string  `json:"title"`
 		Description   string  `json:"description"`
@@ -664,17 +689,17 @@ func SearchArabicCartoon(query string) []MediaResult {
 		YearStarted   int     `json:"year_started"`
 		TotalEpisodes int     `json:"total_episodes"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil
 	}
-	
+
 	var results []MediaResult
 	for _, item := range data {
 		res := MediaResult{
 			Title:       item.Title,
 			Description: item.Description,
-			PosterURL: item.PosterURL,
+			PosterURL:   item.PosterURL,
 		}
 		if item.Rating > 0 {
 			res.Rating = fmt.Sprintf("%.1f", item.Rating)
@@ -690,23 +715,22 @@ func SearchArabicCartoon(query string) []MediaResult {
 	return results
 }
 
-
 func HandlePartCommand(ctx *BotContext) {
 	partQuery := strings.TrimSpace(strings.TrimPrefix(ctx.Text, ".الجزء"))
 	if partQuery == "" {
 		sendMessage(ctx, "يرجى تحديد الجزء، مثال: .الجزء الثاني")
 		return
 	}
-	
+
 	cartoonMutex.Lock()
 	results, ok := cartoonListSessions[ctx.Sender.User]
 	cartoonMutex.Unlock()
-	
+
 	if !ok || len(results) == 0 {
 		sendMessage(ctx, "يرجى البحث عن الكرتون أولاً باستخدام أمر .كرتون")
 		return
 	}
-	
+
 	var selected MediaResult
 	found := false
 	for _, r := range results {
@@ -716,37 +740,39 @@ func HandlePartCommand(ctx *BotContext) {
 			break
 		}
 	}
-	
+
 	if !found {
 		sendMessage(ctx, "لم أتمكن من العثور على هذا الجزء في نتائج بحثك السابقة! تأكد من كتابة الاسم الصحيح كما ظهر في القائمة.")
 		return
 	}
-	
+
 	sendMediaResult(ctx, selected, ".كرتون")
 }
 
 func HandleCartoonList(ctx *BotContext) {
 	sendMessage(ctx, "جاري جلب القائمة... ")
-	
+
 	reqURL1 := "https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/series?select=title&order=title.asc"
 	req1, _ := http.NewRequest("GET", reqURL1, nil)
 	req1.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
-	
+
 	reqURL2 := "https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/movies?select=title&order=title.asc"
 	req2, _ := http.NewRequest("GET", reqURL2, nil)
 	req2.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	
+
 	resp1, err1 := client.Do(req1)
 	resp2, err2 := client.Do(req2)
-	
+
 	var shows []string
 	uniqueShows := make(map[string]bool)
-	
+
 	if err1 == nil {
 		defer resp1.Body.Close()
-		var data []struct{ Title string `json:"title"` }
+		var data []struct {
+			Title string `json:"title"`
+		}
 		json.NewDecoder(resp1.Body).Decode(&data)
 		for _, item := range data {
 			baseName := strings.Split(item.Title, " الجزء ")[0]
@@ -757,10 +783,12 @@ func HandleCartoonList(ctx *BotContext) {
 			}
 		}
 	}
-	
+
 	if err2 == nil {
 		defer resp2.Body.Close()
-		var data []struct{ Title string `json:"title"` }
+		var data []struct {
+			Title string `json:"title"`
+		}
 		json.NewDecoder(resp2.Body).Decode(&data)
 		for _, item := range data {
 			baseName := item.Title
@@ -770,16 +798,15 @@ func HandleCartoonList(ctx *BotContext) {
 			}
 		}
 	}
-	
+
 	msg := "*قائمة الكراتين والأفلام المتوفرة:*\n\n"
 	for _, show := range shows {
 		msg += "- " + show + "\n"
 	}
 	msg += "\n*للبحث عن كرتون اكتب:* `.كرتون اسم_الكرتون`\n*للبحث عن فلم اكتب:* `.فلم اسم_الفلم`"
-	
+
 	sendMessage(ctx, msg)
 }
-
 
 func SearchArabicMovies(query string) []MediaResult {
 	q := strings.ReplaceAll(query, "ي", "_")
@@ -790,37 +817,37 @@ func SearchArabicMovies(query string) []MediaResult {
 	q = strings.ReplaceAll(q, "ا", "_")
 	q = strings.ReplaceAll(q, "ة", "_")
 	q = strings.ReplaceAll(q, "ه", "_")
-	
+
 	escapedQ := strings.ReplaceAll(url.QueryEscape(q), "+", "%20")
 	reqURL := fmt.Sprintf("https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/movies?select=id,title,story,poster_url&title=ilike.*%%25%s%%25*", escapedQ)
-	
+
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
 	req.Header.Set("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
 	}
 	defer resp.Body.Close()
-	
+
 	var data []struct {
-		ID          string `json:"id"`
-		Title       string `json:"title"`
-		Story       string `json:"story"`
-		PosterURL   string `json:"poster_url"`
+		ID        string `json:"id"`
+		Title     string `json:"title"`
+		Story     string `json:"story"`
+		PosterURL string `json:"poster_url"`
 	}
-	
+
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil
 	}
-	
+
 	var results []MediaResult
 	for _, item := range data {
 		// Fetch video servers for this movie
 		embeds := FetchMovieEmbeds(item.ID)
-		
+
 		desc := item.Story + "\n\n*روابط المشاهدة المباشرة:*\n"
 		for _, e := range embeds {
 			desc += fmt.Sprintf("- السيرفر %d: %s\n", e.ServerNumber, e.EmbedURL)
@@ -828,7 +855,7 @@ func SearchArabicMovies(query string) []MediaResult {
 		if len(embeds) == 0 {
 			desc += "لا توجد روابط حالياً."
 		}
-		
+
 		results = append(results, MediaResult{
 			Title:       item.Title,
 			Description: desc,
@@ -846,14 +873,14 @@ func FetchMovieEmbeds(movieID string) []struct {
 	reqURL := fmt.Sprintf("https://wwmdrwjkrzdkqjqddfta.supabase.co/rest/v1/video_servers?movie_id=eq.%s", movieID)
 	req, _ := http.NewRequest("GET", reqURL, nil)
 	req.Header.Set("apikey", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3bWRyd2prcnpka3FqcWRkZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjAxNzUsImV4cCI6MjA5NjM5NjE3NX0.v3-gjEYfuJ4DE17OAHidvd38lCHUTU4ldb2SHLphU8s")
-	
+
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil
 	}
 	defer resp.Body.Close()
-	
+
 	var embeds []struct {
 		ServerNumber int    `json:"server_number"`
 		EmbedURL     string `json:"embed_url"`
@@ -874,12 +901,12 @@ type PendingStardima struct {
 	Season StardimaSeason
 	EpNum  string
 }
-var stardimaPending = make(map[string]PendingStardima)
 
+var stardimaPending = make(map[string]PendingStardima)
 
 func HandleStardimaCommand(ctx *BotContext) {
 	query := strings.TrimSpace(strings.TrimPrefix(ctx.Text, ".ستارديما"))
-	
+
 	if query == "قائمة الافلام" || query == "قائمة الأفلام" {
 		HandleStardimaList(ctx, "aflam")
 		return
@@ -888,7 +915,7 @@ func HandleStardimaCommand(ctx *BotContext) {
 		HandleStardimaList(ctx, "mosalsalat")
 		return
 	}
-	
+
 	if query == "" {
 		sendMessage(ctx, "يرجى كتابة اسم الكرتون بعد الأمر، مثال: .ستارديما داني الشبح")
 		return
@@ -896,17 +923,17 @@ func HandleStardimaCommand(ctx *BotContext) {
 
 	activeSource[ctx.Sender.User] = "stardima"
 	sendMessage(ctx, "جاري البحث في ستارديما...")
-	
+
 	videos, err := SearchStardima(query)
 	if err != nil || len(videos) == 0 {
 		sendMessage(ctx, "لم أتمكن من العثور على نتائج في ستارديما. تأكد من الاسم.")
 		return
 	}
-	
+
 	cartoonMutex.Lock()
 	stardimaSearchSessions[ctx.Sender.User] = videos
 	cartoonMutex.Unlock()
-	
+
 	msg := fmt.Sprintf("*نتائج البحث في ستارديما عن:* %s\n\n", query)
 	for i, v := range videos {
 		typ := "مسلسل"
@@ -915,7 +942,7 @@ func HandleStardimaCommand(ctx *BotContext) {
 		}
 		msg += fmt.Sprintf("%d. %s (%s)\n", i+1, v.Title, typ)
 	}
-	
+
 	msg += "\n*للاختيار اكتب:* `.رقم` متبوعاً بالرقم (مثال: `.رقم 1`)"
 	sendMessage(ctx, msg)
 }
@@ -926,33 +953,33 @@ func HandleNumberSelect(ctx *BotContext) {
 		sendMessage(ctx, "يرجى تحديد الرقم، مثال: .رقم 1")
 		return
 	}
-	
+
 	idx, err := strconv.Atoi(parts[1])
 	if err != nil || idx < 1 {
 		sendMessage(ctx, "رقم غير صحيح.")
 		return
 	}
-	
+
 	cartoonMutex.Lock()
 	videos, ok := stardimaSearchSessions[ctx.Sender.User]
 	cartoonMutex.Unlock()
-	
+
 	if !ok || len(videos) == 0 {
 		sendMessage(ctx, "يرجى البحث أولاً باستخدام .ستارديما")
 		return
 	}
-	
+
 	if idx > len(videos) {
 		sendMessage(ctx, "الرقم غير موجود في النتائج.")
 		return
 	}
-	
+
 	selected := videos[idx-1]
-	
+
 	cartoonMutex.Lock()
 	stardimaSelectedSession[ctx.Sender.User] = selected
 	cartoonMutex.Unlock()
-	
+
 	if selected.IsSeries {
 		sendMessage(ctx, fmt.Sprintf("تم اختيار المسلسل: *%s*\nجاري جلب المواسم...", selected.Title))
 		seasons, err := GetStardimaSeasons(selected.URL)
@@ -960,28 +987,28 @@ func HandleNumberSelect(ctx *BotContext) {
 			sendMessage(ctx, "لم أتمكن من جلب المواسم.")
 			return
 		}
-		
+
 		cartoonMutex.Lock()
 		stardimaSeasonsList[ctx.Sender.User] = seasons
 		cartoonMutex.Unlock()
-		
+
 		msg := "*المواسم المتوفرة:*\n"
 		for i, s := range seasons {
 			msg += fmt.Sprintf("%d. %s\n", i+1, s.Name)
 		}
 		msg += "\n*لاختيار الموسم اكتب:* `.جزء` متبوعاً بالرقم (مثال: `.جزء 1`)"
 		sendMessage(ctx, msg)
-		
+
 	} else {
 		// It's a movie, ask for quality
 		pending := PendingStardima{
-			Type: "movie",
+			Type:  "movie",
 			Video: selected,
 		}
 		cartoonMutex.Lock()
 		stardimaPending[ctx.Sender.User] = pending
 		cartoonMutex.Unlock()
-		
+
 		msg := `يرجى اختيار الجودة المطلوبة:
 1. جودة 1080p (الأعلى - سيتم تقسيمها لأجزاء لو حجمها كبير)
 2. جودة 720p (عالية - فيديو واحد)
@@ -996,25 +1023,25 @@ func HandleStardimaPart(ctx *BotContext, partIdx int) {
 	cartoonMutex.Lock()
 	seasons, ok := stardimaSeasonsList[ctx.Sender.User]
 	cartoonMutex.Unlock()
-	
+
 	if !ok || len(seasons) == 0 {
 		sendMessage(ctx, "يرجى البحث واختيار المسلسل أولاً.")
 		return
 	}
-	
+
 	if partIdx < 1 || partIdx > len(seasons) {
 		sendMessage(ctx, "رقم الجزء غير صحيح.")
 		return
 	}
-	
+
 	selSeason := seasons[partIdx-1]
-	
+
 	cartoonMutex.Lock()
 	stardimaSelectedSeason[ctx.Sender.User] = selSeason
 	cartoonMutex.Unlock()
-	
+
 	sendMessage(ctx, fmt.Sprintf("تم اختيار الموسم: *%s*\nجاري حساب عدد الحلقات...", selSeason.Name))
-	
+
 	go func() {
 		episodes, err := GetStardimaEpisodes(selSeason.ID)
 		if err == nil && len(episodes) > 0 {
@@ -1030,21 +1057,21 @@ func HandleStardimaEpisode(ctx *BotContext, epNum int) {
 	selSeason, ok := stardimaSelectedSeason[ctx.Sender.User]
 	selectedShow := stardimaSelectedSession[ctx.Sender.User]
 	cartoonMutex.Unlock()
-	
+
 	if !ok || selSeason.ID == "" {
 		sendMessage(ctx, "يرجى اختيار الجزء أولاً عبر .جزء")
 		return
 	}
-	
+
 	sendMessage(ctx, "جاري جلب الحلقة وتحميلها...")
-	
+
 	go func() {
 		episodes, err := GetStardimaEpisodes(selSeason.ID)
 		if err != nil || len(episodes) == 0 {
 			sendMessage(ctx, "حدث خطأ أثناء جلب الحلقات.")
 			return
 		}
-		
+
 		var watchURL string
 		for _, e := range episodes {
 			if e.EpisodeNumber == epNum {
@@ -1052,20 +1079,20 @@ func HandleStardimaEpisode(ctx *BotContext, epNum int) {
 				break
 			}
 		}
-		
-				if watchURL == "" {
+
+		if watchURL == "" {
 			sendMessage(ctx, "لم يتم العثور على الحلقة المطلوبة.")
 			return
 		}
-		
+
 		m3u8URL, err := GetBestM3U8(watchURL)
 		if err != nil {
-			sendMessage(ctx, "خطأ في السيرفر: " + err.Error())
+			sendMessage(ctx, "خطأ في السيرفر: "+err.Error())
 			return
 		}
 		data, err := DownloadM3U8WithQuality(m3u8URL, "bestvideo[height<=720]+bestaudio/best[height<=720]")
 		if err != nil {
-			sendMessage(ctx, "حدث خطأ أثناء التحميل: " + err.Error())
+			sendMessage(ctx, "حدث خطأ أثناء التحميل: "+err.Error())
 			return
 		}
 		sendVideoDataWithSplit(ctx, data, selectedShow.Title+" - "+selSeason.Name, strconv.Itoa(epNum), false)
@@ -1078,48 +1105,47 @@ func downloadStardimaMovie(ctx *BotContext, selected StardimaVideo) {
 		sendMessage(ctx, "فشل العثور على رابط المشاهدة.")
 		return
 	}
-	
+
 	uqloadEmbed, err := GetUqloadEmbedURL(hyperURL)
 	if err != nil {
 		sendMessage(ctx, "السيرفر الأساسي غير متوفر لهذا الفيلم حالياً.")
 		return
 	}
-	
+
 	m3u8URL, err := GetUqloadM3U8(uqloadEmbed)
 	if err != nil {
 		sendMessage(ctx, "فشل في فك تشفير السيرفر.")
 		return
 	}
-	
+
 	data, err := DownloadM3U8(m3u8URL)
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ أثناء التحميل: "+err.Error())
 		return
 	}
-	
+
 	sendVideoData(ctx, data, selected.Title, "فيلم")
 }
 
 func HandleStardimaList(ctx *BotContext, category string) {
 	sendMessage(ctx, "جاري جلب القائمة من ستارديما (قد يستغرق بضع ثوان)...")
-	
+
 	go func() {
 		titles, err := GetStardimaFullList(category)
 		if err != nil || len(titles) == 0 {
 			sendMessage(ctx, "فشل في جلب القائمة من ستارديما.")
 			return
 		}
-		
+
 		msg := fmt.Sprintf("*قائمة ستارديما (%d عمل):*\n\n", len(titles))
 		for _, t := range titles {
 			msg += "- " + t + "\n"
 		}
-		
+
 		msg += "\n*للبحث والمشاهدة استخدم:* .ستارديما اسم العمل"
 		sendMessage(ctx, msg)
 	}()
 }
-
 
 func HandleStardimaQuality(ctx *BotContext, choice int) {
 	cartoonMutex.Lock()
@@ -1164,7 +1190,7 @@ func HandleStardimaQuality(ctx *BotContext, choice int) {
 			}
 			m3u8URL, err := GetBestM3U8(watchURL)
 			if err != nil {
-				sendMessage(ctx, "خطأ في السيرفر: " + err.Error())
+				sendMessage(ctx, "خطأ في السيرفر: "+err.Error())
 				return
 			}
 			data, err := DownloadM3U8WithQuality(m3u8URL, qualityFmt)
@@ -1220,23 +1246,25 @@ func sendVideoDataWithSplit(ctx *BotContext, data []byte, animeName, epNum strin
 
 	sendMessage(ctx, "الحجم ضخم جداً للواتساب (أكثر من 64 ميجا) وتم طلب جودة 1080p، جاري التقسيم...")
 	tempDir, err := os.MkdirTemp("", "video_split")
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 	defer os.RemoveAll(tempDir)
 	inputPath := tempDir + "/input.mp4"
 	os.WriteFile(inputPath, data, 0644)
 	outPattern := tempDir + "/part_%03d.mp4"
-	
+
 	ffmpegPath := "./ffmpeg"
 	if _, err := os.Stat("node_modules/ffmpeg-static/ffmpeg"); err == nil {
 		ffmpegPath = "node_modules/ffmpeg-static/ffmpeg"
 	}
-	
+
 	cmd := exec.Command(ffmpegPath, "-i", inputPath, "-c", "copy", "-f", "segment", "-segment_time", "600", "-reset_timestamps", "1", outPattern)
 	if err := cmd.Run(); err != nil {
 		sendMessage(ctx, "فشل تقسيم الفيديو.")
 		return
 	}
-	
+
 	files, _ := os.ReadDir(tempDir)
 	var parts []string
 	for _, f := range files {
@@ -1247,7 +1275,9 @@ func sendVideoDataWithSplit(ctx *BotContext, data []byte, animeName, epNum strin
 	for i, partPath := range parts {
 		partData, _ := os.ReadFile(partPath)
 		resp, err := ctx.Client.Upload(context.Background(), partData, whatsmeow.MediaVideo)
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 		caption := fmt.Sprintf("*%s* - الحلقة %s\n(الجزء %d من %d)", animeName, epNum, i+1, len(parts))
 		vidMsg := &waProto.VideoMessage{
 			URL:           proto.String(resp.URL),

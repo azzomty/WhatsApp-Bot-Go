@@ -79,7 +79,7 @@ func pollTempMail(client *whatsmeow.Client, chatID types.JID, sidToken string) {
 
 				if !seen[m.MailID] {
 					seen[m.MailID] = true
-					
+
 					// We only get excerpt in the list, we need to fetch the full body
 					contentResp, err := httpClient.Get(fmt.Sprintf("https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=%d&sid_token=%s", m.MailID, sidToken))
 					if err == nil {
@@ -108,7 +108,7 @@ func pollTempMail(client *whatsmeow.Client, chatID types.JID, sidToken string) {
 		}
 		resp.Body.Close()
 	}
-	
+
 	expiryMsg := "⌛ *انتهت صلاحية إيميلك المؤقت (15 دقيقة).* لو احتجت إيميل ثاني أرسل `.ايميل` من جديد."
 	client.SendMessage(context.Background(), chatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(expiryMsg)},

@@ -67,7 +67,11 @@ func GenerateSticker(inputData []byte, isVideo bool, pack string, author string)
 
 	if isWebp {
 		// Just inject EXIF into the existing webp!
-		err = exec.Command("./webpmux", "-set", "exif", exifPath, inputPath, "-o", outputPath).Run()
+		out, errWebp := exec.Command("./webpmux", "-set", "exif", exifPath, inputPath, "-o", outputPath).CombinedOutput()
+		if errWebp != nil {
+			fmt.Printf("webpmux failed: %v, output: %s\n", errWebp, string(out))
+		}
+		err = errWebp
 		if err != nil {
 			return nil, fmt.Errorf("webpmux failed: %v", err)
 		}
@@ -103,7 +107,11 @@ func GenerateSticker(inputData []byte, isVideo bool, pack string, author string)
 
 		// Inject EXIF using webpmux
 		exifOut := outputPath + ".exif.webp"
-		err = exec.Command("./webpmux", "-set", "exif", exifPath, outputPath, "-o", exifOut).Run()
+		out, errWebp := exec.Command("./webpmux", "-set", "exif", exifPath, outputPath, "-o", exifOut).CombinedOutput()
+		if errWebp != nil {
+			fmt.Printf("webpmux failed: %v, output: %s\n", errWebp, string(out))
+		}
+		err = errWebp
 		if err == nil {
 			os.Rename(exifOut, outputPath)
 		}

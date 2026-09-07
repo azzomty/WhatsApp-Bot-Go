@@ -69,7 +69,7 @@ func HandleCallerID(ctx *BotContext, number string) {
 
 	// Format token correctly if the user accidentally copied "Bearer " with it
 	token = strings.TrimPrefix(token, "Bearer ")
-	
+
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("User-Agent", "Truecaller/11.75.5 (Android;10)")
 
@@ -99,7 +99,7 @@ func HandleCallerID(ctx *BotContext, number string) {
 
 	person := res.Data[0]
 	name := person.Name
-	
+
 	carrier := "غير معروف"
 	if len(person.Phones) > 0 && person.Phones[0].Carrier != "" {
 		carrier = person.Phones[0].Carrier
@@ -121,7 +121,7 @@ func HandleCallerID(ctx *BotContext, number string) {
 	msg := fmt.Sprintf("🚨 *نتيجة الفحص السري* 🚨\n\n")
 	msg += fmt.Sprintf("👤 *الاسم:* %s%s\n", name, isVerified)
 	msg += fmt.Sprintf("📱 *المزود:* %s\n", carrier)
-	
+
 	if spamScore > 0 {
 		msg += fmt.Sprintf("⚠️ *نسبة السبام (إزعاج):* %d%%\n", spamScore)
 	}

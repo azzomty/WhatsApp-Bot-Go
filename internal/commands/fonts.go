@@ -3,7 +3,7 @@ package commands
 import "strings"
 
 type FontStyle struct {
-	Name string
+	Name    string
 	Mapping map[rune]string
 }
 
@@ -6321,17 +6321,17 @@ var FontStyles = []FontStyle{
 }
 
 func ApplyFont(text string, fontIdx int) string {
-    if fontIdx < 0 || fontIdx >= len(FontStyles) {
-        return text
-    }
-    mapping := FontStyles[fontIdx].Mapping
-    var sb strings.Builder
-    for _, r := range text {
-        if val, ok := mapping[r]; ok {
-            sb.WriteString(val)
-        } else {
-            sb.WriteRune(r)
-        }
-    }
-    return sb.String()
+	if fontIdx < 0 || fontIdx >= len(FontStyles) {
+		return text
+	}
+	mapping := FontStyles[fontIdx].Mapping
+	var sb strings.Builder
+	for _, r := range text {
+		if val, ok := mapping[r]; ok {
+			sb.WriteString(val)
+		} else {
+			sb.WriteRune(r)
+		}
+	}
+	return sb.String()
 }

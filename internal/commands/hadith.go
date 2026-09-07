@@ -55,7 +55,7 @@ func HandleHadithMenu(ctx *BotContext) {
 	msg += "`.بحث قسم الصلاة`\n\n"
 	msg += "ولأخذ حديث عشوائي من قسم معين، اكتب:\n"
 	msg += "`.حديث <رقم القسم>`\n"
-	
+
 	ctx.Client.SendMessage(context.Background(), ctx.ChatID, &waProto.Message{
 		ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String(msg)},
 	})
@@ -66,7 +66,7 @@ func HandleAllCategories(ctx *BotContext) {
 		sendMessage(ctx, "جاري جلب الأقسام من السيرفر، انتظر ثواني وجرب مرة ثانية...")
 		return
 	}
-	
+
 	msg := fmt.Sprintf("*جميع أقسام الأحاديث (%d قسم)*\n\n", len(allCategories))
 	var lines []string
 	for i, c := range allCategories {
@@ -160,7 +160,7 @@ func HandleHadith(ctx *BotContext) {
 	catName := categoriesMap[categoryID].Title
 	countStr := categoriesMap[categoryID].Count
 	count, _ := strconv.Atoi(countStr)
-	
+
 	// Randomize the page! This fixes the issue of always getting the same hadith in large categories
 	page := 1
 	if count > 100 {

@@ -1,0 +1,554 @@
+Navigating...
+>> GET https://www.masterduelmeta.com/top-decks
+<< 200 https://www.masterduelmeta.com/top-decks
+>> GET https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@300;400;500;700;800&display=swap
+>> GET https://www.googletagmanager.com/gtag/js?id=G-2L1XZGKN8Z
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/pages/__layout.svelte-4c6cf8c2.css
+>> GET https://www.masterduelmeta.com/_app/immutable/start-451625cc.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/index-6f51aa43.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/index-6a87c178.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/preload-helper-60cab3ee.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/singletons-d1fb5791.js
+>> GET https://www.masterduelmeta.com/_app/immutable/pages/__layout.svelte-ca96d1ce.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Fetcher-379c69dc.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Env-a9142bcd.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/UserUtils-41c4edde.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/External-0a7deecd.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/UserInfoStores-fcca583a.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/MetaDataStores-1d64aa03.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Locale-44c9ef5e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SkLoad-ad4c273e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Internal-9d290091.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DatabaseStores-730762c6.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/_baseIsEqual-7f5588dc.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Tooltip-6e86954e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeviceInfoStores-c7827777.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/stores-5b7a0b8e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SlotAd-0d26c3a6.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/index.es-d9284ff2.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/fa-85590847.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Button-4673e39b.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SocialButtons-01178aad.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Notifications-3bbcfd14.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/IconButton-6a034426.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/index-7a564fec.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/index-66337615.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/UiUtils-0c007ccf.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/ModalStores-8cbc4d37.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/PushNotifications-ea9826fb.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Avatar-38d6f616.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/NavButton-f6e3b96b.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/LiveIndicator-0cd6542a.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/LinkButton-0ff83356.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/TwitchEmbed-263c9b09.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Viewport-47e9f4b9.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/NavTabs-b3f6dcf6.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/compact-2bb88180.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Countdown-51414235.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/TextInfo-b77a1786.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/ImageUtils-226f6872.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/navigation-6709cf39.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/TabbedContent-8e498d9b.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/LoadBubbles-950f2e41.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Content-67ed9283.js
+>> GET https://www.masterduelmeta.com/_app/immutable/pages/top-decks/index.svelte-982df626.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/CardContainer-976072df.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/CardImage-f8324071.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/AspectBox-c0158263.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/missing-user-7f310b3f.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Card-7f29a750.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SkillInfo-f91b0a5f.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/CardInfo-cb32687e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/ContainerWithFooter-df9770d5.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Content-a9251664.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeckTypeTiers-dc1fa90b.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Title-8308f041.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeckButtonContainer-b29777b0.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/TopDeckStores-77046185.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/BorderButton-87f654f0.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Input-943f18ec.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/InfoIcon-8bab0b45.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeckContainer-4d626083.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Switch-b55ac666.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DMCProButton-31e83353.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SelectItem-38b42af9.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Select-9251c4ee.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/CopyTooltip-85d69249.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/StatusContainer-53fe06f5.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeckTable-80f81546.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/SimplePaging-c6d09e23.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/ProfileLink-835efb6e.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/starchip-6972f65f.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/Role-54ce5bc1.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/BrowserUtils-95c98949.js
+>> GET https://www.masterduelmeta.com/_app/immutable/chunks/DeckTop-88d08837.js
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/site-logo-mdm-cd028f14.svg
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/pages/__layout.svelte-4c6cf8c2.css
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/website-ads-12991e3f.svg
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/index-6a87c178.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/preload-helper-60cab3ee.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/singletons-d1fb5791.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/start-451625cc.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/website-ads-12991e3f.svg
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/site-logo-mdm-cd028f14.svg
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/index-6f51aa43.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Fetcher-379c69dc.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Env-a9142bcd.js
+>> GET https://www.masterduelmeta.com/_app/immutable/pages/__error.svelte-48c8aa53.js
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/pages/__error.svelte-a5f592af.css
+<< 200 https://www.masterduelmeta.com/_app/immutable/pages/__layout.svelte-ca96d1ce.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/UserUtils-41c4edde.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/External-0a7deecd.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/UserInfoStores-fcca583a.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/MetaDataStores-1d64aa03.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Locale-44c9ef5e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SkLoad-ad4c273e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Internal-9d290091.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DatabaseStores-730762c6.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/_baseIsEqual-7f5588dc.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeviceInfoStores-c7827777.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/stores-5b7a0b8e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SlotAd-0d26c3a6.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Tooltip-6e86954e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/fa-85590847.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/index.es-d9284ff2.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/IconButton-6a034426.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Button-4673e39b.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Notifications-3bbcfd14.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SocialButtons-01178aad.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/index-66337615.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/index-7a564fec.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/UiUtils-0c007ccf.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/ModalStores-8cbc4d37.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/PushNotifications-ea9826fb.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Avatar-38d6f616.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/LiveIndicator-0cd6542a.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/LinkButton-0ff83356.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/TwitchEmbed-263c9b09.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Viewport-47e9f4b9.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/compact-2bb88180.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/TextInfo-b77a1786.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/NavTabs-b3f6dcf6.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/navigation-6709cf39.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/ImageUtils-226f6872.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/LoadBubbles-950f2e41.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Content-67ed9283.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/TabbedContent-8e498d9b.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/NavButton-f6e3b96b.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Countdown-51414235.js
+>> GET https://www.masterduelmeta.com/api/v1/config/ads-enabled
+<< 200 https://www.masterduelmeta.com/_app/immutable/pages/top-decks/index.svelte-982df626.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/CardContainer-976072df.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/AspectBox-c0158263.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/CardImage-f8324071.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/missing-user-7f310b3f.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Card-7f29a750.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SkillInfo-f91b0a5f.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/ContainerWithFooter-df9770d5.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/CardInfo-cb32687e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Content-a9251664.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeckTypeTiers-dc1fa90b.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Title-8308f041.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeckButtonContainer-b29777b0.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/TopDeckStores-77046185.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/BorderButton-87f654f0.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Input-943f18ec.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/InfoIcon-8bab0b45.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Switch-b55ac666.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeckContainer-4d626083.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DMCProButton-31e83353.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SelectItem-38b42af9.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/CopyTooltip-85d69249.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Select-9251c4ee.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/pages/__error.svelte-a5f592af.css
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/StatusContainer-53fe06f5.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/SimplePaging-c6d09e23.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeckTable-80f81546.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/ProfileLink-835efb6e.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/starchip-6972f65f.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/BrowserUtils-95c98949.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/Role-54ce5bc1.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/chunks/DeckTop-88d08837.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/pages/__error.svelte-48c8aa53.js
+<< 200 https://www.masterduelmeta.com/api/v1/config/ads-enabled
+>> GET https://www.masterduelmeta.com/api/v1/sets?sort=-release&release[$lte]=2026-09-07T18:00&type[$ne]=Structure%20Deck&fields=name,release,linkedArticle&limit=1
+>> GET https://www.masterduelmeta.com/api/v1/top-decks?sort=created&limit=1
+>> GET https://www.masterduelmeta.com/api/v1/banlist-changes?sort=-announced&limit=1&fields=-_id,announced,date
+>> GET https://www.masterduelmeta.com/api/v1/ranked-types?name=Win%20Streaks&fields=icon&limit=1
+>> GET https://www.masterduelmeta.com/api/v1/ranked-types?activeEvent=true&limit=0
+>> GET https://www.masterduelmeta.com/api/v1/engines?activeFilter=true&fields=name,relatedDeckTypes,requiredCards
+<< 200 https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@300;400;500;700;800&display=swap
+>> GET https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5f1LqEp2iw.woff2
+>> GET https://fonts.gstatic.com/s/alegreyasans/v28/5aUz9_-1phKLFgshYDvh6Vwt7VptvQ.woff2
+>> GET https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5alOqEp2iw.woff2
+<< 200 https://www.masterduelmeta.com/api/v1/sets?sort=-release&release[$lte]=2026-09-07T18:00&type[$ne]=Structure%20Deck&fields=name,release,linkedArticle&limit=1
+<< 200 https://www.masterduelmeta.com/api/v1/banlist-changes?sort=-announced&limit=1&fields=-_id,announced,date
+<< 200 https://www.masterduelmeta.com/api/v1/ranked-types?activeEvent=true&limit=0
+<< 200 https://www.masterduelmeta.com/api/v1/top-decks?sort=created&limit=1
+<< 200 https://www.masterduelmeta.com/api/v1/ranked-types?name=Win%20Streaks&fields=icon&limit=1
+<< 200 https://www.masterduelmeta.com/api/v1/engines?activeFilter=true&fields=name,relatedDeckTypes,requiredCards
+>> GET https://www.masterduelmeta.com/api/v1/discord/site-info
+>> GET https://cdn.intergient.com/pageos/pageos.js
+>> GET https://www.masterduelmeta.com/api/v1/twitch/online-notification-channels
+>> GET https://www.masterduelmeta.com/api/v1/twitch/online-embed-channels
+>> GET https://www.masterduelmeta.com/api/v1/cards?release[$gte]=(days-14)&alternateArt[$ne]=true&fields=name&sort=-rarity,-release&limit=0
+>> GET https://www.googletagmanager.com/gtag/js?id=G-ZDTXFC6ZHD
+>> GET https://cdn.intergient.com/1024485/73327/ramp.js
+<< 200 https://www.masterduelmeta.com/api/v1/discord/site-info
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/background-lines-20971cdc.webp
+>> GET https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5eFIqEp2iw.woff2
+<< 200 https://www.masterduelmeta.com/api/v1/twitch/online-embed-channels
+<< 200 https://www.masterduelmeta.com/api/v1/twitch/online-notification-channels
+<< 200 https://www.masterduelmeta.com/api/v1/cards?release[$gte]=(days-14)&alternateArt[$ne]=true&fields=name&sort=-rarity,-release&limit=0
+>> GET https://www.masterduelmeta.com/api/v1/top-decks?created[$gte]=(days-14)&&fields=-_id,-__v,-notes&limit=0
+<< 200 https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5alOqEp2iw.woff2
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/background-lines-20971cdc.webp
+<< 200 https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5f1LqEp2iw.woff2
+<< 200 https://fonts.gstatic.com/s/alegreyasans/v28/5aUz9_-1phKLFgshYDvh6Vwt7VptvQ.woff2
+<< 200 https://www.masterduelmeta.com/api/v1/top-decks?created[$gte]=(days-14)&&fields=-_id,-__v,-notes&limit=0
+<< 200 https://www.googletagmanager.com/gtag/js?id=G-2L1XZGKN8Z
+<< 200 https://fonts.gstatic.com/s/alegreyasans/v28/5aUu9_-1phKLFgshYDvh6Vwt5eFIqEp2iw.woff2
+>> GET https://www.googletagmanager.com/gtag/js?id=UA-93155050-5&cx=c&gtm=4e6921
+>> GET https://www.googletagmanager.com/gtag/js?id=G-ZDTXFC6ZHD&cx=c&gtm=4e6921
+<< 200 https://cdn.intergient.com/pageos/pageos.js
+<< 200 https://cdn.intergient.com/1024485/73327/ramp.js
+>> GET https://analyzecorona.com/p82thk8j0g_gsyju4pkgy8
+>> GET https://cdn.confiant-integrations.net/TQKqBEtrLKQeEixRZzZ_NmOAgjo/gpt_and_prebid/config.js
+>> GET https://securepubads.g.doubleclick.net/tag/js/gpt.js?network-code=154013155
+>> GET https://cdn.intergient.com/prebid/prebid.fc2db18acfb04cc3dab3.js
+>> GET https://cdn.intergient.com/ramp_core.js
+>> GET https://www.masterduelmeta.com/api/v1/users?_id[$in]=6575506c491ddbda42d19889,66f6c3eb32f04ab438692763,6719fe203108150413bc6314,67a475993e1dd692c49b63a5,69077fb9d44ac2140d78f191,693af24d0353ce66646f17f8
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/card/Blue-Eyes%20Alternative%20White%20Dragon?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/img/tournaments/logos/Spicy_Wins.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/new-red-10cb710b.webp
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/card/68bd0d46d90cdd5843b233c9?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/card/Pot%20of%20Benevolence?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/master-1.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/rateIcon.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/ratingfinalicon.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Dinomorphia?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Fire%20King?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Gimmick%20Puppet?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Yubel?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Sky%20Striker?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a22ea9fef649e0e48bf925f?portrait=true&width=50
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a7a1476a5d5790122e5ed3c?portrait=true&width=50
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/69e7fd742f6ae3657b49d648?portrait=true&width=50
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a993fd18d92852959576e42?portrait=true&width=50
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/69eae74f96895cef89f30eaa?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a993fd18d92852959576e42?portrait=true&width=140
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/cp-ur-93fde075.webp
+>> GET https://www.masterduelmeta.com/_app/immutable/assets/cp-sr-0d04d566.webp
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/master-5.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a22ea9fef649e0e48bf925f?portrait=true&width=140
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/6a7a1476a5d5790122e5ed3c?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/dmc-meta-weekly-icon.webp&w=50&output=webp&we&n=-1&maxage=7d
+>> GET https://imgserv.duellinksmeta.com/v2/mdm/engines/69e7fd742f6ae3657b49d648?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/img/tournaments/logos/community-tournaments-logo.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://cdn.intergient.com/ramp_core.js
+<< 200 https://www.googletagmanager.com/gtag/js?id=G-ZDTXFC6ZHD
+>> POST https://www.google-analytics.com/g/collect?v=2&tid=G-ZDTXFC6ZHD&gtm=45je6921v892163306za200zb879668056zd879668056&_p=1788806085100&gcs=G1--&gcd=13l3l3l3l5l1&npa=0&dma=0&are=1&cid=62761373.1788806086&frm=0&ngs=1&pscdl=noapi&rcb=5&sr=1280x720&uaa=x86&uab=64&uafvl=HeadlessChrome%3B149.0.7827.55%7CChromium%3B149.0.7827.55%7CNot)A%253BBrand%3B24.0.0.0&uam=&uamb=0&uap=Linux&uapv=&uaw=0&ul=en-us&_s=1&tag_exp=115616986~115938465~115938469~118897920~118897930~120213116~120385422~120469145~120469153~120914213&sid=1788806085&sct=1&seg=0&dl=https%3A%2F%2Fwww.masterduelmeta.com%2Ftop-decks&dt=Master%20Duel%20%7C%20Best%20Decks%20with%20Craft%20Prices%20%7C%20Updated%20Daily%20%7C%20Master%20Duel%20Meta&en=ramp_js&_fv=1&_nsi=1&_ss=1&_ee=1&ep.pageview_id=1788806085107&tfd=1799
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/pageos.js
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/cp-sr-0d04d566.webp
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/new-red-10cb710b.webp
+<< 200 https://www.masterduelmeta.com/_app/immutable/assets/cp-ur-93fde075.webp
+<< 200 https://www.masterduelmeta.com/api/v1/users?_id[$in]=6575506c491ddbda42d19889,66f6c3eb32f04ab438692763,6719fe203108150413bc6314,67a475993e1dd692c49b63a5,69077fb9d44ac2140d78f191,693af24d0353ce66646f17f8
+<< 200 https://securepubads.g.doubleclick.net/tag/js/gpt.js?network-code=154013155
+>> GET https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202609020101/pubads_impl.js?cb=122880880
+<< 200 https://www.googletagmanager.com/gtag/js?id=UA-93155050-5&cx=c&gtm=4e6921
+>> GET https://www.google-analytics.com/analytics.js
+<< 200 https://www.googletagmanager.com/gtag/js?id=G-ZDTXFC6ZHD&cx=c&gtm=4e6921
+<< 200 https://cdn.intergient.com/prebid/prebid.fc2db18acfb04cc3dab3.js
+<< 200 https://cdn.confiant-integrations.net/TQKqBEtrLKQeEixRZzZ_NmOAgjo/gpt_and_prebid/config.js
+>> GET https://cdn.confiant-integrations.net/gptprebidnative/202608131959/wrap.js
+>> GET https://securepubads.g.doubleclick.net/pagead/managed/dict/m202609030101/gpt
+<< 200 https://www.google-analytics.com/analytics.js
+<< 200 https://securepubads.g.doubleclick.net/pagead/managed/js/gpt/m202609020101/pubads_impl.js?cb=122880880
+>> GET https://fundingchoicesmessages.google.com/i/154013155?ers=3
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/master-1.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/img/tournaments/logos/Spicy_Wins.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/ratingfinalicon.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/dmc-meta-weekly-icon.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/rateIcon.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/mdm_img/content/logos/master-5.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Fire%20King?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aaa0e24f2d54a52141_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/card/Blue-Eyes%20Alternative%20White%20Dragon?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3a9a0e24f2d54a5178c_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a7a1476a5d5790122e5ed3c?portrait=true&width=50
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dd41a53c6db17f93d6e62a_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a993fd18d92852959576e42?portrait=true&width=50
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/69e6ed6796b4051dd5cb9479_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a22ea9fef649e0e48bf925f?portrait=true&width=50
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dceb6d22432d7d5b1d888f_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Dinomorphia?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/61ef0edf39cb086ec8b2b47c_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Yubel?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3ada0e24f2d54a53f47_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/card/68bd0d46d90cdd5843b233c9?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68bd0d46d90cdd5843b233c9_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/card/Pot%20of%20Benevolence?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a5314b_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/69e7fd742f6ae3657b49d648?portrait=true&width=50
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/684c7734e575808214ce2a20_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Gimmick%20Puppet?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aba0e24f2d54a523d3_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/deck-type/Sky%20Striker?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a53645_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/69eae74f96895cef89f30eaa?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a53869_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a22ea9fef649e0e48bf925f?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dceb6d22432d7d5b1d888f_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a993fd18d92852959576e42?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/69e6ed6796b4051dd5cb9479_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/69e7fd742f6ae3657b49d648?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/684c7734e575808214ce2a20_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 302 https://imgserv.duellinksmeta.com/v2/mdm/engines/6a7a1476a5d5790122e5ed3c?portrait=true&width=140
+>> GET https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dd41a53c6db17f93d6e62a_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/img/tournaments/logos/community-tournaments-logo.webp&w=50&output=webp&we&n=-1&maxage=7d
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/pageos.js
+<< 204 https://www.google-analytics.com/g/collect?v=2&tid=G-ZDTXFC6ZHD&gtm=45je6921v892163306za200zb879668056zd879668056&_p=1788806085100&gcs=G1--&gcd=13l3l3l3l5l1&npa=0&dma=0&are=1&cid=62761373.1788806086&frm=0&ngs=1&pscdl=noapi&rcb=5&sr=1280x720&uaa=x86&uab=64&uafvl=HeadlessChrome%3B149.0.7827.55%7CChromium%3B149.0.7827.55%7CNot)A%253BBrand%3B24.0.0.0&uam=&uamb=0&uap=Linux&uapv=&uaw=0&ul=en-us&_s=1&tag_exp=115616986~115938465~115938469~118897920~118897930~120213116~120385422~120469145~120469153~120914213&sid=1788806085&sct=1&seg=0&dl=https%3A%2F%2Fwww.masterduelmeta.com%2Ftop-decks&dt=Master%20Duel%20%7C%20Best%20Decks%20with%20Craft%20Prices%20%7C%20Updated%20Daily%20%7C%20Master%20Duel%20Meta&en=ramp_js&_fv=1&_nsi=1&_ss=1&_ee=1&ep.pageview_id=1788806085107&tfd=1799
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/videoCard.f860201d651f79aa38c7.js
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.html
+>> GET https://config.playwire.com/1024485/v2/websites/73327/styles.css
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.html
+>> GET https://c.amazon-adsystem.com/aax2/apstag.js
+>> GET https://raw.githubusercontent.com/easylist/easylist/master/docs/1x1.gif
+>> GET https://tags.crwdcntrl.net/lt/c/17138/sync.min.js
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aaa0e24f2d54a52141_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dd41a53c6db17f93d6e62a_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dceb6d22432d7d5b1d888f_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3ada0e24f2d54a53f47_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3a9a0e24f2d54a5178c_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a5314b_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/69e6ed6796b4051dd5cb9479_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/61ef0edf39cb086ec8b2b47c_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68bd0d46d90cdd5843b233c9_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://securepubads.g.doubleclick.net/pagead/managed/dict/m202609030101/gpt
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/684c7734e575808214ce2a20_w420.webp&cx=50&cy=115&cw=320&ch=320&w=50&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aba0e24f2d54a523d3_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a53645_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://cdn.confiant-integrations.net/gptprebidnative/202608131959/wrap.js
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.html
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.html
+>> GET blob:https://www.masterduelmeta.com/af3ab1c5-8fb1-4caa-8b73-68864df6387a
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/60c2b3aca0e24f2d54a53869_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dceb6d22432d7d5b1d888f_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/69e6ed6796b4051dd5cb9479_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/684c7734e575808214ce2a20_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://wsrv.nl/?url=https://s3.duellinksmeta.com/cards/68dd41a53c6db17f93d6e62a_w420.webp&cx=50&cy=115&cw=320&ch=320&w=140&we&precrop=true&output=webp&maxage=7d
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/videoCard.f860201d651f79aa38c7.js
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.js
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.js
+<< 200 https://analyzecorona.com/p82thk8j0g_gsyju4pkgy8
+<< 200 https://tags.crwdcntrl.net/lt/c/17138/sync.min.js
+<< 200 blob:https://www.masterduelmeta.com/af3ab1c5-8fb1-4caa-8b73-68864df6387a
+<< 200 https://raw.githubusercontent.com/easylist/easylist/master/docs/1x1.gif
+<< 200 https://c.amazon-adsystem.com/aax2/apstag.js
+>> GET https://aax.amazon-adsystem.com/e/dtb/bid/338856.6/0/prebid?adunitid=mjoqz_300x250_177735
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.js
+>> GET https://cdn.intergient.com/cdn-cgi/challenge-platform/scripts/jsd/main.js
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/iframe/iframe.js
+>> GET https://cdn.intergient.com/cdn-cgi/challenge-platform/scripts/jsd/main.js
+>> GET blob:https://www.masterduelmeta.com/f895db2e-e9ab-4351-acfb-f90fb799fc49
+>> GET https://config.playwire.com/audience_segments/config.json
+>> GET https://cdn.intergient.com/pageos/V.20260902.3/474.ea665a1b49642152304d.js
+>> GET https://carbon-cdn.ccgateway.net/script?id=www.masterduelmeta.com&parentId=5bb3e20859
+>> GET https://ps.eyeota.net/pixel?pid=m51mh00&t=ajs&uid=user_a0643c0e-dbef-4ce2-9fb7-6d0b1f6f0fae_1788806086934
+<< 200 blob:https://www.masterduelmeta.com/f895db2e-e9ab-4351-acfb-f90fb799fc49
+>> POST https://bcp.crwdcntrl.net/6/map?xcid=17138
+<< 200 https://config.playwire.com/1024485/v2/websites/73327/styles.css
+<< 302 https://cdn.intergient.com/cdn-cgi/challenge-platform/scripts/jsd/main.js
+>> GET https://cdn.intergient.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/330e41bb475c/main.js?
+<< 200 https://cdn.intergient.com/pageos/V.20260902.3/474.ea665a1b49642152304d.js
+<< 200 https://cdn.intergient.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/330e41bb475c/main.js?
+>> POST https://cdn.intergient.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/330e41bb475c/0.8594689931180363:1788804311:-RfFf6BkGECaTvXdKhlU0LWT6OuQqqb4Kca642ID4bM/a377cf39a9bd37a8
+<< 200 https://aax.amazon-adsystem.com/e/dtb/bid/338856.6/0/prebid?adunitid=mjoqz_300x250_177735
+<< 302 https://ps.eyeota.net/pixel?pid=m51mh00&t=ajs&uid=user_a0643c0e-dbef-4ce2-9fb7-6d0b1f6f0fae_1788806086934
+>> GET https://ps.eyeota.net/pixel/bounce/?pid=m51mh00&t=ajs&uid=user_a0643c0e-dbef-4ce2-9fb7-6d0b1f6f0fae_1788806086934
+<< 200 https://config.playwire.com/audience_segments/config.json
+>> POST https://analyzecorona.com/jomii7ba7xhlueh63rcq3rfuyok6412xnro
+<< 200 https://fundingchoicesmessages.google.com/i/154013155?ers=3
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> GET https://fundingchoicesmessages.google.com/f/AGSKWxWzp4ymo9MfNTZs3Lxi9X-KewuchjOGmnvkhX0RNuYaezcpxnzh-VUqIn_QPghizX4NLe5nWNkK8KBPUU8KHCN32uzdUl-JXE1nac7QlK74eNUwrFAYX02Zc6m0aR7EVdjXiVn8-w==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg3LDM0MTAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzddXSwiaHR0cHM6Ly93d3cubWFzdGVyZHVlbG1ldGEuY29tL3RvcC1kZWNrcyIsbnVsbCxbWzgsIlJPc3EtX3MxdURNIl0sWzksImVuLVVTIl0sWzE4LCJbW1tudWxsLDIzMjhdXV0iXSxbMzUsIjE3ODg4MDYwODciXSxbMTksIjIiXSxbMTcsIlswXSJdLFsyNCwiIl0sWzI5LCJmYWxzZSJdXV0
+>> GET https://connectid.analytics.yahoo.com/connectId-gpt.js
+>> GET https://oa.openxcdn.net/esp.js
+>> GET https://invstatic101.creativecdn.com/encrypted-signals/encrypted-tag-g.js
+>> GET https://static.criteo.net/js/ld/publishertag.ids.js
+<< 200 https://ps.eyeota.net/pixel/bounce/?pid=m51mh00&t=ajs&uid=user_a0643c0e-dbef-4ce2-9fb7-6d0b1f6f0fae_1788806086934
+<< 200 https://cdn.intergient.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/330e41bb475c/0.8594689931180363:1788804311:-RfFf6BkGECaTvXdKhlU0LWT6OuQqqb4Kca642ID4bM/a377cf39a9bd37a8
+>> GET https://match.adsrvr.org/track/cmf/generic?ttd_pid=eyeota&ttd_tpi=1&gdpr=0&gdpr_consent=&ttd_passthrough=%26referrer_pid%3Dm51mh00
+>> GET https://cm.g.doubleclick.net/pixel?google_nid=eye&google_cm&google_sc&google_hm=MkNXbENRdmRSeWstb0dNQU5DTDY5RHpWdTdVVGdKUDNRWUVKZkRoWUIzTEk&gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00
+>> GET https://sync.srv.stackadapt.com/sync?nid=eyeota
+>> GET https://eyeota-match.dotomi.com/match/bounce/current?networkId=41703&version=1&nuid=2364YmIFxdv3bjjbayeQc-K8ZbO65j7vf8V7Iq03TkU0&gdpr=0&gdpr_consent=
+>> GET https://trc.taboola.com/sg/eyeota/1/cm
+<< 200 https://connectid.analytics.yahoo.com/connectId-gpt.js
+>> POST https://cd836371f1d.cdn.intergient.com/fb87a4ea41
+<< 200 https://analyzecorona.com/jomii7ba7xhlueh63rcq3rfuyok6412xnro
+>> POST https://analyzecorona.com/jomii7ba7xhlueh63rcq3rfuyok6412xnro
+<< 200 https://fundingchoicesmessages.google.com/f/AGSKWxWzp4ymo9MfNTZs3Lxi9X-KewuchjOGmnvkhX0RNuYaezcpxnzh-VUqIn_QPghizX4NLe5nWNkK8KBPUU8KHCN32uzdUl-JXE1nac7QlK74eNUwrFAYX02Zc6m0aR7EVdjXiVn8-w==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg3LDM0MTAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzddXSwiaHR0cHM6Ly93d3cubWFzdGVyZHVlbG1ldGEuY29tL3RvcC1kZWNrcyIsbnVsbCxbWzgsIlJPc3EtX3MxdURNIl0sWzksImVuLVVTIl0sWzE4LCJbW1tudWxsLDIzMjhdXV0iXSxbMzUsIjE3ODg4MDYwODciXSxbMTksIjIiXSxbMTcsIlswXSJdLFsyNCwiIl0sWzI5LCJmYWxzZSJdXV0
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxV58Uje7xSTEBnksOsFqd5fOZcyCEo53BdeKWnsM89Vp2FKg8C1-9Ip-nCDufXrULWhxxifMtlT658btGtX68y1Ch7GiLbgYIbqBFnI59a8wf6NpTFZuDrMcHBBfaER0Mt4LBbabw==
+>> GET https://fundingchoicesmessages.google.com/f/AGSKWxXpZgrxbYN-3AxFypMj4sxzMYln50h4zS6cL5oTNXoyz0r-0MPpGD7iNC8mYsKlzVEJDpcFbR1WpI4lJIfvbXOTj1--3Zc04cMpOo0sZPPw-lJcgKhVgxomRzCoc6es7Vqk5VA-7g==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg3LDU5OTAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzcsOV0sbnVsbCwyLG51bGwsImVuIl0sImh0dHBzOi8vd3d3Lm1hc3RlcmR1ZWxtZXRhLmNvbS90b3AtZGVja3MiLG51bGwsW1s4LCJST3NxLV9zMXVETSJdLFs5LCJlbi1VUyJdLFsxOCwiW1tbbnVsbCwyMzI4XV1dIl0sWzM1LCIxNzg4ODA2MDg3Il0sWzE5LCIyIl0sWzE3LCJbMF0iXSxbMjQsIiJdLFsyOSwiZmFsc2UiXV1d
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 200 https://static.criteo.net/js/ld/publishertag.ids.js
+>> GET https://gum.criteo.com/syncframe?origin=publishertagids&topUrl=www.masterduelmeta.com&gdpr=0&gdpr_consent=
+<< 200 https://trc.taboola.com/sg/eyeota/1/cm
+<< 302 https://cm.g.doubleclick.net/pixel?google_nid=eye&google_cm&google_sc&google_hm=MkNXbENRdmRSeWstb0dNQU5DTDY5RHpWdTdVVGdKUDNRWUVKZkRoWUIzTEk&gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00
+>> GET https://cm.g.doubleclick.net/pixel?google_nid=eye&google_cm=&google_sc=&google_hm=MkNXbENRdmRSeWstb0dNQU5DTDY5RHpWdTdVVGdKUDNRWUVKZkRoWUIzTEk&gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00&google_tc=
+<< 200 https://oa.openxcdn.net/esp.js
+<< 200 https://cd836371f1d.cdn.intergient.com/fb87a4ea41
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxV58Uje7xSTEBnksOsFqd5fOZcyCEo53BdeKWnsM89Vp2FKg8C1-9Ip-nCDufXrULWhxxifMtlT658btGtX68y1Ch7GiLbgYIbqBFnI59a8wf6NpTFZuDrMcHBBfaER0Mt4LBbabw==
+<< 200 https://carbon-cdn.ccgateway.net/script?id=www.masterduelmeta.com&parentId=5bb3e20859
+>> GET https://privacy-location-edge.ccgateway.net/privacy/location
+>> GET https://pogo.ccgateway.net/v1/p/5bb3e20859/classification?url=https%3A%2F%2Fwww.masterduelmeta.com%2Ftop-decks%23deck%3DSky%2520Striker
+<< 200 https://analyzecorona.com/jomii7ba7xhlueh63rcq3rfuyok6412xnro
+<< 302 https://match.adsrvr.org/track/cmf/generic?ttd_pid=eyeota&ttd_tpi=1&gdpr=0&gdpr_consent=&ttd_passthrough=%26referrer_pid%3Dm51mh00
+>> GET https://match.adsrvr.org/track/cmb/generic?ttd_pid=eyeota&ttd_tpi=1&gdpr=0&gdpr_consent=&ttd_passthrough=%26referrer_pid%3Dm51mh00
+<< 200 https://invstatic101.creativecdn.com/encrypted-signals/encrypted-tag-g.js
+<< 204 https://eyeota-match.dotomi.com/match/bounce/current?networkId=41703&version=1&nuid=2364YmIFxdv3bjjbayeQc-K8ZbO65j7vf8V7Iq03TkU0&gdpr=0&gdpr_consent=
+<< 302 https://cm.g.doubleclick.net/pixel?google_nid=eye&google_cm=&google_sc=&google_hm=MkNXbENRdmRSeWstb0dNQU5DTDY5RHpWdTdVVGdKUDNRWUVKZkRoWUIzTEk&gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00&google_tc=
+>> GET https://ps.eyeota.net/match?gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00&google_gid=CAESEPt7R5EVSGoszWoN04Ilt_I&google_cver=1
+<< 200 https://gum.criteo.com/syncframe?origin=publishertagids&topUrl=www.masterduelmeta.com&gdpr=0&gdpr_consent=
+<< 200 https://bcp.crwdcntrl.net/6/map?xcid=17138
+<< 302 https://match.adsrvr.org/track/cmb/generic?ttd_pid=eyeota&ttd_tpi=1&gdpr=0&gdpr_consent=&ttd_passthrough=%26referrer_pid%3Dm51mh00
+>> GET https://ps.eyeota.net/match?uid=45ef7e55-c8fd-49d5-88c6-7cbd45f95ffe&bid=1e2n4ou&&referrer_pid=m51mh00
+<< 200 https://ps.eyeota.net/match?gdpr=0&gdpr_consent=&uid=1&bid=gdo9o51&newuser=1&referrer_pid=m51mh00&google_gid=CAESEPt7R5EVSGoszWoN04Ilt_I&google_cver=1
+<< 200 https://ps.eyeota.net/match?uid=45ef7e55-c8fd-49d5-88c6-7cbd45f95ffe&bid=1e2n4ou&&referrer_pid=m51mh00
+<< 302 https://sync.srv.stackadapt.com/sync?nid=eyeota
+>> GET https://ps.eyeota.net/match?bid=tpm4omv&uid=ceO_Bxk8T9pcZqINAaX4zw&gdpr=&gdpr_consent=
+<< 200 https://fundingchoicesmessages.google.com/f/AGSKWxXpZgrxbYN-3AxFypMj4sxzMYln50h4zS6cL5oTNXoyz0r-0MPpGD7iNC8mYsKlzVEJDpcFbR1WpI4lJIfvbXOTj1--3Zc04cMpOo0sZPPw-lJcgKhVgxomRzCoc6es7Vqk5VA-7g==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg3LDU5OTAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzcsOV0sbnVsbCwyLG51bGwsImVuIl0sImh0dHBzOi8vd3d3Lm1hc3RlcmR1ZWxtZXRhLmNvbS90b3AtZGVja3MiLG51bGwsW1s4LCJST3NxLV9zMXVETSJdLFs5LCJlbi1VUyJdLFsxOCwiW1tbbnVsbCwyMzI4XV1dIl0sWzM1LCIxNzg4ODA2MDg3Il0sWzE5LCIyIl0sWzE3LCJbMF0iXSxbMjQsIiJdLFsyOSwiZmFsc2UiXV1d
+<< 200 https://ps.eyeota.net/match?bid=tpm4omv&uid=ceO_Bxk8T9pcZqINAaX4zw&gdpr=&gdpr_consent=
+<< 200 https://privacy-location-edge.ccgateway.net/privacy/location
+>> GET https://script-api.ccgateway.net/1/userId
+>> GET https://script-api.ccgateway.net/script/launcher/2/user.js
+>> GET https://script-api.ccgateway.net/script/launcher/1/customevents.js
+>> GET https://script-api.ccgateway.net/script/launcher/6/api.js
+<< 200 https://script-api.ccgateway.net/script/launcher/6/api.js
+<< 200 https://script-api.ccgateway.net/script/launcher/1/customevents.js
+<< 200 https://script-api.ccgateway.net/1/userId
+<< 200 https://script-api.ccgateway.net/script/launcher/2/user.js
+>> GET https://script-api.ccgateway.net/setUser?parent=5bb3e20859&site=www.masterduelmeta.com&ccuid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&ccsid=8c5c728b-e0e6-477e-8e24-285fbcbd231d
+>> GET https://script-api.ccgateway.net/script/bundle?id=www.masterduelmeta.com&parentId=5bb3e20859
+<< 200 https://script-api.ccgateway.net/setUser?parent=5bb3e20859&site=www.masterduelmeta.com&ccuid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&ccsid=8c5c728b-e0e6-477e-8e24-285fbcbd231d
+<< 200 https://script-api.ccgateway.net/script/bundle?id=www.masterduelmeta.com&parentId=5bb3e20859
+>> POST https://pb-ing-02.ccgateway.net/v1.0/parent/5bb3e20859/engagement/trigger/page_visit
+>> GET https://sync.crwdcntrl.net/qmap?c=18513&tp=MGNI&tpid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&d=https%3A%2F%2Fpb-ing-02.ccgateway.net%2Fv1.0%2Fparent%2F5bb3e20859%2Fengagement%2Ftrigger%2Fuser_sync%3Fsrc%3Dlotame%26puid%3D$%7Bprofile_id%7D%26id%3Dwww.masterduelmeta.com%26parentId%3D5bb3e20859%26ccsid%3D8c5c728b-e0e6-477e-8e24-285fbcbd231d%26ccuid%3Dce9ac12c-8514-41b1-8c8f-6d53e1298935%26ccpt%3D0%26pvid%3D3f407af2-b96e-46e7-a191-8ba89efb9512%26engid%3D81726c4b-3798-40e6-a11c-230a6c7abb4c%26engcount%3D0%26engttl%3D60
+>> GET https://fundingchoicesmessages.google.com/f/AGSKWxVLDP_mM5jB6btbDgKyEYOQgwHNIIrcE08PhMI6Cw0y5qIGA64QZwFgJW0V272Dla2jf4dvUoetmkuwNmss7mAh7hIeFKVNR66DHk839SL5XOa0JNIqP2SbJFaITsEjywHNuaf9zv3_hz7-bB7BrgaK0ExQnOLxHC6fiiNNCb80du_iPf4LKTOADoZv/_/300by250ad./iframe-mgid-/css/ads.=admodeliframe&/ads/google2.
+>> GET https://pagead2.googlesyndication.com/pagead/js/lidar.js?fcd=true
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 302 https://sync.crwdcntrl.net/qmap?c=18513&tp=MGNI&tpid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&d=https%3A%2F%2Fpb-ing-02.ccgateway.net%2Fv1.0%2Fparent%2F5bb3e20859%2Fengagement%2Ftrigger%2Fuser_sync%3Fsrc%3Dlotame%26puid%3D$%7Bprofile_id%7D%26id%3Dwww.masterduelmeta.com%26parentId%3D5bb3e20859%26ccsid%3D8c5c728b-e0e6-477e-8e24-285fbcbd231d%26ccuid%3Dce9ac12c-8514-41b1-8c8f-6d53e1298935%26ccpt%3D0%26pvid%3D3f407af2-b96e-46e7-a191-8ba89efb9512%26engid%3D81726c4b-3798-40e6-a11c-230a6c7abb4c%26engcount%3D0%26engttl%3D60
+>> GET https://pb-ing-02.ccgateway.net/v1.0/parent/5bb3e20859/engagement/trigger/user_sync?src=lotame&puid=c3564f8c961255336a24260764970bfe&id=www.masterduelmeta.com&parentId=5bb3e20859&ccsid=8c5c728b-e0e6-477e-8e24-285fbcbd231d&ccuid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&ccpt=0&pvid=3f407af2-b96e-46e7-a191-8ba89efb9512&engid=81726c4b-3798-40e6-a11c-230a6c7abb4c&engcount=0&engttl=60
+<< 200 https://fundingchoicesmessages.google.com/f/AGSKWxVLDP_mM5jB6btbDgKyEYOQgwHNIIrcE08PhMI6Cw0y5qIGA64QZwFgJW0V272Dla2jf4dvUoetmkuwNmss7mAh7hIeFKVNR66DHk839SL5XOa0JNIqP2SbJFaITsEjywHNuaf9zv3_hz7-bB7BrgaK0ExQnOLxHC6fiiNNCb80du_iPf4LKTOADoZv/_/300by250ad./iframe-mgid-/css/ads.=admodeliframe&/ads/google2.
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 200 https://pogo.ccgateway.net/v1/p/5bb3e20859/classification?url=https%3A%2F%2Fwww.masterduelmeta.com%2Ftop-decks%23deck%3DSky%2520Striker
+<< 200 https://pagead2.googlesyndication.com/pagead/js/lidar.js?fcd=true
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> GET https://fundingchoicesmessages.google.com/f/AGSKWxUUJYwDQtCYEtbDlThIf0ee5gDPMfjIvdyvIhEv6H8vKp-TWQcmH46RCxf8ZfgQ6NCeeNKJ2TXnCdwCtYohTVQjOKnlBxoLTxVVw3ulq51pCJkunG_mGsI1SCLBgpWaWwS2DUE2XQ==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg5LDM0NjAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzcsOSw2XSxudWxsLDIsbnVsbCwiZW4iLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCwxXSwiaHR0cHM6Ly93d3cubWFzdGVyZHVlbG1ldGEuY29tL3RvcC1kZWNrcyIsbnVsbCxbWzgsIlJPc3EtX3MxdURNIl0sWzksImVuLVVTIl0sWzE4LCJbW1tudWxsLDIzMjhdXV0iXSxbMzUsIjE3ODg4MDYwODciXSxbMTksIjIiXSxbMTcsIlswXSJdLFsyNCwiIl0sWzI5LCJmYWxzZSJdXV0
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxULFg8yEXrhkJYDbImfJ8_Hz5MIelA8fk5X4BzqcH-HKIGG3ivGylgyiGS9XDZbAqjy4rAathF1p6jjtNjk8cDKNHwuesUHKPtAPuDO-IgNF7gmkynivkP6Hu4ULBQJ-2NVZal9yg==
+>> POST https://cd836371f1d.cdn.intergient.com/fb87a4ea41
+<< 200 https://fundingchoicesmessages.google.com/f/AGSKWxUUJYwDQtCYEtbDlThIf0ee5gDPMfjIvdyvIhEv6H8vKp-TWQcmH46RCxf8ZfgQ6NCeeNKJ2TXnCdwCtYohTVQjOKnlBxoLTxVVw3ulq51pCJkunG_mGsI1SCLBgpWaWwS2DUE2XQ==?fccs=W251bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLFsxNzg4ODA2MDg5LDM0NjAwMDAwMF0sbnVsbCxudWxsLG51bGwsW251bGwsWzcsOSw2XSxudWxsLDIsbnVsbCwiZW4iLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCwxXSwiaHR0cHM6Ly93d3cubWFzdGVyZHVlbG1ldGEuY29tL3RvcC1kZWNrcyIsbnVsbCxbWzgsIlJPc3EtX3MxdURNIl0sWzksImVuLVVTIl0sWzE4LCJbW1tudWxsLDIzMjhdXV0iXSxbMzUsIjE3ODg4MDYwODciXSxbMTksIjIiXSxbMTcsIlswXSJdLFsyNCwiIl0sWzI5LCJmYWxzZSJdXV0
+>> POST https://fundingchoicesmessages.google.com/el/AGSKWxWEeVo9ZNBce16twSlXO_YWwBIGwcOZvcLYpLXXFGTk7h2hy-54LKdvkjQS3awtnZkO2kGozhMHIcAfBVSF1BUhtJ_T3S2aO3H3JAMIMurjye5dhCARdjfzYVQMZ3U5mBDuZ3I5cQ==
+<< 200 https://pb-ing-02.ccgateway.net/v1.0/parent/5bb3e20859/engagement/trigger/page_visit
+<< 200 https://cd836371f1d.cdn.intergient.com/fb87a4ea41
+<< 204 https://fundingchoicesmessages.google.com/el/AGSKWxWEeVo9ZNBce16twSlXO_YWwBIGwcOZvcLYpLXXFGTk7h2hy-54LKdvkjQS3awtnZkO2kGozhMHIcAfBVSF1BUhtJ_T3S2aO3H3JAMIMurjye5dhCARdjfzYVQMZ3U5mBDuZ3I5cQ==
+<< 200 https://pb-ing-02.ccgateway.net/v1.0/parent/5bb3e20859/engagement/trigger/user_sync?src=lotame&puid=c3564f8c961255336a24260764970bfe&id=www.masterduelmeta.com&parentId=5bb3e20859&ccsid=8c5c728b-e0e6-477e-8e24-285fbcbd231d&ccuid=ce9ac12c-8514-41b1-8c8f-6d53e1298935&ccpt=0&pvid=3f407af2-b96e-46e7-a191-8ba89efb9512&engid=81726c4b-3798-40e6-a11c-230a6c7abb4c&engcount=0&engttl=60
+Found deck links: 81
+/top-decks/ TOP DECKS
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ 
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ 
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ 
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ 
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ —
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ Shmoneyy
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/  960
+ 360
+/top-decks/master-v/september-2026/sky-striker/shmoneyy/ZspFc/ Sep 7, 2026
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ 
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ 
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ 
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ 
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ 1st Place
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ ReleaseTheCrken
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/  1020
+ 360
+/top-decks/meta-weekly/244/sky-striker/releasethecrken/QLea1/ Sep 7, 2026
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ 
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ 
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ 
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ 
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ Top 16
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ Waydow
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/  1410
+ 450
+/top-decks/meta-weekly/244/sky-striker/waydow/pMdKh/ Sep 7, 2026
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ 
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ 
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ 
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ 
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ 1652.82
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ Aeren
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/  990
+ 420
+/top-decks/rating-duels/september-2026/sky-striker/aeren/GJDZ7/ Sep 6, 2026
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ 
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ 
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ 
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ 
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ —
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ yanagiya_okina
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/  990
+ 450
+/top-decks/master-i/september-2026/sky-striker/yanagiya_okina/Cj0XU/ Sep 6, 2026
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ 
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ 
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ 
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ 
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ —
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ April Sheep
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/  1050
+ 300
+/top-decks/master-v/september-2026/sky-striker/april-sheep/RUspE/ Sep 5, 2026
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ 
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ 
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ 
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ 
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ 2nd Place
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ ReleaseTheCrken
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/  1080
+ 330
+/top-decks/community-tournaments/pulp-squeeze/7/sky-striker/releasethecrken/ucwq5/ Sep 5, 2026
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ 
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ 
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ 
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ 
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ —
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ @Soul6524
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/  1020
+ 330
+/top-decks/master-i/september-2026/sky-striker/soul6524/qYxFz/ Sep 5, 2026
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ 
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ 
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ 
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ 
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ —
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ andthenishowedhermypanini
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/  1020
+ 360
+/top-decks/master-i/september-2026/sky-striker/andthenishowedhermypanini/99aZ1/ Sep 4, 2026
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ 
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ 
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ 
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ 
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ —
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ skystriker2025
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/  1050
+ 360
+/top-decks/master-i/september-2026/sky-striker/skystriker2025/YOHmY/ Sep 4, 2026

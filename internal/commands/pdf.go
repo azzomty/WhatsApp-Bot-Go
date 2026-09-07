@@ -68,7 +68,7 @@ func HandlePDF(ctx *BotContext) {
 	}
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
-	
+
 	for i, data := range imagesData {
 		img, format, err := image.DecodeConfig(bytes.NewReader(data))
 		if err != nil {
@@ -96,7 +96,7 @@ func HandlePDF(ctx *BotContext) {
 		yPos := (pageHeight - finalH) / 2
 
 		pdf.AddPage()
-		
+
 		opt := gofpdf.ImageOptions{
 			ImageType: strings.ToUpper(format),
 			ReadDpi:   false,
