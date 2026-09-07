@@ -211,6 +211,11 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 	if err == nil {
 		defer res.Body.Close()
 		body, _ := io.ReadAll(res.Body)
+		if res.StatusCode != 200 {
+			sendMessage(ctx, fmt.Sprintf("DEBUG: API Status %d", res.StatusCode))
+		}
+		
+		var dbgErr error
 
 		var data []struct {
 			Author     interface{} `json:"author"`
@@ -231,7 +236,11 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 			} `json:"extra"`
 		}
 
-		if json.Unmarshal(body, &data) == nil {
+		dbgErr = json.Unmarshal(body, &data)
+		if dbgErr != nil {
+			sendMessage(ctx, fmt.Sprintf("DEBUG: JSON Error: %v", dbgErr))
+		}
+		if dbgErr == nil {
 			for _, d := range data {
 				deckName := ""
 				switch v := d.DeckType.(type) {
@@ -303,7 +312,7 @@ func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 			if err3 == nil {
 				container := doc.Find(".deck-container").First()
 				if container.Length() > 0 {
-					sd := SubDeck{Author: "Sample Deck", Info: "Main page list"}
+					sd := SubDeck{Author: "Sample Deck (Fallback)", Info: "Main page list"}
 					var uniqueCards []string
 					container.Find("img.card-img").Each(func(i int, s *goquery.Selection) {
 						alt := s.AttrOr("alt", "")
