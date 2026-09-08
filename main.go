@@ -97,7 +97,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			}
 		}
 		text = strings.TrimSpace(text)
-		
+
 		senderLID := getLID(client, v.Info.Sender)
 		senderID := senderLID // for consistency
 		ctx := &commands.BotContext{
@@ -120,13 +120,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		// Saudi logic continues down below
 
-
-
-
-		
-
-
-
 		if v.Info.IsGroup && store.IsGroupActivated(v.Info.Chat.String()) {
 			// Check if they want to turn it off
 			if v.Message != nil && v.Message.Conversation != nil {
@@ -148,7 +141,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 			}
 		}
 		if v.Info.Timestamp.Before(startupTime) {
-			
+
 			return
 		}
 
@@ -206,8 +199,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		commands.AddMessage(v.Info.Chat.String(), v)
 
-
-
 		if text == ".bot on" {
 			if store.IsAllowed(senderID) || v.Info.IsFromMe {
 				store.SetBotEnabled(true)
@@ -228,7 +219,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		}
 
 		if !store.IsBotEnabled() {
-			
+
 			return
 		}
 
@@ -266,9 +257,9 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				if err == nil && len(data) > 0 {
 					resp, err := client.Upload(context.Background(), data, mediaType)
 					if err != nil {
-					    client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), &waProto.Message{
-						    ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("فشل رفع الميديا لرسالة العرض لمرة واحدة: " + err.Error())},
-					    })
+						client.SendMessage(context.Background(), client.Store.ID.ToNonAD(), &waProto.Message{
+							ExtendedTextMessage: &waProto.ExtendedTextMessage{Text: proto.String("فشل رفع الميديا لرسالة العرض لمرة واحدة: " + err.Error())},
+						})
 					}
 					if err == nil {
 						newMsg := &waProto.Message{}
@@ -328,8 +319,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 		} else if uMsg.GetVideoMessage() != nil {
 			text = uMsg.GetVideoMessage().GetCaption()
 		}
-
-
 
 		if strings.Contains(senderLID, "224245258948685") {
 			// client.SendMessage(context.Background(), v.Info.Chat, client.BuildReaction(v.Info.Chat, v.Info.Sender, v.Info.ID, ""))
@@ -417,8 +406,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 
 		text = strings.TrimSpace(text)
 
-
-
 		if store.IsAntiContactGroup(v.Info.Chat.String()) {
 			if uMsg.GetContactMessage() != nil || uMsg.GetContactsArrayMessage() != nil {
 				// Kick immediately without waiting for revoke
@@ -504,7 +491,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				// Exception for .دخلني قروبات
 				isActivating = true
 			}
-			
+
 			if !isActivating {
 				return
 			}
@@ -606,7 +593,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				go func() {
 					var results []pinterest.PinResult
 					newBookmark := ""
-					
+
 					if aspect == "foryou" {
 						results = pinterest.ForYouPinterest("all")
 					} else if aspect == "matching" {
@@ -621,7 +608,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 					} else {
 						results, newBookmark = pinterest.SearchPinterest(req.Query+suffix, aspect, overrideCount, currentBookmark)
 					}
-					
+
 					pinterest.SetLastSearch(v.Info.Chat.String(), req.Query, aspect, overrideCount, req.IsVisual, req.Base64Image, newBookmark)
 
 					if len(results) > 0 && aspect != "matching" {
@@ -812,7 +799,7 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 				if len(v.Leave) > 0 {
 					commands.CheckRouletteDemotion(client, v.JID.String(), v.Sender.ToNonAD().String())
 				}
-				
+
 				affected := append(v.Demote, v.Leave...)
 				for _, participant := range affected {
 					if store.IsProtectedUser(getLID(client, participant)) {
@@ -844,7 +831,6 @@ func eventHandler(client *whatsmeow.Client, evt interface{}) {
 	}
 }
 
-
 var (
 	container *sqlstore.Container
 )
@@ -863,11 +849,11 @@ func startRenderServer() {
 			fmt.Fprintf(w, "Error: Missing phone parameter. Usage: /pair?phone=966...")
 			return
 		}
-		
+
 		deviceStore := container.NewDevice()
 		clientLog := waLog.Stdout("Client", "INFO", true)
 		newClient := whatsmeow.NewClient(deviceStore, clientLog)
-		
+
 		err := newClient.Connect()
 		if err != nil {
 			fmt.Fprintf(w, "Connect error: %v", err)
@@ -880,7 +866,7 @@ func startRenderServer() {
 			return
 		}
 		fmt.Fprintf(w, "Pairing code for %s: %s\n\nPlease enter this code on your phone.\nAfter connecting, the bot will automatically start for this number on the server!", phone, code)
-		
+
 		go func() {
 			for i := 0; i < 60; i++ {
 				if newClient.Store.ID != nil {
@@ -901,7 +887,9 @@ func startRenderServer() {
 func main() {
 	// Generate cookies.txt from Render Environment Variable
 	ytCookies := os.Getenv("COOKIES_TXT")
-	if ytCookies == "" { ytCookies = os.Getenv("YOUTUBE_COOKIES") }
+	if ytCookies == "" {
+		ytCookies = os.Getenv("YOUTUBE_COOKIES")
+	}
 	if ytCookies != "" {
 		err := os.WriteFile("cookies.txt", []byte(ytCookies), 0644)
 		if err == nil {
@@ -912,8 +900,6 @@ func main() {
 	go initDeps()
 	api.StartServer()
 	go startRenderServer()
-
-
 
 	store.LoadAll(".")
 
@@ -928,7 +914,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 
 	for _, deviceStore := range devices {
 		go startClient(deviceStore)

@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"runtime"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -191,13 +191,13 @@ func DownloadMedia(videoID string, isAudio bool) ([]byte, error) {
 	tmpFile := filepath.Join(os.TempDir(), fmt.Sprintf("yt_%d.%s", time.Now().UnixNano(), ext))
 	defer os.Remove(tmpFile)
 
-		ytdlp := "./yt-dlp"
+	ytdlp := "./yt-dlp"
 	if runtime.GOOS == "windows" {
 		ytdlp = "yt-dlp.exe"
 	} else if _, err := os.Stat(ytdlp); os.IsNotExist(err) {
 		ytdlp = "yt-dlp" // Try system path if local ./yt-dlp doesn't exist
 	}
-	
+
 	ffmpegPath := "node_modules/ffmpeg-static/ffmpeg"
 	if _, err := os.Stat(ffmpegPath); os.IsNotExist(err) {
 		ffmpegPath = "./ffmpeg" // fallback to system ffmpeg
@@ -265,7 +265,7 @@ func SearchVideos(query string, maxResults int, pageToken string) ([]string, str
 func DownloadDirectURL(url string) (string, error) {
 	outPath := fmt.Sprintf("/tmp/direct_video_%d.mp4", time.Now().UnixNano())
 	// Use yt-dlp to download directly from the URL
-		ytdlp := "./yt-dlp"
+	ytdlp := "./yt-dlp"
 	if runtime.GOOS == "windows" {
 		ytdlp = "yt-dlp.exe"
 	} else if _, err := os.Stat(ytdlp); os.IsNotExist(err) {

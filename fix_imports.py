@@ -1,9 +1,9 @@
 with open('/home/lennox/Desktop/اهها/Go_Bot/internal/commands/downloader.go', 'r') as f:
-    content = f.read()
+    c = f.read()
 
-content = content.replace('t"net/url"\\n\\t"regexp"', '"net/url"\\n\\t"regexp"')
-content = content.replace('t"net/url"\n\t"regexp"', '"net/url"\n\t"regexp"')
-content = content.replace('t"net/url"', '"net/url"')
+c = c.replace('\t"net/url"\n', '')
+c = c.replace('\t"regexp"\n', '')
+c = c.replace('\t"github.com/kkdai/youtube/v2"\n', '')
 
 with open('/home/lennox/Desktop/اهها/Go_Bot/internal/commands/downloader.go', 'w') as f:
-    f.write(content)
+    f.write(c)

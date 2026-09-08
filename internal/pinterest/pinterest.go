@@ -8,10 +8,10 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"regexp"
 	"net/textproto"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -157,11 +157,11 @@ func SearchTenorGifs(query string, count int) []PinResult {
 		return nil
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := ioutil.ReadAll(resp.Body)
 	mp4Regex := regexp.MustCompile(`https://media.tenor.com/[^"]*\.mp4`)
 	matches := mp4Regex.FindAllString(string(body), -1)
-	
+
 	var results []PinResult
 	unique := make(map[string]bool)
 	for _, m := range matches {
@@ -208,7 +208,7 @@ func SearchPinterestGifs(query string, count int) []PinResult {
 			if err != nil {
 				return
 			}
-			
+
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
 
@@ -429,7 +429,7 @@ func SearchPinterest(query string, aspect string, count int, startBookmark strin
 		if len(newPins) == 0 {
 			break // No more results
 		}
-		
+
 		// Stop if we fetched too many to prevent infinite loops
 		if len(allPins) > 300 {
 			break
@@ -626,7 +626,7 @@ func SearchPinterestLens(base64Image string, aspect string, count int) []PinResu
 
 	writer.WriteField("camera_type", "0")
 	writer.WriteField("source_type", "1")
-	
+
 	// Request slightly more than count to have enough valid results after filtering
 	pageSize := count + 10
 	if pageSize > 100 {

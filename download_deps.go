@@ -36,7 +36,7 @@ func initDeps() {
 			fmt.Println("yt-dlp downloaded.")
 		}
 	}
-	
+
 	// Check ffmpeg
 	info2, err2 := os.Stat("ffmpeg")
 	if os.IsNotExist(err2) || (err2 == nil && info2.Size() < 1000000) {

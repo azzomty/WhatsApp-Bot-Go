@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	exchangeMu       sync.RWMutex
-	FavoriteList     = make(map[string]bool)
-	ExchangeGroup    string
-	MyExchangeMsgs   [][]byte
-	StrikeList       = make(map[string]int)
+	exchangeMu     sync.RWMutex
+	FavoriteList   = make(map[string]bool)
+	ExchangeGroup  string
+	MyExchangeMsgs [][]byte
+	StrikeList     = make(map[string]int)
 )
 
 func LoadExchange() {
@@ -42,14 +42,14 @@ func LoadExchange() {
 func ToggleFavorite(id string) bool {
 	exchangeMu.Lock()
 	defer exchangeMu.Unlock()
-	
+
 	status := !FavoriteList[id]
 	if status {
 		FavoriteList[id] = true
 	} else {
 		delete(FavoriteList, id)
 	}
-	
+
 	data, _ := json.Marshal(FavoriteList)
 	os.WriteFile("favorites.json", data, 0644)
 	return status
@@ -98,7 +98,6 @@ func GetFavorites() []string {
 	}
 	return list
 }
-
 
 func IncrementStrike(id string) int {
 	exchangeMu.Lock()
