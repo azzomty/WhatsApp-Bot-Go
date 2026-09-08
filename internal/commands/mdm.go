@@ -200,94 +200,143 @@ func fetchTierList(ctx *BotContext, sessionKey string, topDecksOnly bool) {
 func fetchDeckDetails(ctx *BotContext, sessionKey string) {
 	session := mdmSessions[sessionKey]
 
-	// Fetch from Top Decks API (last 30 days)
-	apiURL := "https://www.masterduelmeta.com/api/v1/top-decks?deck=" + url.QueryEscape(session.TargetDeck.Name)
-	req, _ := http.NewRequest("GET", apiURL, nil)
-	req.Header.Set("User-Agent", "Mozilla/5.0")
-	res, err := http.DefaultClient.Do(req)
-
 	session.SubDecks = []SubDeck{}
 
-	if err == nil {
-		defer res.Body.Close()
-		body, _ := io.ReadAll(res.Body)
-		if res.StatusCode != 200 {
-			sendMessage(ctx, fmt.Sprintf("DEBUG: API Status %d", res.StatusCode))
-		}
-		
-		var dbgErr error
+	// Parse URL to determine if it's an engine or deck-type
+	u, _ := url.Parse(session.TargetDeck.URL)
+	segments := strings.Split(strings.Trim(u.Path, "/"), "/")
 
-		var data []struct {
-			Author     interface{} `json:"author"`
-			DeckType   interface{} `json:"deckType"`
-			RankedType interface{} `json:"rankedType"`
-			TournamentNumber interface{} `json:"tournamentNumber"`
-			Main       []struct {
-				Card struct {
-					Name string `json:"name"`
-				} `json:"card"`
-				Amount int `json:"amount"`
-			} `json:"main"`
-			Extra []struct {
-				Card struct {
-					Name string `json:"name"`
-				} `json:"card"`
-				Amount int `json:"amount"`
-			} `json:"extra"`
+	isEngine := false
+	entityName := session.TargetDeck.Name
+	if len(segments) >= 3 {
+		if segments[1] == "engines" {
+			isEngine = true
+		}
+		entityName, _ = url.PathUnescape(segments[2])
+	}
+
+	// 1. Get ID
+	var metaURL string
+	if isEngine {
+		metaURL = "https://www.masterduelmeta.com/api/v1/engines?name=" + url.QueryEscape(entityName)
+	} else {
+		metaURL = "https://www.masterduelmeta.com/api/v1/deck-types?name=" + url.QueryEscape(entityName)
+	}
+
+	req1, _ := http.NewRequest("GET", metaURL, nil)
+	req1.Header.Set("User-Agent", "Mozilla/5.0")
+	res1, err1 := http.DefaultClient.Do(req1)
+
+	var entityID string
+	if err1 == nil && res1.StatusCode == 200 {
+		defer res1.Body.Close()
+		body1, _ := io.ReadAll(res1.Body)
+		var items []struct {
+			ID string `json:"_id"`
+		}
+		json.Unmarshal(body1, &items)
+		if len(items) > 0 {
+			entityID = items[0].ID
+		}
+	}
+
+	if entityID != "" {
+		// 2. Fetch Top Decks using ID
+		apiURL := ""
+		if isEngine {
+			apiURL = "https://www.masterduelmeta.com/api/v1/top-decks?engines=" + entityID + "&sort=-created&limit=15"
+		} else {
+			apiURL = "https://www.masterduelmeta.com/api/v1/top-decks?deckType=" + entityID + "&sort=-created&limit=15"
 		}
 
-		dbgErr = json.Unmarshal(body, &data)
-		if dbgErr != nil {
-			sendMessage(ctx, fmt.Sprintf("DEBUG: JSON Error: %v", dbgErr))
-		}
-		if dbgErr == nil {
-			for _, d := range data {
-				
-				
-				// Always accept since the API already filters it!
-				if true {
-					authorName := "Unknown"
-					switch v := d.Author.(type) {
-					case string:
-						authorName = v
-					case map[string]interface{}:
-						if u, ok := v["username"].(string); ok { authorName = u }
-					}
-					
-					sd := SubDeck{Author: authorName}
-					
-					tNum := ""
-					switch v := d.TournamentNumber.(type) {
-					case string: tNum = v
-					case float64: tNum = fmt.Sprintf("%.0f", v)
-					}
-					
-					rType := ""
-					switch v := d.RankedType.(type) {
-					case string: rType = v
-					case map[string]interface{}:
-						if n, ok := v["shortName"].(string); ok { rType = n }
-					}
-					
-					if tNum != "" {
-						sd.Info = "Tournament " + tNum
-					} else if rType != "" {
-						sd.Info = rType
-					}
+		req, _ := http.NewRequest("GET", apiURL, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0")
+		res, err := http.DefaultClient.Do(req)
 
-					for _, c := range d.Main {
-						sd.Cards = append(sd.Cards, fmt.Sprintf("%dx %s", c.Amount, c.Card.Name))
-					}
-					if len(d.Extra) > 0 {
-						sd.Cards = append(sd.Cards, "--- Extra Deck ---")
-						for _, c := range d.Extra {
+		if err == nil {
+			defer res.Body.Close()
+			body, _ := io.ReadAll(res.Body)
+
+			var dbgErr error
+
+			var data []struct {
+				Author           interface{} `json:"author"`
+				DeckType         interface{} `json:"deckType"`
+				RankedType       interface{} `json:"rankedType"`
+				TournamentNumber interface{} `json:"tournamentNumber"`
+				Main             []struct {
+					Card struct {
+						Name string `json:"name"`
+					} `json:"card"`
+					Amount int `json:"amount"`
+				} `json:"main"`
+				Extra []struct {
+					Card struct {
+						Name string `json:"name"`
+					} `json:"card"`
+					Amount int `json:"amount"`
+				} `json:"extra"`
+			}
+
+			dbgErr = json.Unmarshal(body, &data)
+			if dbgErr != nil {
+				sendMessage(ctx, fmt.Sprintf("DEBUG: JSON Error: %v", dbgErr))
+			}
+			if dbgErr == nil {
+				for _, d := range data {
+
+					// Always accept since the API already filters it!
+					if true {
+						authorName := "Unknown"
+						switch v := d.Author.(type) {
+						case string:
+							authorName = v
+						case map[string]interface{}:
+							if u, ok := v["username"].(string); ok {
+								authorName = u
+							}
+						}
+
+						sd := SubDeck{Author: authorName}
+
+						tNum := ""
+						switch v := d.TournamentNumber.(type) {
+						case string:
+							tNum = v
+						case float64:
+							tNum = fmt.Sprintf("%.0f", v)
+						}
+
+						rType := ""
+						switch v := d.RankedType.(type) {
+						case string:
+							rType = v
+						case map[string]interface{}:
+							if n, ok := v["shortName"].(string); ok {
+								rType = n
+							}
+						}
+
+						if tNum != "" {
+							sd.Info = "Tournament " + tNum
+						} else if rType != "" {
+							sd.Info = rType
+						}
+
+						for _, c := range d.Main {
 							sd.Cards = append(sd.Cards, fmt.Sprintf("%dx %s", c.Amount, c.Card.Name))
 						}
-					}
+						if len(d.Extra) > 0 {
+							sd.Cards = append(sd.Cards, "--- Extra Deck ---")
+							for _, c := range d.Extra {
+								sd.Cards = append(sd.Cards, fmt.Sprintf("%dx %s", c.Amount, c.Card.Name))
+							}
+						}
 
-					session.SubDecks = append(session.SubDecks, sd)
-					if len(session.SubDecks) >= 15 {
-						break
+						session.SubDecks = append(session.SubDecks, sd)
+						if len(session.SubDecks) >= 15 {
+							break
+						}
 					}
 				}
 			}
