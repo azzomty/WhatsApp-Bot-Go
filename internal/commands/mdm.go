@@ -401,7 +401,8 @@ func contains(slice []string, item string) bool {
 }
 
 func fetchCard(ctx *BotContext, query string) {
-	apiURL := "https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=" + url.QueryEscape(query)
+	bestQuery := GetClosestCardName(query)
+	apiURL := "https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=" + url.QueryEscape(bestQuery)
 	res, err := http.Get(apiURL)
 	if err != nil {
 		sendMessage(ctx, "حدث خطأ أثناء البحث عن البطاقة.")
