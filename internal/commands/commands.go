@@ -198,6 +198,9 @@ func Handle(ctx *BotContext) {
 	if HandleMDMCommand(ctx) {
 		return
 	}
+	if HandleFontImageCommand(ctx) {
+		return
+	}
 	if HandleDownloadCommand(ctx) {
 		return
 	}
@@ -1406,6 +1409,10 @@ func showCommands(ctx *BotContext) {
 .فوريو (صور عشوائية)
 .تطقيم (صور متطابقة)
 
+[ أوامر الخطوط والزخرفة ]
+	.قائمة الخطوط (لعرض وتطبيق أكثر من 120 زخرفة نصوص يونيكود)
+	.خط [النص] | [اسم الخط] | [لون الخلفية] | [لون النص] (لصنع ملصق شفاف بخطوط حقيقية فخمة مثل Creattion Demo)
+
 [ أوامر الملصقات ]
 .ملصق (لتحويل الصور والفيديوهات لملصقات)
 .عمل حزمة (لتحويل مجموعة صور/فيديوهات إلى حزمة ملصقات)
@@ -2574,8 +2581,8 @@ func HandleSyrian(ctx *BotContext) {
 func HandleFontsCommand(ctx *BotContext) bool {
 	text := strings.TrimSpace(ctx.Text)
 	if text == ".قائمة الخطوط" || text == ".fonts list" {
-		sampleTextEn := "Abc 123"
-		sampleTextAr := "تجربة"
+		sampleTextEn := "I LOVE ASSUITY i love assuity"
+		sampleTextAr := "احب اسيوتي"
 
 		var msgs []string
 		var currentMsg strings.Builder
